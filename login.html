@@ -67,7 +67,6 @@
   </div>
 </div>
 
-<script src="assets/js/api.js"></script>
 <script src="assets/js/app.js"></script>
 <script>
 let toastTimer;
@@ -85,30 +84,48 @@ function showToast(msg, type = 'error', icon = '⚠️') {
   toastTimer = setTimeout(() => t.classList.remove('show'), 3800);
 }
 
-async function doLogin(e) {
+function doLogin(e) {
   e.preventDefault();
-  const email = document.getElementById('email').value.trim().toLowerCase();
-  const password = document.getElementById('password').value;
-  const role = document.getElementById('role').value;
-  try {
-    const result = await apiCall('/login.php', {
-      method: 'POST',
-      body: JSON.stringify({ email, password, role })
-    });
-    showToast(`Welcome back, ${result.user.name}!`, 'success', '✅');
-    setTimeout(() => {
-      const userRole = result.user.role;
-      if (userRole === 'admin') { location.href = 'admin.html'; return; }
-      if (userRole === 'staff') { location.href = 'staff-dashboard.html'; return; }
-      if (userRole === 'owner') { location.href = 'owner-dashboard.html'; return; }
-      location.href = 'index.html';
-    }, 900);
-  } catch (err) {
-    showToast(err.message, 'error', '❌');
-  }
-}
+  const email  = document.getElementById('email').value.trim().toLowerCase();
+  const role   = document.getElementById('role').value;
+  const users  = get('users', []);
 
-window.addEventListener('DOMContentLoaded', async () => { await nav(); });
+  // Check if email is registered
+  const match = users.find(u => u.email.toLowerCase() === email);
+
+  if (!match) {
+    // Not registered — shake form and show toast
+    const form = document.getElementById('loginForm');
+    form.classList.remove('shake');
+    void form.offsetWidth;
+    form.classList.add('shake');
+    showToast('No account found with that email. Please sign up first.', 'error', '❌');
+    return;
+  }
+
+  // Email found — check role matches
+  if (match.role !== role) {
+    const form = document.getElementById('loginForm');
+    form.classList.remove('shake');
+    void form.offsetWidth;
+    form.classList.add('shake');
+    showToast(`This email is registered as "${match.role}", not "${role}". Please select the correct role.`, 'warning', '⚠️');
+    return;
+  }
+
+  // All good — log in
+  showToast(`Welcome back, ${match.name}!`, 'success', '✅');
+  set('session', match);
+  setTimeout(() => {
+    const redirect = get('redirectAfterLogin', null);
+    localStorage.removeItem('redirectAfterLogin');
+    if (redirect && role === 'customer') { location.href = redirect; return; }
+    if (role === 'admin')  { location.href = 'admin.html'; return; }
+    if (role === 'staff')  { location.href = 'staff-dashboard.html'; return; }
+    if (role === 'owner')  { location.href = 'owner-dashboard.html'; return; }
+    location.href = 'index.html';
+  }, 900);
+}
 </script>
 </body>
 </html>

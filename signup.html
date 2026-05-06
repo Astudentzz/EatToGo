@@ -39,12 +39,10 @@
   </div>
 </div>
 
-<script src="assets/js/api.js"></script>
 <script src="assets/js/app.js"></script>
 <script>
 // Pre-select role if coming from owner CTA
-window.addEventListener('DOMContentLoaded', async () => {
-  await nav();
+window.addEventListener('DOMContentLoaded', () => {
   const params = new URLSearchParams(location.search);
   const role = params.get('role');
   if (role) {
@@ -58,24 +56,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
   }
 });
-
-async function signup(e) {
-    e.preventDefault();
-    const name = document.getElementById('name').value;
-    const email = document.getElementById('email').value;
-    const password = document.querySelector('input[type="password"]').value;
-    const role = document.getElementById('role').value;
-    try {
-        await apiCall('/register.php', {
-            method: 'POST',
-            body: JSON.stringify({ name, email, password, role })
-        });
-        alert('Registration successful! Welcome to EatToGo.');
-        window.location.href = 'index.html';
-    } catch (err) {
-        alert(err.message);
-    }
-}
 </script>
 </body>
 </html>

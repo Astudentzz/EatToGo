@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
   <link rel="stylesheet" href="assets/css/style.css">
-  <title>Search Results – EatToGo</title>
+  <title>Booking Receipt – EatToGo</title>
 </head>
 <body>
+
 <nav class="navbar-etg">
   <div class="container d-flex align-items-center justify-content-between">
     <a class="logo" href="index.html">Eat<span>To</span>Go</a>
@@ -24,21 +24,29 @@
 
 <section class="page-head">
   <div class="container">
-    <h1>Search Results</h1>
-    <p class="text-muted">Filter restaurants by name, cuisine, date, time and guests.</p>
-    <div class="glass-card p-3 row g-3">
-      <div class="col-md-5"><input id="q" oninput="filterResults()" class="form-control" placeholder="Search restaurants"></div>
-      <div class="col-md-3"><select id="cuisine" onchange="filterResults()" class="form-select"></select></div>
-      <div class="col-md-2"><input class="form-control" type="date"></div>
-      <div class="col-md-2"><select class="form-select"><option>2 Guests</option><option>4 Guests</option><option>6 Guests</option></select></div>
+    <div class="timeline">
+      <span>Reserve Table</span>
+      <span>Pre-Order Food</span>
+      <span>Customer Details</span>
+      <span class="active">Receipt</span>
+      <span>Pay at Counter</span>
     </div>
+    <h1 class="mt-3">Booking Receipt</h1>
+    <p class="text-muted">Review your complete reservation, customer details, and itemized pre-order before payment instruction.</p>
   </div>
 </section>
 
 <section class="section">
   <div class="container">
-    <div class="row g-4" id="restaurantList"></div>
-    <div id="emptyResults" class="card-etg p-4 text-center mt-4 d-none">No restaurants found. Try another cuisine or keyword.</div>
+    <div class="row justify-content-center">
+      <div class="col-lg-9">
+        <div id="receiptBox"></div>
+        <div class="d-flex gap-3 justify-content-end mt-4 flex-wrap">
+          <a href="checkout.html" class="btn btn-outline-etg">← Edit Details</a>
+          <button onclick="goPayment()" class="btn btn-etg">Continue to Payment Instruction →</button>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -49,6 +57,7 @@
   </div>
   <div class="footer-bottom">© 2026 EatToGo • Universiti Teknologi Malaysia (UTM)</div>
 </footer>
+
 <script src="assets/js/app.js"></script>
 </body>
 </html>

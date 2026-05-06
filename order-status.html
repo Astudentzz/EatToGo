@@ -1,159 +1,73 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
-  <link rel="stylesheet" href="assets/css/style.css">
-  <title>Order Status – EatToGo</title>
-  <style>
-    .order-tracker { display:flex; flex-direction:column; gap:0; position:relative; }
-    .tracker-step { display:flex; gap:20px; align-items:flex-start; position:relative; padding-bottom:30px; }
-    .tracker-step:last-child { padding-bottom:0; }
-    .tracker-step::before { content:''; position:absolute; left:19px; top:40px; width:2px; height:calc(100% - 10px); background:var(--cream-dark); }
-    .tracker-step:last-child::before { display:none; }
-    .step-dot { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; border:3px solid var(--cream-dark); background:white; position:relative; z-index:1; }
-    .step-dot.done { background:var(--green); border-color:var(--green); color:white; }
-    .step-dot.active { background:var(--orange); border-color:var(--orange); color:white; box-shadow:0 0 0 6px rgba(255,107,53,.18); }
-    .step-dot.pending { background:white; border-color:var(--cream-dark); color:var(--gray); }
-    .step-body h5 { margin:0 0 4px; font-weight:800; font-size:16px; }
-    .step-body p { margin:0; color:var(--gray); font-size:14px; }
-    .order-card { border-left:4px solid var(--orange); }
-    .pulse { animation: pulse 1.6s ease-in-out infinite; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.55} }
-  </style>
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="assets/css/style.css" />
+    <title>Order Status – EatToGo</title>
+  </head>
+  <body>
+    <nav class="navbar-etg">
+      <div class="container d-flex align-items-center justify-content-between">
+        <a class="logo" href="index.html">Eat<span>To</span>Go</a>
+        <div class="d-none d-md-flex gap-4">
+          <a class="nav-link" href="search-results.html">Restaurants</a>
+          <a class="nav-link" href="booking-history.html">My Bookings</a>
+          <a class="nav-link" href="order-status.html">Order Status</a>
+        </div>
+        <div id="authArea"></div>
+      </div>
+    </nav>
 
-<nav class="navbar-etg">
-  <div class="container d-flex align-items-center justify-content-between">
-    <a class="logo" href="index.html">Eat<span>To</span>Go</a>
-    <div class="d-none d-md-flex gap-4">
-      <a class="nav-link" href="search-results.html">Restaurants</a>
-      <a class="nav-link" href="booking-history.html">My Bookings</a>
-      <a class="nav-link fw-bold" style="color:var(--orange)!important" href="order-status.html">Order Status</a>
-    </div>
-    <div id="authArea"></div>
-  </div>
-</nav>
+    <section class="page-head">
+      <div class="container">
+        <h1>Order Status</h1>
+        <p class="text-muted">
+          Track your reservation, preorder preparation, payment instruction,
+          and arrival confirmation.
+        </p>
+      </div>
+    </section>
 
-<section class="page-head">
-  <div class="container">
-    <h1>Order Status</h1>
-    <p class="text-muted">Track your pre-order and reservation in real time.</p>
-  </div>
-</section>
-
-<section class="section">
-  <div class="container">
-    <div class="row g-4" id="orderStatusContainer">
-      <!-- Rendered by JS -->
-    </div>
-    <div class="text-center mt-4" id="emptyState" style="display:none!important">
-      <div style="font-size:72px">🍽️</div>
-      <h3>No active orders</h3>
-      <p class="text-muted">Make a reservation first to track your order here.</p>
-      <a href="search-results.html" class="btn btn-etg">Browse Restaurants</a>
-    </div>
-  </div>
-</section>
-
-<footer class="minimal-footer">
-  <div class="container d-flex justify-content-between flex-wrap gap-5">
-    <div class="footer-brand">
-      <h2>Eat<span>To</span>Go</h2>
-      <p>Final Year Project – Restaurant and Food Reservation System.</p>
-    </div>
-    <div class="footer-members">
-      <h4>Project Team</h4>
-      <ul class="list-unstyled">
-        <li>Navin Ramu</li><li>Muhamamd Nazim</li><li>Hadif</li><li>Ng Yue Yang</li>
-      </ul>
-    </div>
-  </div>
-  <div class="footer-bottom">© 2026 EatToGo • Universiti Teknologi Malaysia (UTM)</div>
-</footer>
-
-<script src="assets/js/api.js"></script>
-<script>
-async function renderOrderStatus() {
-  try {
-    const bookings = await apiCall('/user-reservations.php');
-    const container = document.getElementById('orderStatusContainer');
-    const empty = document.getElementById('emptyState');
-
-    if (!bookings.length) { empty.style.display = 'block'; return; }
-
-    container.innerHTML = bookings.map(b => {
-      const order = b.order || null;
-      const bStatus = b.status;
-      const oStatus = order ? order.status.toLowerCase() : null;
-
-      const steps = [
-        { label: 'Reservation Submitted', desc: `Booking ID: ${b.id} • ${b.reservation_date} ${b.reservation_time}`, done: true },
-        { label: 'Reservation Confirmed', desc: bStatus === 'confirmed' ? 'Staff confirmed your table.' : bStatus === 'rejected' ? '❌ Reservation rejected.' : 'Waiting for staff confirmation…', done: bStatus === 'confirmed', active: bStatus === 'pending', rejected: bStatus === 'rejected' },
-        { label: 'Pre-Order Received', desc: order ? `Items: ${order.items}` : 'No pre-order placed yet.', done: !!order, active: bStatus === 'confirmed' && !order },
-        { label: 'Being Prepared', desc: oStatus === 'preparing' || oStatus === 'pending' ? 'Kitchen is preparing your food.' : oStatus === 'ready' ? 'Done!' : 'Awaiting confirmation…', done: oStatus === 'ready', active: oStatus === 'preparing' || oStatus === 'pending' },
-        { label: 'Ready – Pay at Counter', desc: 'Food will be ready when you arrive. Pay at the counter.', done: oStatus === 'ready' && b.arrival_confirmed, active: oStatus === 'ready' && !b.arrival_confirmed },
-        { label: 'Arrived at Restaurant', desc: b.arrival_confirmed ? '✅ Arrival confirmed.' : 'Confirm when you arrive.', done: b.arrival_confirmed, active: false },
-      ];
-
-      const stepsHtml = steps.map(s => {
-        const cls = s.rejected ? 'pending' : s.done ? 'done' : s.active ? 'active' : 'pending';
-        const icon = s.rejected ? '✕' : s.done ? '✓' : s.active ? '●' : '○';
-        return `<div class="tracker-step">
-          <div class="step-dot ${cls} ${s.active ? 'pulse' : ''}">${icon}</div>
-          <div class="step-body pt-1">
-            <h5>${s.label}</h5>
-            <p>${s.desc}</p>
-          </div>
-        </div>`;
-      }).join('');
-
-      const overallBadge = bStatus === 'rejected'
-        ? `<span class="status rejected">Rejected</span>`
-        : b.arrival_confirmed
-          ? `<span class="status confirmed">Completed</span>`
-          : oStatus === 'ready'
-            ? `<span class="status ready">Ready to Pick Up</span>`
-            : `<span class="status pending">In Progress</span>`;
-
-      return `
-        <div class="col-lg-6">
-          <div class="card-etg order-card p-4">
-            <div class="d-flex justify-content-between align-items-start mb-4">
-              <div>
-                <h4 class="mb-1">${b.restaurant_name}</h4>
-                <small class="text-muted">${b.reservation_date} • ${b.reservation_time} • ${b.num_people} guests</small>
+    <section class="section">
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-lg-7">
+            <div class="card-etg p-4">
+              <h3>Latest Booking Progress</h3>
+              <div class="timeline mt-3">
+                <span class="active">Receipt Generated</span>
+                <span class="active">Pay at Counter</span>
+                <span>Preparing</span>
+                <span>Arrived</span>
+                <span>Feedback</span>
               </div>
-              ${overallBadge}
+              <div id="receiptBox" class="mt-4"></div>
             </div>
-            <div class="order-tracker">${stepsHtml}</div>
-            ${!b.arrival_confirmed && bStatus !== 'rejected' ? `
-            <div class="mt-4 pt-3 border-top d-flex gap-2 flex-wrap">
-              <button class="btn btn-etg btn-sm" onclick="confirmArrivalFromStatus('${b.id}')">Confirm Arrival</button>
-              <a href="booking-history.html" class="btn btn-outline-etg btn-sm">My Bookings</a>
-            </div>` : b.arrival_confirmed ? `
-            <div class="mt-4 pt-3 border-top">
-              <a href="feedback.html?reservation_id=${b.id}" class="btn btn-outline-etg btn-sm">Leave Feedback</a>
-            </div>` : ''}
           </div>
-        </div>`;
-    }).join('');
-  } catch (err) { console.error(err); }
-}
+          <div class="col-lg-5">
+            <div class="card-etg p-4">
+              <h3>Arrival Confirmation</h3>
+              <p class="text-muted">
+                Confirm this only when you reach the restaurant.
+              </p>
+              <button onclick="confirmArrival()" class="btn btn-etg w-100">
+                I Have Arrived
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-async function confirmArrivalFromStatus(bookingId) {
-  try {
-    await apiCall('/arrival.php', { method: 'POST', body: JSON.stringify({ reservation_id: bookingId }) });
-    alert('Arrival confirmed! Restaurant staff has been notified.');
-    renderOrderStatus();
-  } catch (err) { alert(err.message); }
-}
-
-window.addEventListener('DOMContentLoaded', async () => { await nav(); renderOrderStatus(); });
-</script>
-</body>
+    <script src="assets/js/app.js"></script>
+  </body>
 </html>
