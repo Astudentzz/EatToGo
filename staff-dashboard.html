@@ -9,7 +9,6 @@
   <link rel="stylesheet" href="assets/css/style.css">
   <title>Restaurant Staff Dashboard – EatToGo</title>
 </head>
-<body>
 
 <aside class="sidebar">
   <a class="logo" href="index.html">Eat<span>To</span>Go</a>
@@ -84,6 +83,7 @@
   </div>
 </main>
 
+<script src="assets/js/api.js"></script>
 <script src="assets/js/app.js"></script>
 <script>
 function renderStats() {
@@ -195,8 +195,14 @@ window.renderStaff = function() {
   }
 };
 
-window.addEventListener('DOMContentLoaded', () => {
-  nav();
+window.addEventListener('DOMContentLoaded', async () => {
+  const sessionData = await checkSession();
+  if (!sessionData.loggedIn || sessionData.user.role !== 'staff') {
+    alert('Unauthorized. Please login as restaurant staff.');
+    window.location.href = 'login.html';
+    return;
+  }
+  await nav();
   renderStaffBookings();
   renderStaff();
   renderMenuTable();

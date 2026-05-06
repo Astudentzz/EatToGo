@@ -114,6 +114,7 @@
   </div>
 </main>
 
+<script src="assets/js/api.js"></script>
 <script src="assets/js/app.js"></script>
 <script>
 function renderStats() {
@@ -126,114 +127,136 @@ function renderStats() {
   document.getElementById('statRestaurants').textContent = r.length;
 }
 
-function renderRestaurantTable() {
+async function renderRestaurantTable() {
   const el = document.getElementById('restaurantRows');
   if (!el) return;
-  const list = get('customRestaurants', ETG.restaurants);
-  el.innerHTML = list.map((r, idx) => `
-    <tr>
-      <td>${r.emoji || '🍽️'} ${r.name}</td>
-      <td>${r.cuisine}</td>
-      <td>${r.loc}</td>
-      <td>${r.price}</td>
-      <td>
-        <button class="btn btn-sm btn-warning me-1" onclick="editRestaurant(${idx})">Update</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteRestaurant(${idx})">Delete</button>
-      </td>
-    </tr>`).join('');
+  try {
+    const list = await apiCall('/restaurants.php');
+    el.innerHTML = list.map((r) => `
+      <tr>
+        <td>${r.emoji || '🍽️'} ${r.name}</td>
+        <td>${r.category}</td>
+        <td>${r.location}</td>
+        <td>${r.price}</td>
+        <td>
+          <button class="btn btn-sm btn-warning me-1" onclick="editRestaurant(${r.id})">Update</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteRestaurant(${r.id})">Delete</button>
+        </td>
+      </tr>`).join('');
+  } catch (err) { console.error(err); }
 }
 
-function addRestaurant() {
+async function addRestaurant() {
   const name = document.getElementById('restNameInput').value.trim();
   const cuisine = document.getElementById('restCuisine').value.trim();
   const loc = document.getElementById('restLoc').value.trim();
   const price = document.getElementById('restPrice').value.trim();
   if (!name || !cuisine) { alert('Please fill in restaurant name and cuisine.'); return; }
-  const list = get('customRestaurants', ETG.restaurants);
-  list.push({ id: Date.now(), name, cuisine, loc: loc || 'Malaysia', price: price || 'RM10-50', emoji: '🍽️', deal: 'New', rating: 4.5 });
-  set('customRestaurants', list);
-  document.getElementById('restNameInput').value = '';
-  document.getElementById('restCuisine').value = '';
-  document.getElementById('restLoc').value = '';
-  document.getElementById('restPrice').value = '';
-  renderRestaurantTable();
-  renderStats();
-  alert(`Restaurant "${name}" added.`);
+  try {
+    await apiCall('/restaurants.php', {
+      method: 'POST',
+      body: JSON.stringify({ name, category: cuisine, location: loc || 'Malaysia', price: price || 'RM10-50' })
+    });
+    document.getElementById('restNameInput').value = '';
+    document.getElementById('restCuisine').value = '';
+    document.getElementById('restLoc').value = '';
+    document.getElementById('restPrice').value = '';
+    renderRestaurantTable();
+    renderStats();
+    alert(`Restaurant "${name}" added.`);
+  } catch (err) { alert(err.message); }
 }
 
-function editRestaurant(idx) {
-  const list = get('customRestaurants', ETG.restaurants);
-  const newName = prompt('Update restaurant name:', list[idx].name);
-  if (newName) { list[idx].name = newName.trim(); set('customRestaurants', list); renderRestaurantTable(); }
+async function editRestaurant(id) {
+  const newName = prompt('Update restaurant name:');
+  if (!newName) return;
+  try {
+    await apiCall('/restaurants.php', {
+      method: 'PUT',
+      body: JSON.stringify({ restaurant_id: id, name: newName.trim() })
+    });
+    renderRestaurantTable();
+  } catch (err) { alert(err.message); }
 }
 
-function deleteRestaurant(idx) {
+async function deleteRestaurant(id) {
   if (!confirm('Delete this restaurant?')) return;
-  const list = get('customRestaurants', ETG.restaurants);
-  list.splice(idx, 1);
-  set('customRestaurants', list);
-  renderRestaurantTable();
-  renderStats();
+  try {
+    await apiCall(`/restaurants.php?id=${id}`, { method: 'DELETE' });
+    renderRestaurantTable();
+    renderStats();
+  } catch (err) { alert(err.message); }
 }
 
-function renderAdminMenu() {
+async function renderAdminMenu() {
   const el = document.getElementById('adminMenuRows');
   if (!el) return;
-  const menu = get('customMenu', ETG.menu);
-  el.innerHTML = menu.map((item, idx) => `
-    <tr>
-      <td>${item.emoji} ${item.name}</td>
-      <td>${item.cat}</td>
-      <td>RM ${Number(item.price).toFixed(2)}</td>
-      <td>
-        <button class="btn btn-sm btn-warning me-1" onclick="editMenuItem(${idx})">Update</button>
-        <button class="btn btn-sm btn-danger" onclick="adminRemoveMenu(${idx})">Remove</button>
-      </td>
-    </tr>`).join('');
+  try {
+    const menu = await apiCall('/menu-items.php');
+    el.innerHTML = menu.map((item) => `
+      <tr>
+        <td>${item.emoji || '🍽️'} ${item.name}</td>
+        <td>${item.category}</td>
+        <td>RM ${Number(item.price).toFixed(2)}</td>
+        <td>
+          <button class="btn btn-sm btn-warning me-1" onclick="editAdminMenuItem(${item.id})">Update</button>
+          <button class="btn btn-sm btn-danger" onclick="adminRemoveMenu(${item.id})">Remove</button>
+        </td>
+      </tr>`).join('');
+  } catch (err) { console.error(err); }
 }
 
-function adminAddMenu() {
+async function adminAddMenu() {
   const name = document.getElementById('menuName').value.trim();
   const price = parseFloat(document.getElementById('menuPrice').value);
   const cat = document.getElementById('menuCat').value;
   const emoji = document.getElementById('menuEmoji').value.trim() || '🍽️';
   if (!name || isNaN(price)) { alert('Please enter item name and price.'); return; }
-  const menu = get('customMenu', ETG.menu);
-  menu.push({ id: Date.now(), name, price, cat, emoji });
-  set('customMenu', menu);
-  document.getElementById('menuName').value = '';
-  document.getElementById('menuPrice').value = '';
-  document.getElementById('menuEmoji').value = '';
-  renderAdminMenu();
-  alert(`"${name}" added to menu.`);
-}
-
-function editMenuItem(idx) {
-  const menu = get('customMenu', ETG.menu);
-  const newPrice = prompt(`Update price for "${menu[idx].name}" (current: RM${menu[idx].price}):`, menu[idx].price);
-  if (newPrice !== null) {
-    menu[idx].price = parseFloat(newPrice) || menu[idx].price;
-    set('customMenu', menu);
+  try {
+    await apiCall('/menu-items.php', {
+      method: 'POST',
+      body: JSON.stringify({ name, price, category: cat, emoji })
+    });
+    document.getElementById('menuName').value = '';
+    document.getElementById('menuPrice').value = '';
+    document.getElementById('menuEmoji').value = '';
     renderAdminMenu();
-  }
+    alert(`"${name}" added to menu.`);
+  } catch (err) { alert(err.message); }
 }
 
-function adminRemoveMenu(idx) {
+async function editAdminMenuItem(id) {
+  const newPrice = prompt('Update price (RM):', '');
+  if (!newPrice) return;
+  try {
+    await apiCall('/menu-items.php', {
+      method: 'PUT',
+      body: JSON.stringify({ menu_item_id: id, price: parseFloat(newPrice) })
+    });
+    renderAdminMenu();
+  } catch (err) { alert(err.message); }
+}
+
+async function adminRemoveMenu(id) {
   if (!confirm('Remove this menu item?')) return;
-  const menu = get('customMenu', ETG.menu);
-  menu.splice(idx, 1);
-  set('customMenu', menu);
-  renderAdminMenu();
+  try {
+    await apiCall(`/menu-items.php?id=${id}`, { method: 'DELETE' });
+    renderAdminMenu();
+  } catch (err) { alert(err.message); }
 }
 
 function sendFeedbackRequest() {
-  const customers = get('users', []).filter(u => u.role === 'customer');
-  if (!customers.length) { alert('No customers found.'); return; }
-  alert(`Feedback request sent to ${customers.length} customer(s). They will see a prompt to leave feedback after dining.`);
+  alert('Feedback requests can be triggered from order-status page after arrival confirmation.');
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-  nav();
+window.addEventListener('DOMContentLoaded', async () => {
+  const sessionData = await checkSession();
+  if (!sessionData.loggedIn || sessionData.user.role !== 'admin') {
+    alert('Unauthorized. Please login as admin.');
+    window.location.href = 'login.html';
+    return;
+  }
+  await nav();
   renderStats();
   renderBookings();
   renderRestaurantTable();

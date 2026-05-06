@@ -76,84 +76,84 @@
   <div class="footer-bottom">© 2026 EatToGo • Universiti Teknologi Malaysia (UTM)</div>
 </footer>
 
-<script src="assets/js/app.js"></script>
+<script src="assets/js/api.js"></script>
 <script>
-function renderOrderStatus() {
-  const bookings = get('bookings', []);
-  const staffOrders = get('staffOrders', []);
-  const container = document.getElementById('orderStatusContainer');
-  const empty = document.getElementById('emptyState');
+async function renderOrderStatus() {
+  try {
+    const bookings = await apiCall('/user-reservations.php');
+    const container = document.getElementById('orderStatusContainer');
+    const empty = document.getElementById('emptyState');
 
-  if (!bookings.length) { empty.style.display = 'block'; return; }
+    if (!bookings.length) { empty.style.display = 'block'; return; }
 
-  container.innerHTML = bookings.map(b => {
-    const order = staffOrders.find(o => o.booking === b.id);
-    const bStatus = b.status; // pending / confirmed / rejected
-    const oStatus = order ? order.status.toLowerCase() : null;
+    container.innerHTML = bookings.map(b => {
+      const order = b.order || null;
+      const bStatus = b.status;
+      const oStatus = order ? order.status.toLowerCase() : null;
 
-    // Steps: Reservation Submitted → Confirmed → Pre-order Received → Being Prepared → Ready / Pay Counter → Arrived
-    const steps = [
-      { label: 'Reservation Submitted', desc: `Booking ID: ${b.id} • ${b.date} ${b.time}`, done: true },
-      { label: 'Reservation Confirmed', desc: bStatus === 'confirmed' ? 'Staff confirmed your table.' : bStatus === 'rejected' ? '❌ Reservation rejected.' : 'Waiting for staff confirmation…', done: bStatus === 'confirmed', active: bStatus === 'pending', rejected: bStatus === 'rejected' },
-      { label: 'Pre-Order Received', desc: order ? `Items: ${order.items}` : 'No pre-order placed yet.', done: !!order, active: bStatus === 'confirmed' && !order },
-      { label: 'Being Prepared', desc: oStatus === 'preparing' || oStatus === 'pending' ? 'Kitchen is preparing your food.' : oStatus === 'ready' ? 'Done!' : 'Awaiting confirmation…', done: oStatus === 'ready', active: oStatus === 'preparing' || oStatus === 'pending' },
-      { label: 'Ready – Pay at Counter', desc: 'Food will be ready when you arrive. Pay at the counter.', done: oStatus === 'ready' && b.arrival === 'Arrived', active: oStatus === 'ready' && b.arrival !== 'Arrived' },
-      { label: 'Arrived at Restaurant', desc: b.arrival === 'Arrived' ? '✅ Arrival confirmed.' : 'Confirm when you arrive.', done: b.arrival === 'Arrived', active: false },
-    ];
+      const steps = [
+        { label: 'Reservation Submitted', desc: `Booking ID: ${b.id} • ${b.reservation_date} ${b.reservation_time}`, done: true },
+        { label: 'Reservation Confirmed', desc: bStatus === 'confirmed' ? 'Staff confirmed your table.' : bStatus === 'rejected' ? '❌ Reservation rejected.' : 'Waiting for staff confirmation…', done: bStatus === 'confirmed', active: bStatus === 'pending', rejected: bStatus === 'rejected' },
+        { label: 'Pre-Order Received', desc: order ? `Items: ${order.items}` : 'No pre-order placed yet.', done: !!order, active: bStatus === 'confirmed' && !order },
+        { label: 'Being Prepared', desc: oStatus === 'preparing' || oStatus === 'pending' ? 'Kitchen is preparing your food.' : oStatus === 'ready' ? 'Done!' : 'Awaiting confirmation…', done: oStatus === 'ready', active: oStatus === 'preparing' || oStatus === 'pending' },
+        { label: 'Ready – Pay at Counter', desc: 'Food will be ready when you arrive. Pay at the counter.', done: oStatus === 'ready' && b.arrival_confirmed, active: oStatus === 'ready' && !b.arrival_confirmed },
+        { label: 'Arrived at Restaurant', desc: b.arrival_confirmed ? '✅ Arrival confirmed.' : 'Confirm when you arrive.', done: b.arrival_confirmed, active: false },
+      ];
 
-    const stepsHtml = steps.map(s => {
-      const cls = s.rejected ? 'pending' : s.done ? 'done' : s.active ? 'active' : 'pending';
-      const icon = s.rejected ? '✕' : s.done ? '✓' : s.active ? '●' : '○';
-      return `<div class="tracker-step">
-        <div class="step-dot ${cls} ${s.active ? 'pulse' : ''}">${icon}</div>
-        <div class="step-body pt-1">
-          <h5>${s.label}</h5>
-          <p>${s.desc}</p>
-        </div>
-      </div>`;
-    }).join('');
-
-    const overallBadge = bStatus === 'rejected'
-      ? `<span class="status rejected">Rejected</span>`
-      : b.arrival === 'Arrived'
-        ? `<span class="status confirmed">Completed</span>`
-        : oStatus === 'ready'
-          ? `<span class="status ready">Ready to Pick Up</span>`
-          : `<span class="status pending">In Progress</span>`;
-
-    return `
-      <div class="col-lg-6">
-        <div class="card-etg order-card p-4">
-          <div class="d-flex justify-content-between align-items-start mb-4">
-            <div>
-              <h4 class="mb-1">${b.restaurant}</h4>
-              <small class="text-muted">${b.date} • ${b.time} • ${b.guests} guests</small>
-            </div>
-            ${overallBadge}
+      const stepsHtml = steps.map(s => {
+        const cls = s.rejected ? 'pending' : s.done ? 'done' : s.active ? 'active' : 'pending';
+        const icon = s.rejected ? '✕' : s.done ? '✓' : s.active ? '●' : '○';
+        return `<div class="tracker-step">
+          <div class="step-dot ${cls} ${s.active ? 'pulse' : ''}">${icon}</div>
+          <div class="step-body pt-1">
+            <h5>${s.label}</h5>
+            <p>${s.desc}</p>
           </div>
-          <div class="order-tracker">${stepsHtml}</div>
-          ${b.arrival !== 'Arrived' && bStatus !== 'rejected' ? `
-          <div class="mt-4 pt-3 border-top d-flex gap-2 flex-wrap">
-            <button class="btn btn-etg btn-sm" onclick="confirmArrivalFromStatus('${b.id}')">Confirm Arrival</button>
-            <a href="booking-history.html" class="btn btn-outline-etg btn-sm">My Bookings</a>
-          </div>` : b.arrival === 'Arrived' ? `
-          <div class="mt-4 pt-3 border-top">
-            <a href="feedback.html" class="btn btn-outline-etg btn-sm">Leave Feedback</a>
-          </div>` : ''}
-        </div>
-      </div>`;
-  }).join('');
+        </div>`;
+      }).join('');
+
+      const overallBadge = bStatus === 'rejected'
+        ? `<span class="status rejected">Rejected</span>`
+        : b.arrival_confirmed
+          ? `<span class="status confirmed">Completed</span>`
+          : oStatus === 'ready'
+            ? `<span class="status ready">Ready to Pick Up</span>`
+            : `<span class="status pending">In Progress</span>`;
+
+      return `
+        <div class="col-lg-6">
+          <div class="card-etg order-card p-4">
+            <div class="d-flex justify-content-between align-items-start mb-4">
+              <div>
+                <h4 class="mb-1">${b.restaurant_name}</h4>
+                <small class="text-muted">${b.reservation_date} • ${b.reservation_time} • ${b.num_people} guests</small>
+              </div>
+              ${overallBadge}
+            </div>
+            <div class="order-tracker">${stepsHtml}</div>
+            ${!b.arrival_confirmed && bStatus !== 'rejected' ? `
+            <div class="mt-4 pt-3 border-top d-flex gap-2 flex-wrap">
+              <button class="btn btn-etg btn-sm" onclick="confirmArrivalFromStatus('${b.id}')">Confirm Arrival</button>
+              <a href="booking-history.html" class="btn btn-outline-etg btn-sm">My Bookings</a>
+            </div>` : b.arrival_confirmed ? `
+            <div class="mt-4 pt-3 border-top">
+              <a href="feedback.html?reservation_id=${b.id}" class="btn btn-outline-etg btn-sm">Leave Feedback</a>
+            </div>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+  } catch (err) { console.error(err); }
 }
 
-function confirmArrivalFromStatus(bookingId) {
-  const bookings = get('bookings', []);
-  const idx = bookings.findIndex(b => b.id === bookingId);
-  if (idx !== -1) { bookings[idx].arrival = 'Arrived'; set('bookings', bookings); }
-  alert('Arrival confirmed! Restaurant staff has been notified. You will receive a feedback request after dining.');
-  renderOrderStatus();
+async function confirmArrivalFromStatus(bookingId) {
+  try {
+    await apiCall('/arrival.php', { method: 'POST', body: JSON.stringify({ reservation_id: bookingId }) });
+    alert('Arrival confirmed! Restaurant staff has been notified.');
+    renderOrderStatus();
+  } catch (err) { alert(err.message); }
 }
 
-window.addEventListener('DOMContentLoaded', renderOrderStatus);
+window.addEventListener('DOMContentLoaded', async () => { await nav(); renderOrderStatus(); });
 </script>
 </body>
 </html>

@@ -3,79 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pre-Order Food – EatToGo</title>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
   <link rel="stylesheet" href="assets/css/style.css">
-  <title>Pre-Order Food – EatToGo</title>
   <style>
-    .menu-item-card {
-      border-radius: 18px;
-      background: #fff;
-      box-shadow: var(--shadow);
-      border: 2.5px solid transparent;
-      transition: all .2s ease;
-      cursor: default;
-      overflow: hidden;
-    }
-    .menu-item-card.in-cart {
-      border-color: var(--orange);
-      background: #fff8f2;
-      box-shadow: 0 6px 24px rgba(255,107,53,.22);
-    }
-    .menu-item-card.in-cart .item-emoji-wrap {
-      background: linear-gradient(135deg, #ffe1b0, #ffd080);
-    }
-    .item-emoji-wrap {
-      height: 110px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 56px;
-      background: linear-gradient(135deg, #ffe1ce, #fff3e9);
-      transition: background .2s;
-    }
-    .qty-controls {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .qty-btn {
-      width: 32px; height: 32px;
-      border-radius: 50%;
-      border: 2px solid var(--orange);
-      background: white;
-      color: var(--orange);
-      font-size: 18px;
-      font-weight: 800;
-      line-height: 1;
-      cursor: pointer;
-      transition: all .15s;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .qty-btn:hover { background: var(--orange); color: white; }
-    .qty-btn.add-btn { background: var(--orange); color: white; }
-    .qty-num {
-      font-weight: 800;
-      font-size: 16px;
-      min-width: 22px;
-      text-align: center;
-      color: var(--brown);
-    }
-    .selected-badge {
-      display: none;
-      background: var(--orange);
-      color: white;
-      font-size: 11px;
-      font-weight: 800;
-      border-radius: 999px;
-      padding: 3px 10px;
-      position: absolute;
-      top: 10px; right: 10px;
-    }
-    .menu-item-card.in-cart .selected-badge { display: block; }
+    .menu-item-card { border-radius:18px; background:#fff; box-shadow:var(--shadow); border:2px solid transparent; transition:all .2s; cursor:default; overflow:hidden; }
+    .menu-item-card.in-cart { border-color:var(--orange); background:#fff8f2; box-shadow:0 6px 24px rgba(255,107,53,.22); }
+    .item-emoji-wrap { height:110px; display:flex; align-items:center; justify-content:center; font-size:56px; background:linear-gradient(135deg,#ffe1ce,#fff3e9); }
+    .qty-controls { display:flex; align-items:center; gap:6px; }
+    .qty-btn { width:32px; height:32px; border-radius:50%; border:2px solid var(--orange); background:white; color:var(--orange); font-size:18px; font-weight:800; cursor:pointer; }
+    .qty-btn.add-btn { background:var(--orange); color:white; }
+    .selected-badge { display:none; background:var(--orange); color:white; font-size:11px; border-radius:999px; padding:3px 10px; position:absolute; top:10px; right:10px; }
+    .menu-item-card.in-cart .selected-badge { display:block; }
     .cart-item-row { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--cream-dark); }
-    .cart-item-row:last-child { border-bottom: none; }
   </style>
 </head>
 <body>
@@ -94,12 +36,7 @@
 
 <section class="page-head">
   <div class="container">
-    <div class="timeline">
-      <span>Reserve Table</span>
-      <span class="active">Pre-Order Food</span>
-      <span>Pay at Counter</span>
-      <span>Confirmation</span>
-    </div>
+    <div class="timeline"><span>Reserve Table</span><span class="active">Pre-Order Food</span><span>Pay at Counter</span><span>Confirmation</span></div>
     <h1 class="mt-3">Pre-Order Your Food</h1>
     <p class="text-muted">Add meals before arrival so the restaurant can prepare earlier.</p>
   </div>
@@ -108,8 +45,6 @@
 <section class="section">
   <div class="container">
     <div class="row g-4">
-
-      <!-- Menu -->
       <div class="col-lg-8">
         <div class="d-flex justify-content-between align-items-center mb-3">
           <h4 class="mb-0">Choose Your Items</h4>
@@ -117,88 +52,118 @@
         </div>
         <div class="row g-3" id="menuList"></div>
       </div>
-
-      <!-- Cart -->
       <div class="col-lg-4">
         <div class="card-etg p-4 summary-card">
           <h3>Order Summary</h3>
-          <div id="cartItems"><p class="text-muted text-center py-3" style="font-size:14px">No items added yet.<br>Tap + on any dish to add it.</p></div>
+          <div id="cartItems"><p class="text-muted text-center py-3">No items added yet.</p></div>
           <div class="d-flex justify-content-between fs-5 fw-bold mt-3 pt-3 border-top">
-            <span>Total</span>
-            <span id="total" style="color:var(--orange)">RM 0.00</span>
+            <span>Total</span><span id="total" style="color:var(--orange)">RM 0.00</span>
           </div>
           <button onclick="checkout()" class="btn btn-etg w-100 mt-3">Continue to Pay at Counter</button>
           <button onclick="location.href='booking-success.html'" class="btn btn-outline-etg w-100 mt-2">Skip Pre-Order</button>
         </div>
       </div>
-
     </div>
   </div>
 </section>
 
-<footer class="minimal-footer">
-  <div class="container d-flex justify-content-between flex-wrap gap-5">
-    <div class="footer-brand"><h2>Eat<span>To</span>Go</h2><p>Final Year Project – Restaurant and Food Reservation System.</p></div>
-    <div class="footer-members"><h4>Project Team</h4><ul class="list-unstyled"><li>Navin Ramu</li><li>Muhamamd Nazim</li><li>Hadif</li><li>Ng Yue Yang</li></ul></div>
-  </div>
-  <div class="footer-bottom">© 2026 EatToGo • Universiti Teknologi Malaysia (UTM)</div>
-</footer>
+<footer class="minimal-footer">...</footer>
 
-<script src="assets/js/app.js"></script>
+<script src="assets/js/api.js"></script>
 <script>
-// Override renderMenu for this page — enhanced card with visual selected state
-function renderMenu() {
-  const el = document.getElementById('menuList');
-  if (!el) return;
-  const menuData = get('customMenu', ETG.menu);
-  const cart = get('cart', {});
+  const urlParams = new URLSearchParams(window.location.search);
+  const reservationId = urlParams.get('reservation_id');
+  const restaurantId = urlParams.get('restaurant_id');
 
-  el.innerHTML = menuData.map(i => {
-    const inCart = cart[i.id] > 0;
-    const qty = cart[i.id] || 0;
-    return `
-      <div class="col-sm-6 col-md-4" id="card-${i.id}">
-        <div class="menu-item-card h-100 position-relative ${inCart ? 'in-cart' : ''}">
-          <span class="selected-badge">✓ Added</span>
-          <div class="item-emoji-wrap">${i.emoji}</div>
-          <div class="p-3">
-            <div class="fw-bold mb-1" style="font-size:15px">${i.name}</div>
-            <small class="text-muted">${i.cat}</small>
-            <div class="d-flex justify-content-between align-items-center mt-2">
-              <span class="fw-bold" style="color:var(--orange)">RM ${Number(i.price).toFixed(2)}</span>
-              <div class="qty-controls">
-                ${qty > 0
-                  ? `<button class="qty-btn" onclick="qtyCard(${i.id},-1)">−</button>
-                     <span class="qty-num">${qty}</span>`
-                  : ''}
-                <button class="qty-btn add-btn" onclick="qtyCard(${i.id},1)">+</button>
+  if (!reservationId || !restaurantId) {
+    alert('Missing reservation or restaurant ID. Redirecting.');
+    window.location.href = 'index.html';
+  }
+
+  let cart = {};
+  let menuItems = [];  // store menu for price lookups
+
+  async function loadMenu() {
+    try {
+      const data = await apiCall(`/restaurant-detail.php?id=${restaurantId}`);
+      menuItems = data.menu;
+      const container = document.getElementById('menuList');
+      container.innerHTML = menuItems.map(item => `
+        <div class="col-sm-6 col-md-4" id="card-${item.id}">
+          <div class="menu-item-card h-100 position-relative ${cart[item.id] ? 'in-cart' : ''}">
+            <span class="selected-badge">✓ Added</span>
+            <div class="item-emoji-wrap">${item.emoji || '🍽️'}</div>
+            <div class="p-3">
+              <div class="fw-bold mb-1">${item.name}</div>
+              <small class="text-muted">${item.category}</small>
+              <div class="d-flex justify-content-between align-items-center mt-2">
+                <span class="fw-bold" style="color:var(--orange)">RM ${Number(item.price).toFixed(2)}</span>
+                <div class="qty-controls">
+                  ${cart[item.id] ? `
+                    <button class="qty-btn" onclick="updateQty(${item.id}, -1)">−</button>
+                    <span class="qty-num">${cart[item.id]}</span>
+                  ` : ''}
+                  <button class="qty-btn add-btn" onclick="updateQty(${item.id}, 1)">+</button>
+                </div>
               </div>
             </div>
           </div>
         </div>
+      `).join('');
+      renderCart();
+    } catch (err) { alert('Failed to load menu'); }
+  }
+
+  function updateQty(itemId, delta) {
+    const newQty = (cart[itemId] || 0) + delta;
+    if (newQty <= 0) delete cart[itemId];
+    else cart[itemId] = newQty;
+    loadMenu();  // refresh cards and cart
+  }
+
+  function renderCart() {
+    const container = document.getElementById('cartItems');
+    if (Object.keys(cart).length === 0) {
+      container.innerHTML = '<p class="text-muted text-center py-3">No items added yet.</p>';
+      document.getElementById('total').innerText = 'RM 0.00';
+      document.getElementById('selectedCount').innerText = '0 items selected';
+      return;
+    }
+    let total = 0;
+    let html = '';
+    for (let [id, qty] of Object.entries(cart)) {
+      const item = menuItems.find(i => i.id == id);
+      if (!item) continue;
+      const subtotal = item.price * qty;
+      total += subtotal;
+      html += `<div class="cart-item-row">
+        <div class="flex-grow-1">${item.emoji} ${item.name} x${qty}</div>
+        <div class="fw-bold">RM ${subtotal.toFixed(2)}</div>
+        <button class="btn btn-sm btn-outline-danger" onclick="updateQty(${id}, -1)">−</button>
       </div>`;
-  }).join('');
+    }
+    container.innerHTML = html;
+    document.getElementById('total').innerText = `RM ${total.toFixed(2)}`;
+    const totalItems = Object.values(cart).reduce((a,b)=>a+b,0);
+    document.getElementById('selectedCount').innerText = `${totalItems} item${totalItems>1?'s':''} selected`;
+  }
 
-  renderCart();
-  updateSelectedCount();
-}
+  async function checkout() {
+    const items = Object.entries(cart).map(([id, qty]) => ({ id: parseInt(id), quantity: qty }));
+    if (items.length === 0) {
+      if (confirm('No items added. Skip pre-order?')) window.location.href = 'booking-success.html';
+      return;
+    }
+    try {
+      await apiCall('/orders.php', {
+        method: 'POST',
+        body: JSON.stringify({ reservation_id: reservationId, items })
+      });
+      window.location.href = 'booking-success.html';
+    } catch (err) { alert(err.message); }
+  }
 
-function qtyCard(id, delta) {
-  const cart = get('cart', {});
-  cart[id] = Math.max(0, (cart[id] || 0) + delta);
-  if (cart[id] === 0) delete cart[id];
-  set('cart', cart);
-  renderMenu(); // re-render cards so selected state updates
-}
-
-function updateSelectedCount() {
-  const cart = get('cart', {});
-  const total = Object.values(cart).reduce((a, b) => a + b, 0);
-  const el = document.getElementById('selectedCount');
-  if (el) el.textContent = total > 0 ? `${total} item${total > 1 ? 's' : ''} selected` : '0 items selected';
-}
-
-window.addEventListener('DOMContentLoaded', () => { nav(); renderMenu(); });
+  window.addEventListener('DOMContentLoaded', async () => { await nav(); loadMenu(); });
 </script>
 </body>
 </html>

@@ -119,6 +119,7 @@
   </div>
 </main>
 
+<script src="assets/js/api.js"></script>
 <script src="assets/js/app.js"></script>
 <script>
 function renderOwnerReservations() {
@@ -189,8 +190,14 @@ function renderStats() {
   document.getElementById('statPending').textContent = b.filter(x => x.status === 'pending').length;
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-  nav();
+window.addEventListener('DOMContentLoaded', async () => {
+  const sessionData = await checkSession();
+  if (!sessionData.loggedIn || sessionData.user.role !== 'owner') {
+    alert('Unauthorized. Please login as a restaurant owner.');
+    window.location.href = 'login.html';
+    return;
+  }
+  await nav();
   renderStats();
   populateDateFilter();
   renderOwnerReservations();
