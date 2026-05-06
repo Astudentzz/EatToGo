@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <title>Booking History – EatToGo</title>
+</head>
+<body>
+
+<nav class="navbar-etg">
+  <div class="container d-flex align-items-center justify-content-between">
+    <a class="logo" href="index.html">Eat<span>To</span>Go</a>
+    <div class="d-none d-md-flex gap-4">
+      <a class="nav-link" href="search-results.html">Restaurants</a>
+      <a class="nav-link fw-bold" style="color:var(--orange)!important" href="booking-history.html">My Bookings</a>
+      <a class="nav-link" href="order-status.html">Order Status</a>
+    </div>
+    <div id="authArea"></div>
+  </div>
+</nav>
+
+<section class="page-head">
+  <div class="container">
+    <h1>My Bookings</h1>
+    <p class="text-muted">Track your reservation status, confirm arrival, and submit feedback.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="card-etg p-4 table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Booking ID</th>
+            <th>Restaurant</th>
+            <th>Date & Time</th>
+            <th>Guests</th>
+            <th>Status</th>
+            <th>Arrival</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="myBookingRows"></tbody>
+      </table>
+      <div class="mt-3">
+        <a href="search-results.html" class="btn btn-etg">+ New Reservation</a>
+        <a href="order-status.html" class="btn btn-outline-etg ms-2">Track Order Status</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="minimal-footer">
+  <div class="container d-flex justify-content-between flex-wrap gap-5">
+    <div class="footer-brand">
+      <h2>Eat<span>To</span>Go</h2>
+      <p>Final Year Project – Restaurant and Food Reservation System.</p>
+    </div>
+    <div class="footer-members">
+      <h4>Project Team</h4>
+      <ul class="list-unstyled">
+        <li>Navin Ramu</li><li>Muhamamd Nazim</li><li>Hadif</li><li>Ng Yue Yang</li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">© 2026 EatToGo • Universiti Teknologi Malaysia (UTM)</div>
+</footer>
+
+<script src="assets/js/app.js"></script>
+<script>
+function renderMyBookings() {
+  const el = document.getElementById('myBookingRows');
+  if (!el) return;
+  const b = get('bookings', []);
+  if (!b.length) {
+    el.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No bookings yet. <a href="search-results.html">Make a reservation</a></td></tr>';
+    return;
+  }
+  el.innerHTML = b.map(x => `
+    <tr>
+      <td><b>${x.id}</b></td>
+      <td>${x.restaurant}</td>
+      <td>${x.date} ${x.time}</td>
+      <td>${x.guests}</td>
+      <td><span class="status ${x.status}">${x.status}</span></td>
+      <td>${x.arrival === 'Arrived' ? '<span class="status confirmed">Arrived</span>' : '<span class="text-muted">Not arrived</span>'}</td>
+      <td class="d-flex flex-wrap gap-1">
+        ${x.arrival !== 'Arrived' && x.status !== 'rejected'
+          ? `<button class="btn btn-sm btn-etg" onclick="confirmArrivalById('${x.id}')">Confirm Arrival</button>`
+          : ''}
+        ${x.arrival === 'Arrived'
+          ? `<a href="feedback.html" class="btn btn-sm btn-outline-etg">Feedback</a>`
+          : ''}
+        <a href="order-status.html" class="btn btn-sm btn-outline-secondary">Track</a>
+      </td>
+    </tr>`).join('');
+}
+
+function confirmArrivalById(id) {
+  const bookings = get('bookings', []);
+  const idx = bookings.findIndex(b => b.id === id);
+  if (idx !== -1) { bookings[idx].arrival = 'Arrived'; set('bookings', bookings); }
+  alert('Arrival confirmed. Restaurant staff has been notified. You will receive a feedback request after dining.');
+  renderMyBookings();
+}
+
+window.addEventListener('DOMContentLoaded', () => { nav(); renderMyBookings(); });
+</script>
+</body>
+</html>

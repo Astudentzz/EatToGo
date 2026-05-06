@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <title>Restaurant Detail – EatToGo</title>
+  <style>
+    /* Hero gallery */
+    .rest-gallery { position:relative; border-radius:24px; overflow:hidden; height:380px; background:#1C1208; cursor:pointer; }
+    .gallery-slide { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:110px;
+      opacity:0; transition:opacity .55s ease; background:linear-gradient(135deg,#ffe1ce,#fff3e9); }
+    .gallery-slide.active { opacity:1; }
+    .gallery-slide .scene-label { position:absolute; bottom:18px; left:22px; background:rgba(28,18,8,.65);
+      color:white; font-size:13px; font-weight:800; padding:6px 14px; border-radius:999px; backdrop-filter:blur(6px); }
+    .gallery-dots { display:flex; gap:8px; justify-content:center; margin-top:12px; }
+    .gallery-dot { width:10px; height:10px; border-radius:50%; background:var(--cream-dark); cursor:pointer; transition:.2s; border:none; padding:0; }
+    .gallery-dot.active { background:var(--orange); transform:scale(1.3); }
+    .gallery-arrows { position:absolute; inset:0; display:flex; justify-content:space-between; align-items:center; padding:0 14px; pointer-events:none; }
+    .gallery-arr { pointer-events:all; width:42px; height:42px; border-radius:50%; background:rgba(255,255,255,.88);
+      border:none; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+      box-shadow:0 4px 16px rgba(0,0,0,.12); transition:.2s; }
+    .gallery-arr:hover { background:white; transform:scale(1.1); }
+
+    /* Menu card hover */
+    .menu-preview-card {
+      border-radius:16px; background:white; border:2px solid transparent;
+      box-shadow:0 4px 16px rgba(0,0,0,.07);
+      transition:all .2s ease; cursor:default;
+      display:flex; align-items:center; gap:14px; padding:14px;
+    }
+    .menu-preview-card:hover {
+      border-color:var(--orange); background:#fff8f2;
+      box-shadow:0 8px 28px rgba(255,107,53,.18);
+      transform:translateY(-3px);
+    }
+    .menu-preview-card .menu-emoji { font-size:42px; width:60px; text-align:center; flex-shrink:0; }
+
+    /* Slot hover */
+    .slot:hover:not(.active):not(.text-muted) { background:rgba(255,107,53,.1); border-color:var(--orange); color:var(--orange); }
+  </style>
+</head>
+<body>
+
+<nav class="navbar-etg">
+  <div class="container d-flex align-items-center justify-content-between">
+    <a class="logo" href="index.html">Eat<span>To</span>Go</a>
+    <div class="d-none d-md-flex gap-4">
+      <a class="nav-link" href="search-results.html">Restaurants</a>
+      <a class="nav-link" href="booking-history.html">My Bookings</a>
+      <a class="nav-link" href="order-status.html">Order Status</a>
+    </div>
+    <div id="authArea"></div>
+  </div>
+</nav>
+
+<!-- Restaurant hero + gallery -->
+<section class="page-head" style="padding-bottom:0">
+  <div class="container">
+    <div class="row align-items-start g-4">
+      <div class="col-md-7">
+        <span class="badge-etg">Japanese • Kuala Lumpur • Open now</span>
+        <h1 class="mt-3">Sakura Omakase</h1>
+        <p class="lead text-muted">Premium sushi and hot meals with fast pre-order preparation.</p>
+        <p>⭐ 4.8 • 1.2km away • RM25–60 • 10:00 AM – 10:00 PM</p>
+
+        <!-- Gallery -->
+        <div class="rest-gallery mt-3" id="gallery" onclick="nextSlide()">
+          <div class="gallery-slide active"><span>🍣</span><span class="scene-label">🍣 Signature Sushi Bar</span></div>
+          <div class="gallery-slide"><span>🍱</span><span class="scene-label">🍱 Bento & Set Meals</span></div>
+          <div class="gallery-slide"><span>🍜</span><span class="scene-label">🍜 Hot Ramen Counter</span></div>
+          <div class="gallery-slide"><span>🎋</span><span class="scene-label">🎋 Dining Ambience</span></div>
+          <div class="gallery-slide"><span>🍵</span><span class="scene-label">🍵 Drinks & Desserts</span></div>
+          <div class="gallery-arrows">
+            <button class="gallery-arr" onclick="event.stopPropagation();prevSlide()">‹</button>
+            <button class="gallery-arr" onclick="event.stopPropagation();nextSlide()">›</button>
+          </div>
+        </div>
+        <div class="gallery-dots" id="galleryDots"></div>
+      </div>
+
+      <!-- Booking summary -->
+      <div class="col-md-5">
+        <div class="card-etg p-4 summary-card mt-3">
+          <h3>Booking Summary</h3>
+          <label class="fw-bold mb-1 d-block">Date</label>
+          <input id="resDate" type="date" class="form-control mb-3">
+          <label class="fw-bold mb-1 d-block">Guests</label>
+          <select id="guests" class="form-select mb-3">
+            <option>2</option><option>4</option><option>6</option><option>8</option>
+          </select>
+          <p class="mb-3">Selected time: <b id="selectedTime">7:00 PM</b></p>
+          <button onclick="reserve()" class="btn btn-etg w-100">Reserve Table &amp; Pre-Order</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-lg-8">
+
+        <!-- Time slots -->
+        <h2 class="mb-3">Available Time Slots</h2>
+        <div class="d-flex gap-2 flex-wrap mb-5">
+          <button onclick="selectSlot(this)" class="slot active">7:00 PM</button>
+          <button onclick="selectSlot(this)" class="slot">7:30 PM</button>
+          <button onclick="selectSlot(this)" class="slot">8:00 PM</button>
+          <button class="slot text-muted" disabled>Full – 8:30 PM</button>
+        </div>
+
+        <!-- Menu preview -->
+        <h2 class="mb-3">Menu Preview</h2>
+        <div id="menuList" class="row g-3"></div>
+
+        <!-- Reviews -->
+        <h2 class="mt-5 mb-3">Reviews</h2>
+        <div class="card-etg p-4">
+          <div class="d-flex align-items-center gap-3 mb-2">
+            <div style="font-size:36px">⭐</div>
+            <div><b style="font-size:20px">4.8 Excellent</b><br><small class="text-muted">Based on recent customer feedback</small></div>
+          </div>
+          <p class="text-muted mb-0">Customers love the fast reservation and pre-order experience at Sakura Omakase. The sushi quality and quick service are highly praised.</p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="minimal-footer">
+  <div class="container d-flex justify-content-between flex-wrap gap-5">
+    <div class="footer-brand"><h2>Eat<span>To</span>Go</h2><p>Final Year Project – Restaurant and Food Reservation System.</p></div>
+    <div class="footer-members"><h4>Project Team</h4><ul class="list-unstyled"><li>Navin Ramu</li><li>Muhamamd Nazim</li><li>Hadif</li><li>Ng Yue Yang</li></ul></div>
+  </div>
+  <div class="footer-bottom">© 2026 EatToGo • Universiti Teknologi Malaysia (UTM)</div>
+</footer>
+
+<script src="assets/js/app.js"></script>
+<script>
+// Gallery
+const slides = document.querySelectorAll('.gallery-slide');
+const dotsContainer = document.getElementById('galleryDots');
+let current = 0, autoTimer;
+
+slides.forEach((_, i) => {
+  const d = document.createElement('button');
+  d.className = 'gallery-dot' + (i === 0 ? ' active' : '');
+  d.onclick = () => goSlide(i);
+  dotsContainer.appendChild(d);
+});
+
+function goSlide(n) {
+  slides[current].classList.remove('active');
+  dotsContainer.children[current].classList.remove('active');
+  current = (n + slides.length) % slides.length;
+  slides[current].classList.add('active');
+  dotsContainer.children[current].classList.add('active');
+  resetAuto();
+}
+function nextSlide() { goSlide(current + 1); }
+function prevSlide() { goSlide(current - 1); }
+function resetAuto() { clearInterval(autoTimer); autoTimer = setInterval(nextSlide, 3200); }
+resetAuto();
+
+// Menu preview cards — override renderMenu for restaurant.html style
+function renderMenu() {
+  const el = document.getElementById('menuList');
+  if (!el) return;
+  const menuData = get('customMenu', ETG.menu);
+  el.innerHTML = menuData.map(i => `
+    <div class="col-md-6">
+      <div class="menu-preview-card">
+        <div class="menu-emoji">${i.emoji}</div>
+        <div class="flex-grow-1">
+          <div class="fw-bold" style="font-size:15px">${i.name}</div>
+          <small class="text-muted">${i.cat}</small>
+        </div>
+        <div class="fw-bold" style="color:var(--orange);white-space:nowrap">RM ${Number(i.price).toFixed(2)}</div>
+      </div>
+    </div>`).join('');
+}
+
+window.addEventListener('DOMContentLoaded', () => { nav(); renderMenu(); });
+</script>
+</body>
+</html>
