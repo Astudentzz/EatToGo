@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script src="assets/js/api.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -78,12 +79,14 @@
   <div class="footer-bottom">© 2026 EatToGo • Universiti Teknologi Malaysia (UTM)</div>
 </footer>
 
+<script src="assets/js/api.js"></script>
 <script src="assets/js/app.js"></script>
 <script>
-function renderNav() {
-  const session = get('session', null);
+async function renderNav() {
+  const sessionData = await checkSession();
   const nav = document.getElementById('mainNav');
   if (!nav) return;
+  const session = sessionData.loggedIn ? sessionData.user : null;
   if (!session || session.role === 'customer') {
     nav.innerHTML = `
       <a class="nav-link" href="search-results.html">Restaurants</a>
@@ -98,15 +101,16 @@ function renderNav() {
   }
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-  nav();
-  renderNav();
+window.addEventListener('DOMContentLoaded', async () => {
+  await nav();
+  await renderNav();
   renderRestaurants();
-  const session = get('session', null);
-  if (session) {
-    if (session.role === 'admin') { location.href = 'admin.html'; return; }
-    if (session.role === 'staff') { location.href = 'staff-dashboard.html'; return; }
-    if (session.role === 'owner') { location.href = 'owner-dashboard.html'; return; }
+  const sessionData = await checkSession();
+  if (sessionData.loggedIn) {
+    const userRole = sessionData.user.role;
+    if (userRole === 'admin') { location.href = 'admin.html'; return; }
+    if (userRole === 'staff') { location.href = 'staff-dashboard.html'; return; }
+    if (userRole === 'owner') { location.href = 'owner-dashboard.html'; return; }
   }
 });
 </script>

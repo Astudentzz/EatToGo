@@ -141,8 +141,18 @@
   <div class="footer-bottom">© 2026 EatToGo • Universiti Teknologi Malaysia (UTM)</div>
 </footer>
 
+<script src="assets/js/api.js"></script>
 <script src="assets/js/app.js"></script>
 <script>
+// ==================== INIT ====================
+const urlParams = new URLSearchParams(window.location.search);
+const restaurantId = urlParams.get('id');
+
+if (!restaurantId) {
+    alert('Restaurant ID missing. Redirecting to home.');
+    window.location.href = 'index.html';
+}
+
 // Gallery
 const slides = document.querySelectorAll('.gallery-slide');
 const dotsContainer = document.getElementById('galleryDots');
@@ -168,25 +178,55 @@ function prevSlide() { goSlide(current - 1); }
 function resetAuto() { clearInterval(autoTimer); autoTimer = setInterval(nextSlide, 3200); }
 resetAuto();
 
-// Menu preview cards — override renderMenu for restaurant.html style
-function renderMenu() {
-  const el = document.getElementById('menuList');
-  if (!el) return;
-  const menuData = get('customMenu', ETG.menu);
-  el.innerHTML = menuData.map(i => `
-    <div class="col-md-6">
-      <div class="menu-preview-card">
-        <div class="menu-emoji">${i.emoji}</div>
-        <div class="flex-grow-1">
-          <div class="fw-bold" style="font-size:15px">${i.name}</div>
-          <small class="text-muted">${i.cat}</small>
-        </div>
-        <div class="fw-bold" style="color:var(--orange);white-space:nowrap">RM ${Number(i.price).toFixed(2)}</div>
-      </div>
-    </div>`).join('');
+// ==================== LOAD RESTAURANT & MENU ====================
+async function loadRestaurant() {
+    try {
+        const data = await apiCall(`/restaurant-detail.php?id=${restaurantId}`);
+        // Fill page title, info, menu...
+        document.querySelector('h1').innerText = data.restaurant.name;
+        document.querySelector('.badge-etg').innerText = `${data.restaurant.category} • ${data.restaurant.location}`;
+        const menuContainer = document.getElementById('menuList');
+        if (menuContainer) {
+            menuContainer.innerHTML = data.menu.map(i => `
+                <div class="col-md-6">
+                    <div class="menu-preview-card">
+                        <div class="menu-emoji">${i.emoji || '🍽️'}</div>
+                        <div class="flex-grow-1">
+                            <div class="fw-bold" style="font-size:15px">${i.name}</div>
+                            <small class="text-muted">${i.category}</small>
+                        </div>
+                        <div class="fw-bold" style="color:var(--orange);white-space:nowrap">RM ${Number(i.price).toFixed(2)}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+    } catch (err) {
+        console.error(err);
+        alert('Failed to load restaurant details.');
+    }
 }
 
-window.addEventListener('DOMContentLoaded', () => { nav(); renderMenu(); });
+async function reserve() {
+    const date = document.getElementById('resDate').value;
+    const guests = document.getElementById('guests').value;
+    const time = document.getElementById('selectedTime').innerText;
+    if (!date || !time) { alert('Select date and time'); return; }
+    try {
+        const result = await apiCall('/reservations.php', {
+            method: 'POST',
+            body: JSON.stringify({
+                restaurant_id: restaurantId,
+                date, time,
+                guests: parseInt(guests)
+            })
+        });
+        window.location.href = `preorder.html?reservation_id=${result.id}&restaurant_id=${restaurantId}`;
+    } catch (err) {
+        alert(err.message);
+    }
+}
+
+window.addEventListener('DOMContentLoaded', async () => { await nav(); loadRestaurant(); });
 </script>
 </body>
 </html>

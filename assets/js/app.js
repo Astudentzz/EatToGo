@@ -4,9 +4,31 @@ function $(q){return document.querySelector(q)};function $all(q){return [...docu
 function get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}}function set(k,v){localStorage.setItem(k,JSON.stringify(v))}
 function seed(){if(!get('users',null))set('users',[{name:'Navin Ramu',email:'customer@eattogo.test',role:'customer'},{name:'Restaurant Staff',email:'staff@eattogo.test',role:'staff'},{name:'Restaurant Owner',email:'owner@eattogo.test',role:'owner'},{name:'Admin',email:'admin@eattogo.test',role:'admin'}]);if(!get('bookings',null))set('bookings',[{id:'B1001',customer:'Navin Ramu',restaurant:'Sakura Omakase',date:'2026-05-10',time:'7:30 PM',guests:2,status:'pending',arrival:'Not arrived',payment:'Pay at counter'}]);if(!get('requests',null))set('requests',[{id:'R001',owner:'Ng Yue Yang',restaurant:'Yang Noodles',status:'pending'}]);if(!get('staffOrders',null))set('staffOrders',[{id:'O3001',booking:'B1001',items:'Sushi Set x2, Matcha x1',status:'Preparing'}])}
 seed();
-function nav(){let u=get('session',null);let box=$('#authArea'); if(box) box.innerHTML=u?`<span class="me-2 fw-bold">${u.name}</span><button onclick="logout()" class="btn btn-outline-etg btn-sm">Sign Out</button>`:`<a href="login.html" class="btn btn-outline-etg btn-sm">Sign In</a>`}
-function login(e){e.preventDefault();let role=$('#role').value,email=$('#email').value;let users=get('users',[]);let u=users.find(x=>x.role==role)||{name:role,email,role};set('session',u);location.href= role=='admin'?'admin.html':role=='staff'?'staff-dashboard.html':role=='owner'?'owner-dashboard.html':'index.html'}
-function signup(e){e.preventDefault();let u={name:$('#name').value,email:$('#email').value,role:$('#role').value};let users=get('users',[]);users.push(u);set('users',users);set('session',u);location.href=u.role=='owner'?'owner-dashboard.html':'index.html'}function logout(){localStorage.removeItem('session');location.href='login.html'}
+async function nav() {
+    const sessionData = await checkSession();
+    const authArea = document.getElementById('authArea');
+    if (!authArea) return;
+
+    if (sessionData.loggedIn) {
+        const user = sessionData.user;
+        authArea.innerHTML = `
+            <div class="dropdown">
+                <span class="fw-bold">👋 ${user.name}</span>
+                <a href="#" onclick="logout()" class="ms-2 text-danger">Logout</a>
+            </div>
+        `;
+    } else {
+        authArea.innerHTML = `
+            <a href="login.html" class="btn btn-sm btn-outline-etg">Sign In</a>
+            <a href="signup.html" class="btn btn-sm btn-etg ms-2">Sign Up</a>
+        `;
+    }
+}
+
+async function logout() {
+    await apiCall('/logout.php', { method: 'POST' });
+    window.location.href = 'index.html';
+}
 function forgot(e){e.preventDefault();alert('Demo: password reset link has been sent. Backend teammate can connect email later.');location.href='login.html'}
 function renderRestaurants(list=get("customRestaurants",ETG.restaurants)){let el=$('#restaurantList');if(!el)return;el.innerHTML=list.map(r=>`<div class="col-md-6 col-lg-3"><div class="restaurant-card h-100"><div class="food-img">${r.emoji}</div><div class="p-3"><span class="badge-etg">${r.deal}</span><h4 class="mt-3">${r.name}</h4><p class="text-muted mb-1">${r.cuisine} • ${r.loc}</p><p>⭐ ${r.rating} • ${r.price}</p><a class="btn btn-etg w-100" href="restaurant.html?id=${r.id}">View & Reserve</a></div></div></div>`).join('')}
 function searchHome(e){e.preventDefault();let q=$('#q')?.value||'';location.href='search-results.html?q='+encodeURIComponent(q)}
@@ -27,4 +49,4 @@ function renderRequests(){let el=$('#requestRows');if(!el)return;el.innerHTML=ge
 function ownerRequest(e){e.preventDefault();let arr=get('requests',[]);arr.unshift({id:'R'+Date.now().toString().slice(-4),owner:$('#ownerName').value,restaurant:$('#restName').value,status:'pending'});set('requests',arr);alert('Restaurant information request submitted to admin.');e.target.reset();renderOwnerRequests()}
 function renderOwnerRequests(){let el=$('#ownerRequests');if(!el)return;el.innerHTML=get('requests',[]).map(r=>`<tr><td>${r.restaurant}</td><td><span class="status ${r.status}">${r.status}</span></td><td>Admin will send request result here.</td></tr>`).join('')}
 function renderStaff(){let el=$('#staffOrders');if(el)el.innerHTML=get('staffOrders',[]).map(o=>`<tr><td>${o.id}</td><td>${o.booking}</td><td>${o.items}</td><td><span class="status ready">${o.status}</span></td><td><button class="btn btn-sm btn-success" onclick="o.status='Ready';alert('Order status updated and customer notified to pay at counter.')">Update</button></td></tr>`).join('');renderBookings()}
-window.addEventListener('DOMContentLoaded',()=>{nav();renderRestaurants();filterResults();renderMenu();renderBookings();renderAccounts();renderRequests();renderOwnerRequests();renderStaff();});
+window.addEventListener('DOMContentLoaded', async () => { await nav(); renderRestaurants(); filterResults(); renderMenu(); renderBookings(); renderAccounts(); renderRequests(); renderOwnerRequests(); renderStaff(); });
