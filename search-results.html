@@ -29,8 +29,8 @@
     <div class="glass-card p-3 row g-3">
       <div class="col-md-5"><input id="q" oninput="filterResults()" class="form-control" placeholder="Search restaurants"></div>
       <div class="col-md-3"><select id="cuisine" onchange="filterResults()" class="form-select"></select></div>
-      <div class="col-md-2"><input class="form-control" type="date"></div>
-      <div class="col-md-2"><select class="form-select"><option>2 Guests</option><option>4 Guests</option><option>6 Guests</option></select></div>
+      <div class="col-md-2"><input class="form-control" type="date" id="filterDate"></div>
+      <div class="col-md-2"><select class="form-select" id="filterGuests"><option>2 Guests</option><option>4 Guests</option><option>6 Guests</option></select></div>
     </div>
   </div>
 </section>
@@ -49,6 +49,75 @@
   </div>
   <div class="footer-bottom">© 2026 EatToGo • Universiti Teknologi Malaysia (UTM)</div>
 </footer>
-<script src="assets/js/app.js"></script>
+
+<script src="assets/js/api.js"></script>
+<script>
+  let allRestaurants = [];
+
+  // Helper to escape HTML
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+      if (m === '&') return '&amp;';
+      if (m === '<') return '&lt;';
+      if (m === '>') return '&gt;';
+      return m;
+    });
+  }
+
+  // Load restaurants from API and populate cuisine filter
+  async function loadRestaurants() {
+    try {
+      allRestaurants = await apiCall('/restaurants.php');
+      // Build cuisine dropdown from unique categories
+      const cuisineSelect = document.getElementById('cuisine');
+      const cuisines = [...new Set(allRestaurants.map(r => r.category).filter(c => c))];
+      cuisineSelect.innerHTML = '<option value="">All cuisines</option>' +
+        cuisines.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+      filterResults(); // initial render
+    } catch (err) {
+      console.error(err);
+      document.getElementById('restaurantList').innerHTML = '<div class="col-12 text-center text-danger">Failed to load restaurants.</div>';
+    }
+  }
+
+  // Filter and render restaurant cards
+  function filterResults() {
+    const query = document.getElementById('q').value.toLowerCase().trim();
+    const cuisine = document.getElementById('cuisine').value;
+    const filtered = allRestaurants.filter(r => {
+      if (query && !r.name.toLowerCase().includes(query) && !(r.category && r.category.toLowerCase().includes(query))) return false;
+      if (cuisine && r.category !== cuisine) return false;
+      return true;
+    });
+
+    const container = document.getElementById('restaurantList');
+    const emptyDiv = document.getElementById('emptyResults');
+    if (filtered.length === 0) {
+      container.innerHTML = '';
+      emptyDiv.classList.remove('d-none');
+      return;
+    }
+    emptyDiv.classList.add('d-none');
+    container.innerHTML = filtered.map(r => `
+      <div class="col-md-4">
+        <div class="rest-card">
+          <img src="${r.image || 'assets/img/default-restaurant.jpg'}" onerror="this.src='assets/img/default-restaurant.jpg'">
+          <div class="card-body">
+            <h3>${escapeHtml(r.name)}</h3>
+            <p>${escapeHtml(r.category || 'Restaurant')} • ${escapeHtml(r.location || 'Malaysia')}</p>
+            <a href="restaurant.html?id=${r.id}" class="btn btn-etg btn-sm">View & Book</a>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // On page load, set up nav and load restaurants
+  window.addEventListener('DOMContentLoaded', async () => {
+    await nav();                 // updates authArea
+    await loadRestaurants();    // load from API and populate filter
+  });
+</script>
 </body>
 </html>

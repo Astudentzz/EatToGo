@@ -7,8 +7,8 @@
         {
             "type": "editor-browser",
             "request": "launch",
-            "name": "Open admin.html",
-            "url": "file:///c%3A/EatToGo/admin.html"
+            "name": "Open restaurant.html",
+            "url": "file:///c%3A/xampp/htdocs/EatToGo/restaurant.html"
         }
     ]
 }
