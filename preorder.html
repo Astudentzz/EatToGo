@@ -83,7 +83,11 @@
 <nav class="navbar-etg">
   <div class="container d-flex align-items-center justify-content-between">
     <a class="logo" href="index.html">Eat<span>To</span>Go</a>
-    <div class="d-none d-md-flex gap-4" id="mainNav"></div>
+    <div class="d-none d-md-flex gap-4">
+      <a class="nav-link" href="search-results.html">Restaurants</a>
+      <a class="nav-link" href="booking-history.html">My Bookings</a>
+      <a class="nav-link" href="order-status.html">Order Status</a>
+    </div>
     <div id="authArea"></div>
   </div>
 </nav>
@@ -124,7 +128,7 @@
             <span id="total" style="color:var(--orange)">RM 0.00</span>
           </div>
           <button onclick="checkout()" class="btn btn-etg w-100 mt-3">Continue to Checkout</button>
-          <button onclick="skipPreorder()" class="btn btn-outline-etg w-100 mt-2">Skip Pre-Order</button>
+          <button onclick="checkout()" class="btn btn-outline-etg w-100 mt-2">Skip Pre-Order</button>
         </div>
       </div>
 
@@ -140,175 +144,62 @@
   <div class="footer-bottom">© 2026 EatToGo • Universiti Teknologi Malaysia (UTM)</div>
 </footer>
 
-<script src="assets/js/api.js"></script>
+<script src="assets/js/app.js"></script>
 <script>
-  // Get reservation_id and restaurant_id from URL
-  const urlParams = new URLSearchParams(window.location.search);
-  const reservationId = urlParams.get('reservation_id');
-  const restaurantId = urlParams.get('restaurant_id');
+// Override renderMenu for this page — enhanced card with visual selected state
+function renderMenu() {
+  const el = document.getElementById('menuList');
+  if (!el) return;
+  const menuData = get('customMenu', ETG.menu);
+  const cart = get('cart', {});
 
-  let cart = {};   // { menuItemId: quantity }
-  let menuItems = [];
-
-  async function loadMenu() {
-    if (!restaurantId) {
-      alert('Restaurant ID missing. Redirecting...');
-      window.location.href = 'search-results.html';
-      return;
-    }
-    try {
-      menuItems = await apiCall(`/restaurant-menu.php?restaurant_id=${restaurantId}`);
-      if (!menuItems.length) {
-        document.getElementById('menuList').innerHTML = '<div class="col-12 text-center">No menu items available.</div>';
-        return;
-      }
-      renderMenu();
-    } catch (err) {
-      console.error(err);
-      document.getElementById('menuList').innerHTML = '<div class="col-12 text-danger">Failed to load menu.</div>';
-    }
-  }
-
-  function renderMenu() {
-    const container = document.getElementById('menuList');
-    container.innerHTML = menuItems.map(item => {
-      const inCart = cart[item.id] > 0;
-      const qty = cart[item.id] || 0;
-      return `
-        <div class="col-sm-6 col-md-4" id="card-${item.id}">
-          <div class="menu-item-card h-100 position-relative ${inCart ? 'in-cart' : ''}">
-            <span class="selected-badge">✓ Added</span>
-            <div class="item-emoji-wrap">${item.emoji || '🍽️'}</div>
-            <div class="p-3">
-              <div class="fw-bold mb-1" style="font-size:15px">${escapeHtml(item.name)}</div>
-              <small class="text-muted">${escapeHtml(item.category)}</small>
-              <div class="d-flex justify-content-between align-items-center mt-2">
-                <span class="fw-bold" style="color:var(--orange)">RM ${parseFloat(item.price).toFixed(2)}</span>
-                <div class="qty-controls">
-                  ${qty > 0 ? `
-                    <button class="qty-btn" onclick="updateQty(${item.id}, -1)">−</button>
-                    <span class="qty-num">${qty}</span>
-                  ` : ''}
-                  <button class="qty-btn add-btn" onclick="updateQty(${item.id}, 1)">+</button>
-                </div>
+  el.innerHTML = menuData.map(i => {
+    const inCart = cart[i.id] > 0;
+    const qty = cart[i.id] || 0;
+    return `
+      <div class="col-sm-6 col-md-4" id="card-${i.id}">
+        <div class="menu-item-card h-100 position-relative ${inCart ? 'in-cart' : ''}">
+          <span class="selected-badge">✓ Added</span>
+          <div class="item-emoji-wrap">${i.emoji}</div>
+          <div class="p-3">
+            <div class="fw-bold mb-1" style="font-size:15px">${i.name}</div>
+            <small class="text-muted">${i.cat}</small>
+            <div class="d-flex justify-content-between align-items-center mt-2">
+              <span class="fw-bold" style="color:var(--orange)">RM ${Number(i.price).toFixed(2)}</span>
+              <div class="qty-controls">
+                ${qty > 0
+                  ? `<button class="qty-btn" onclick="qtyCard(${i.id},-1)">−</button>
+                     <span class="qty-num">${qty}</span>`
+                  : ''}
+                <button class="qty-btn add-btn" onclick="qtyCard(${i.id},1)">+</button>
               </div>
             </div>
           </div>
         </div>
-      `;
-    }).join('');
-    renderCart();
-    updateSelectedCount();
-  }
+      </div>`;
+  }).join('');
 
-  function updateQty(itemId, delta) {
-    const newQty = (cart[itemId] || 0) + delta;
-    if (newQty <= 0) {
-      delete cart[itemId];
-    } else {
-      cart[itemId] = newQty;
-    }
-    renderMenu();
-  }
+  renderCart();
+  updateSelectedCount();
+}
 
-  function renderCart() {
-    const container = document.getElementById('cartItems');
-    let itemsHtml = '';
-    let total = 0;
-    for (const [id, qty] of Object.entries(cart)) {
-      const item = menuItems.find(i => i.id == id);
-      if (!item) continue;
-      const subtotal = item.price * qty;
-      total += subtotal;
-      itemsHtml += `
-        <div class="cart-item-row">
-          <span style="font-size:28px">${item.emoji || '🍽️'}</span>
-          <div class="flex-grow-1"><b>${escapeHtml(item.name)}</b><br><small>RM ${parseFloat(item.price).toFixed(2)} × ${qty} = RM ${subtotal.toFixed(2)}</small></div>
-          <button class="btn btn-sm btn-outline-secondary" onclick="updateQty(${id}, -1)">−</button>
-          <b class="px-1">${qty}</b>
-          <button class="btn btn-sm btn-outline-secondary" onclick="updateQty(${id}, 1)">+</button>
-          <button class="btn btn-sm btn-danger" onclick="updateQty(${id}, -999)">×</button>
-        </div>
-      `;
-    }
-    if (!itemsHtml) {
-      container.innerHTML = '<p class="text-muted text-center py-3">No items added yet.<br>Tap + on any dish to add it.</p>';
-    } else {
-      container.innerHTML = itemsHtml;
-    }
-    document.getElementById('total').innerText = `RM ${total.toFixed(2)}`;
-  }
+function qtyCard(id, delta) {
+  if(!requireCustomer('add preorder items')) return;
+  const cart = get('cart', {});
+  cart[id] = Math.max(0, (cart[id] || 0) + delta);
+  if (cart[id] === 0) delete cart[id];
+  set('cart', cart);
+  renderMenu(); // re-render cards so selected state updates
+}
 
-  function updateSelectedCount() {
-    const totalQty = Object.values(cart).reduce((a,b) => a+b, 0);
-    const el = document.getElementById('selectedCount');
-    if (el) el.textContent = totalQty > 0 ? `${totalQty} item${totalQty > 1 ? 's' : ''} selected` : '0 items selected';
-  }
+function updateSelectedCount() {
+  const cart = get('cart', {});
+  const total = Object.values(cart).reduce((a, b) => a + b, 0);
+  const el = document.getElementById('selectedCount');
+  if (el) el.textContent = total > 0 ? `${total} item${total > 1 ? 's' : ''} selected` : '0 items selected';
+}
 
-  async function checkout() {
-    // Check login
-    const session = await checkSession();
-    if (!session.loggedIn || session.user.role !== 'customer') {
-      alert('Please login as customer to place order.');
-      window.location.href = 'login.html';
-      return;
-    }
-    if (!reservationId) {
-      alert('No reservation found. Please make a reservation first.');
-      window.location.href = 'search-results.html';
-      return;
-    }
-    const items = Object.entries(cart).map(([id, quantity]) => ({ id: parseInt(id), quantity }));
-    if (items.length === 0) {
-      // Skip pre-order and continue to checkout
-      window.location.href = `checkout.html?reservation_id=${reservationId}`;
-      return;
-    }
-    try {
-      await apiCall('/orders.php', {
-        method: 'POST',
-        body: JSON.stringify({ reservation_id: parseInt(reservationId), items })
-      });
-      // Clear cart
-      cart = {};
-      window.location.href = `checkout.html?reservation_id=${reservationId}`;
-    } catch (err) {
-      alert('Error placing order: ' + err.message);
-    }
-  }
-
-  function skipPreorder() {
-    // Just redirect to checkout without ordering
-    window.location.href = `checkout.html?reservation_id=${reservationId}`;
-  }
-
-  function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
-  }
-
-  // Setup navigation based on session
-  async function setupNav() {
-    const sessionData = await checkSession();
-    const session = sessionData.loggedIn ? sessionData.user : null;
-    const navDiv = document.getElementById('mainNav');
-    if (!navDiv) return;
-    if (!session || session.role === 'customer') {
-      navDiv.innerHTML = `<a class="nav-link" href="search-results.html">Restaurants</a><a class="nav-link" href="booking-history.html">My Bookings</a><a class="nav-link" href="order-status.html">Order Status</a>`;
-    } else if (session.role === 'staff') {
-      navDiv.innerHTML = `<a class="nav-link fw-bold" style="color:var(--orange)!important" href="staff-dashboard.html">↗ Go to Staff Dashboard</a>`;
-    } else if (session.role === 'owner') {
-      navDiv.innerHTML = `<a class="nav-link fw-bold" style="color:var(--orange)!important" href="owner-dashboard.html">↗ Go to Owner Dashboard</a>`;
-    } else if (session.role === 'admin') {
-      navDiv.innerHTML = `<a class="nav-link fw-bold" style="color:var(--orange)!important" href="admin.html">↗ Go to Admin Dashboard</a>`;
-    }
-  }
-
-  window.addEventListener('DOMContentLoaded', async () => {
-    await nav();        // update authArea
-    await setupNav();   // update mainNav
-    await loadMenu();
-  });
+window.addEventListener('DOMContentLoaded', () => { nav(); renderMenu(); });
 </script>
 </body>
 </html>

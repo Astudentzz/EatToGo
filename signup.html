@@ -8,35 +8,11 @@
   <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
   <link rel="stylesheet" href="assets/css/style.css">
   <title>Sign Up – EatToGo</title>
-  <style>
-    /* Toast notification */
-    .etg-toast {
-      position: fixed; top: 24px; left: 50%; transform: translateX(-50%) translateY(-20px);
-      background: #1C1208; color: white; border-radius: 16px;
-      padding: 14px 24px; font-weight: 700; font-size: 15px;
-      display: flex; align-items: center; gap: 12px;
-      box-shadow: 0 12px 40px rgba(0,0,0,.25);
-      opacity: 0; transition: all .35s cubic-bezier(.34,1.56,.64,1);
-      z-index: 9999; min-width: 300px; max-width: 90vw; pointer-events: none;
-    }
-    .etg-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-    .etg-toast.error  { border-left: 5px solid #ef4444; }
-    .etg-toast.success { border-left: 5px solid var(--green); }
-    .etg-toast.warning { border-left: 5px solid var(--orange); }
-    .toast-icon { font-size: 20px; }
-  </style>
 </head>
 <body>
-
-<!-- Toast -->
-<div class="etg-toast" id="etgToast">
-  <span class="toast-icon" id="toastIcon">⚠️</span>
-  <span id="toastMsg">Message here</span>
-</div>
-
 <div class="auth-wrap">
   <div class="container">
-    <form class="auth-card card-etg" id="signupForm">
+    <form onsubmit="signup(event)" class="auth-card card-etg">
       <a class="logo" href="index.html">Eat<span>To</span>Go</a>
       <h1 class="mt-4">Create Account</h1>
       <p class="text-muted" id="signupSubtitle">Join EatToGo to reserve tables and pre-order food.</p>
@@ -48,7 +24,7 @@
       <input id="email" class="form-control mb-3" type="email" placeholder="your@email.com" required>
 
       <label class="fw-bold mb-1">Password</label>
-      <input id="password" class="form-control mb-3" type="password" placeholder="Create a password" required>
+      <input class="form-control mb-3" type="password" placeholder="Create a password" required>
 
       <label class="fw-bold mb-1">Register as</label>
       <select id="role" class="form-select mb-4">
@@ -63,73 +39,23 @@
   </div>
 </div>
 
-<script src="assets/js/api.js"></script>
+<script src="assets/js/app.js"></script>
 <script>
-  let toastTimer;
-  function showToast(msg, type = 'success', icon = '✅') {
-    const t = document.getElementById('etgToast');
-    const m = document.getElementById('toastMsg');
-    const i = document.getElementById('toastIcon');
-    t.className = `etg-toast ${type}`;
-    m.textContent = msg;
-    i.textContent = icon;
-    clearTimeout(toastTimer);
-    void t.offsetWidth;
-    t.classList.add('show');
-    toastTimer = setTimeout(() => t.classList.remove('show'), 3800);
-  }
-
-  // Pre-select role if coming from owner CTA
-  window.addEventListener('DOMContentLoaded', () => {
-    const params = new URLSearchParams(location.search);
-    const role = params.get('role');
-    if (role) {
-      const sel = document.getElementById('role');
-      const opt = [...sel.options].find(o => o.value === role);
-      if (opt) {
-        sel.value = role;
-        if (role === 'owner') {
-          document.getElementById('signupSubtitle').textContent = 'Register as a Restaurant Owner to list your restaurant on EatToGo.';
-        }
+// Pre-select role if coming from owner CTA
+window.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(location.search);
+  const role = params.get('role');
+  if (role) {
+    const sel = document.getElementById('role');
+    const opt = [...sel.options].find(o => o.value === role);
+    if (opt) {
+      sel.value = role;
+      if (role === 'owner') {
+        document.getElementById('signupSubtitle').textContent = 'Register as a Restaurant Owner to list your restaurant on EatToGo.';
       }
     }
-  });
-
-  async function signup(event) {
-    event.preventDefault();
-    const name = document.getElementById('name').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
-    const role = document.getElementById('role').value;
-
-    if (!name || !email || !password) {
-      showToast('Please fill all fields', 'warning', '⚠️');
-      return;
-    }
-
-    try {
-      const data = await apiCall('/register.php', {
-        method: 'POST',
-        body: JSON.stringify({ name, email, password, role })
-      });
-      if (data.success) {
-        showToast('Account created successfully! Redirecting...', 'success', '✅');
-        setTimeout(() => {
-          if (role === 'admin') window.location.href = 'admin.html';
-          else if (role === 'staff') window.location.href = 'staff-dashboard.html';
-          else if (role === 'owner') window.location.href = 'owner-dashboard.html';
-          else window.location.href = 'index.html';
-        }, 1500);
-      } else {
-        showToast(data.error || 'Registration failed', 'error', '❌');
-      }
-    } catch (err) {
-      showToast(err.message, 'error', '❌');
-    }
   }
-
-  // Attach event listener to the form after it exists
-  document.getElementById('signupForm').addEventListener('submit', signup);
+});
 </script>
 </body>
 </html>

@@ -1,219 +1,342 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css">
-  <title>Admin Dashboard – EatToGo</title>
-</head>
-<body>
-<aside class="sidebar">
-  <a class="logo" href="index.html">Eat<span>To</span>Go</a>
-  <hr>
-  <a class="active" href="admin.html">📊 Dashboard</a>
-  <a href="#bookings">🗓️ Bookings</a>
-  <a href="#restaurants">🏪 Restaurants & Menu</a>
-  <a href="#accounts">👥 Accounts</a>
-  <a href="#requests">📝 Restaurant Requests</a>
-  <a href="#" onclick="logout(); return false;">🚪 Sign Out</a>
-</aside>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="assets/css/style.css" />
+    <title>Admin Dashboard – EatToGo</title>
+  </head>
+  <body>
+    <aside class="sidebar">
+      <a class="logo" href="index.html">Eat<span>To</span>Go</a>
+      <p class="mt-3 text-white-50">Website Owner / Admin</p>
+      <a class="active" href="#analytics">Analytics</a>
+      <a href="#requests">Owner Requests</a>
+      <a href="#accounts">All Accounts</a>
+      <a href="#restaurants">Restaurants</a>
+      <a href="#admin-menu">Menu CRUD</a>
+      <a href="#reservations">All Reservations & Orders</a>
+      <a href="#feedback-requests">Send Feedback Request</a>
+      <a href="index.html">Back to Site</a>
+    </aside>
 
-<main class="admin-main">
-  <div class="topbar d-flex justify-content-between align-items-center">
-    <h2>Admin Dashboard</h2>
-    <div id="authArea"></div>
-  </div>
-
-  <div class="p-4">
-    <!-- Stats row -->
-    <div class="row g-3 mb-4">
-      <div class="col-md-3"><div class="dash-card p-4"><b>Total Bookings</b><h2 id="statTotal">—</h2></div></div>
-      <div class="col-md-3"><div class="dash-card p-4"><b>Pending</b><h2 id="statPending">—</h2></div></div>
-      <div class="col-md-3"><div class="dash-card p-4"><b>Pre-Orders</b><h2 id="statOrders">—</h2></div></div>
-      <div class="col-md-3"><div class="dash-card p-4"><b>Restaurants</b><h2 id="statRestaurants">—</h2></div></div>
-    </div>
-
-    <!-- Bookings -->
-    <section id="bookings" class="card-etg p-4 mb-4">
-      <h3>Booking Management</h3>
-      <div class="table-responsive"><table class="table"><thead><tr><th>ID</th><th>Customer</th><th>Restaurant</th><th>Date & Time</th><th>Guests</th><th>Status</th><th>Arrival</th><th>Action</th></tr></thead><tbody id="bookingRows"></tbody></table></div>
-    </section>
-
-    <!-- Restaurants & Menu CRUD -->
-    <section id="restaurants" class="card-etg p-4 mb-4">
-      <h3>Restaurant Information &amp; Menu Management</h3>
-      <div class="row g-2 mb-3 align-items-end">
-        <div class="col-md-3"><label class="form-label fw-bold">Restaurant Name</label><input id="restNameInput" class="form-control" placeholder="e.g. Nasi Lemak Paradise"></div>
-        <div class="col-md-2"><label class="form-label fw-bold">Cuisine</label><input id="restCuisine" class="form-control" placeholder="e.g. Malay"></div>
-        <div class="col-md-2"><label class="form-label fw-bold">Location</label><input id="restLoc" class="form-control" placeholder="e.g. Johor Bahru"></div>
-        <div class="col-md-2"><label class="form-label fw-bold">Price Range</label><input id="restPrice" class="form-control" placeholder="RM10-30"></div>
-        <div class="col-md-3"><label class="form-label">&nbsp;</label><button class="btn btn-etg w-100 d-block" onclick="addRestaurant()">+ Add Restaurant</button></div>
+    <main class="admin-main">
+      <div class="topbar d-flex justify-content-between">
+        <b>EatToGo Platform Admin</b>
+        <div id="authArea"></div>
       </div>
-      <div class="table-responsive"><table class="table"><thead><tr><th>Name</th><th>Cuisine</th><th>Location</th><th>Price</th><th>Action</th></tr></thead><tbody id="restaurantRows"></tbody></table></div>
 
-      <hr class="my-4">
-      <h5>Menu Item Management</h5>
-      <div class="row g-2 mb-3 align-items-end">
-        <div class="col-md-3"><label class="form-label fw-bold">Item Name</label><input id="menuName" class="form-control" placeholder="e.g. Nasi Lemak Set"></div>
-        <div class="col-md-2"><label class="form-label fw-bold">Price (RM)</label><input id="menuPrice" type="number" step="0.50" class="form-control" placeholder="0.00"></div>
-        <div class="col-md-2"><label class="form-label fw-bold">Category</label><select id="menuCat" class="form-select"><option>Popular</option><option>Hot Dishes</option><option>Drinks</option><option>Sides</option><option>Desserts</option></select></div>
-        <div class="col-md-2"><label class="form-label fw-bold">Emoji</label><input id="menuEmoji" class="form-control" placeholder="🍽️"></div>
-        <div class="col-md-3"><label class="form-label">&nbsp;</label><button class="btn btn-etg w-100 d-block" onclick="adminAddMenu()">+ Add Menu Item</button></div>
+      <div class="p-4">
+        <div class="permission-note">
+          <b>Admin permissions:</b> Admin is the website owner with highest
+          authority over platform users, restaurants, owner registration
+          requests, reservations, orders, analytics, and platform settings.
+        </div>
+
+        <section id="analytics" class="dashboard-grid mb-4">
+          <div class="metric-card">
+            <span>Restaurants</span>
+            <h3>4</h3>
+          </div>
+          <div class="metric-card">
+            <span>Users</span>
+            <h3 id="userMetric">4</h3>
+          </div>
+          <div class="metric-card">
+            <span>Reservations</span>
+            <h3>18</h3>
+          </div>
+          <div class="metric-card">
+            <span>Platform Health</span>
+            <h3>98%</h3>
+          </div>
+        </section>
+
+        <section id="requests" class="card-etg p-4 mb-4">
+          <h3>Restaurant Owner Registration Requests</h3>
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Owner</th>
+                  <th>Restaurant</th>
+                  <th>Details</th>
+                  <th>Status / Result</th>
+                  <th>Admin Action</th>
+                </tr>
+              </thead>
+              <tbody id="requestRows"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="accounts" class="card-etg p-4 mb-4">
+          <h3>Manage Customer, Staff, Owner & Admin Accounts</h3>
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="accountRows"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="restaurants" class="card-etg p-4 mb-4">
+          <h3>Manage All Restaurants</h3>
+          <p class="text-muted">
+            Admin can add, edit, delete, and verify restaurant information.
+            Payment/pricing details remain owner-controlled.
+          </p>
+          <form
+            id="adminRestaurantForm"
+            onsubmit="saveRestaurantAdmin(event)"
+            class="row g-3 mb-4"
+          >
+            <input type="hidden" id="adminRestaurantId" />
+            <div class="col-md-4">
+              <input
+                id="adminRestName"
+                class="form-control"
+                placeholder="Restaurant name"
+                required
+              />
+            </div>
+            <div class="col-md-2">
+              <input
+                id="adminRestCuisine"
+                class="form-control"
+                placeholder="Cuisine"
+                required
+              />
+            </div>
+            <div class="col-md-2">
+              <input
+                id="adminRestLoc"
+                class="form-control"
+                placeholder="Location"
+                required
+              />
+            </div>
+            <div class="col-md-2">
+              <input
+                id="adminRestPrice"
+                class="form-control"
+                placeholder="Price range"
+                required
+              />
+            </div>
+            <div class="col-md-2">
+              <input
+                id="adminRestEmoji"
+                class="form-control"
+                placeholder="Emoji"
+                value="🍽️"
+              />
+            </div>
+            <div class="col-md-4">
+              <input
+                id="adminRestDeal"
+                class="form-control"
+                placeholder="Deal / promotion"
+              />
+            </div>
+            <div class="col-md-4">
+              <input
+                id="adminRestHours"
+                class="form-control"
+                placeholder="Operating hours"
+              />
+            </div>
+            <div class="col-md-2">
+              <input
+                id="adminRestRating"
+                type="number"
+                step="0.1"
+                min="1"
+                max="5"
+                class="form-control"
+                placeholder="Rating"
+                value="4.5"
+              />
+            </div>
+            <div class="col-md-2">
+              <button class="btn btn-etg w-100">Save Restaurant</button>
+            </div>
+            <div class="col-md-2">
+              <button
+                type="button"
+                onclick="resetRestaurantForm()"
+                class="btn btn-outline-etg w-100"
+              >
+                Clear
+              </button>
+            </div>
+          </form>
+          <div class="row g-4" id="restaurantList"></div>
+        </section>
+
+        <section id="admin-menu" class="card-etg p-4 mb-4">
+          <h3>Admin Menu CRUD</h3>
+          <p class="text-muted">
+            Admin can manage platform menu items for frontend demo. Restaurant
+            owner still controls financial/payment settings for their own
+            restaurant.
+          </p>
+          <form onsubmit="saveMenuItem(event)" class="row g-3 mb-4">
+            <input type="hidden" id="menuItemId" />
+            <div class="col-md-3">
+              <input
+                id="menuName"
+                class="form-control"
+                placeholder="Food name"
+                required
+              />
+            </div>
+            <div class="col-md-2">
+              <input
+                id="menuCategory"
+                class="form-control"
+                placeholder="Category"
+                required
+              />
+            </div>
+            <div class="col-md-2">
+              <input
+                id="menuPrice"
+                type="number"
+                step="0.01"
+                min="0"
+                class="form-control"
+                placeholder="Price RM"
+                required
+              />
+            </div>
+            <div class="col-md-2">
+              <input
+                id="menuEmoji"
+                class="form-control"
+                placeholder="Emoji"
+                value="🍽️"
+              />
+            </div>
+            <div class="col-md-2">
+              <select id="menuAvailable" class="form-select">
+                <option value="true">Available</option>
+                <option value="false">Unavailable</option>
+              </select>
+            </div>
+            <div class="col-md-1">
+              <button class="btn btn-etg w-100">Save</button>
+            </div>
+            <div class="col-12">
+              <button
+                type="button"
+                onclick="resetMenuForm()"
+                class="btn btn-outline-etg btn-sm"
+              >
+                Clear Menu Form
+              </button>
+            </div>
+          </form>
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Category</th>
+                  <th>Price</th>
+                  <th>Availability</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="menuCrudRows"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="reservations" class="card-etg p-4">
+          <h3>View All Reservations & Orders</h3>
+          <div class="table-responsive mb-4">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Customer</th>
+                  <th>Restaurant</th>
+                  <th>Date/Time</th>
+                  <th>Guests</th>
+                  <th>Status</th>
+                  <th>Arrival</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="bookingRows"></tbody>
+            </table>
+          </div>
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Order</th>
+                  <th>Booking</th>
+                  <th>Actual Food Items</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                  <th>Update</th>
+                </tr>
+              </thead>
+              <tbody id="staffOrders"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="feedback-requests" class="card-etg p-4 mt-4">
+          <h3>Send Feedback Request to Customer</h3>
+          <p class="text-muted">
+            Admin can send feedback requests after dining. The request appears
+            on the customer feedback page.
+          </p>
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Booking</th>
+                  <th>Customer</th>
+                  <th>Restaurant</th>
+                  <th>Date/Time</th>
+                  <th>Request Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="feedbackRequestRows"></tbody>
+            </table>
+          </div>
+        </section>
       </div>
-      <div class="table-responsive"><table class="table"><thead><tr><th>Item</th><th>Category</th><th>Price</th><th>Action</th></tr></thead><tbody id="adminMenuRows"></tbody></table></div>
-    </section>
+    </main>
 
-    <!-- Accounts -->
-    <section id="accounts" class="card-etg p-4 mb-4">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3 class="mb-0">Customer / Staff / Owner Accounts</h3>
-        <button class="btn btn-outline-etg btn-sm" onclick="sendFeedbackRequest()">📨 Send Feedback Request to Customers</button>
-      </div>
-      <div class="table-responsive"><table class="table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Action</th></tr></thead><tbody id="accountRows"></tbody></tr></div>
-    </section>
-
-    <!-- Restaurant Requests from Owners -->
-    <section id="requests" class="card-etg p-4">
-      <h3>Restaurant Information Requests (from Owners)</h3>
-      <div class="table-responsive"><table class="table"><thead><tr><th>ID</th><th>Owner</th><th>Restaurant</th><th>Status</th><th>Action</th></tr></thead><tbody id="requestRows"></tbody></table></div>
-    </section>
-  </div>
-</main>
-
-<script src="assets/js/api.js"></script>
-<script>
-async function loadAdminData() {
-  const session = await checkSession();
-  if (!session.loggedIn || session.user.role !== 'admin') {
-    alert('Unauthorized. Please login as admin.');
-    window.location.href = 'login.html';
-    return;
-  }
-  renderStats(); renderBookings(); renderRestaurantTable(); renderAdminMenu(); renderAccounts(); renderRequests();
-}
-async function renderStats() {
-  const bookings = await apiCall('/admin-bookings.php');
-  const orders = await apiCall('/staff-orders.php');
-  const restaurants = await apiCall('/admin-restaurants.php');
-  document.getElementById('statTotal').textContent = bookings.length;
-  document.getElementById('statPending').textContent = bookings.filter(b => b.status === 'pending').length;
-  document.getElementById('statOrders').textContent = orders.length;
-  document.getElementById('statRestaurants').textContent = restaurants.length;
-}
-async function renderBookings() {
-  const tbody = document.getElementById('bookingRows');
-  try {
-    const bookings = await apiCall('/admin-bookings.php');
-    if (!bookings.length) { tbody.innerHTML = '<tr><td colspan="8">No bookings</div>'; return; }
-    tbody.innerHTML = bookings.map(b => `<tr><td>${b.id}</td><td>${b.customer_name||''}</td><td>${b.restaurant_name||''}</td><td>${b.reservation_date} ${b.reservation_time}</td><td>${b.num_people}</td><td><span class="status ${b.status}">${b.status}</span></td><td>${b.arrival_confirmed?'Arrived':'No'}</td><td><button class="btn btn-sm btn-warning" onclick="alert('Edit not implemented')">Edit</button></td>`).join('');
-  } catch(e) { tbody.innerHTML = '<tr><td colspan="8">Error loading bookings</div>'; }
-}
-async function renderRestaurantTable() {
-  const tbody = document.getElementById('restaurantRows');
-  try {
-    const restaurants = await apiCall('/admin-restaurants.php');
-    if (!restaurants.length) { tbody.innerHTML = '<td><td colspan="5">No restaurants</div>'; return; }
-    tbody.innerHTML = restaurants.map(r => `<tr><td>${r.name}</td><td>${r.category||''}</td><td>${r.location||''}</td><td>${r.price_range||''}</td><td><button class="btn btn-sm btn-warning" onclick="editRestaurant(${r.id})">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteRestaurant(${r.id})">Delete</button></td>`).join('');
-  } catch(e) { tbody.innerHTML = '<tr><td colspan="5">Error loading restaurants</div>'; }
-}
-async function addRestaurant() {
-  const name = document.getElementById('restNameInput').value.trim();
-  if (!name) { alert('Name required'); return; }
-  await apiCall('/admin-restaurants.php', { method:'POST', body: JSON.stringify({ name, category: document.getElementById('restCuisine').value, location: document.getElementById('restLoc').value, price_range: document.getElementById('restPrice').value }) });
-  alert('Added'); renderRestaurantTable();
-}
-// EDIT RESTAURANT – full implementation
-async function editRestaurant(id) {
-  // Fetch current restaurant details
-  const restaurants = await apiCall('/admin-restaurants.php');
-  const r = restaurants.find(rest => rest.id == id);
-  if (!r) return;
-  const newName = prompt('Edit restaurant name:', r.name);
-  if (!newName) return;
-  const newCuisine = prompt('Edit cuisine:', r.category || '');
-  const newLocation = prompt('Edit location:', r.location || '');
-  const newPrice = prompt('Edit price range:', r.price_range || '');
-  try {
-    await apiCall('/admin-restaurants.php', {
-      method: 'PUT',
-      body: JSON.stringify({
-        id: id,
-        name: newName,
-        category: newCuisine,
-        location: newLocation,
-        price_range: newPrice
-      })
-    });
-    alert('Restaurant updated');
-    renderRestaurantTable();
-    renderStats(); // update stats if needed
-  } catch(e) { alert(e.message); }
-}
-async function deleteRestaurant(id) { if(confirm('Delete?')){ await apiCall(`/admin-restaurants.php?id=${id}`,{method:'DELETE'}); renderRestaurantTable(); } }
-async function renderAdminMenu() {
-  const tbody = document.getElementById('adminMenuRows');
-  try {
-    const menu = await apiCall('/menu-items.php');
-    if (!menu.length) { tbody.innerHTML = '<tr><td colspan="4">No menu items</div>'; return; }
-    // Added Edit button for each menu item
-    tbody.innerHTML = menu.map(m => `<tr><td>${m.emoji||'🍽️'} ${m.name}</td><td>${m.category||''}</td><td>RM ${m.price}</td><td><button class="btn btn-sm btn-warning me-1" onclick="editMenuItem(${m.id})">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteMenuItem(${m.id})">Delete</button></td>`).join('');
-  } catch(e) { tbody.innerHTML = '<tr><td colspan="4">Error loading menu</div>'; }
-}
-async function adminAddMenu() {
-  const name = document.getElementById('menuName').value.trim();
-  const price = parseFloat(document.getElementById('menuPrice').value);
-  if (!name || isNaN(price)) { alert('Name and price required'); return; }
-  await apiCall('/menu-items.php', { method:'POST', body: JSON.stringify({ name, price, category: document.getElementById('menuCat').value, emoji: document.getElementById('menuEmoji').value || '🍽️' }) });
-  alert('Added'); renderAdminMenu();
-}
-// EDIT MENU ITEM – full implementation
-async function editMenuItem(id) {
-  const menu = await apiCall('/menu-items.php');
-  const item = menu.find(i => i.id == id);
-  if (!item) return;
-  const newName = prompt('Edit item name:', item.name);
-  if (!newName) return;
-  const newPrice = prompt('Edit price (RM):', item.price);
-  if (isNaN(parseFloat(newPrice))) { alert('Invalid price'); return; }
-  try {
-    await apiCall('/menu-items.php', {
-      method: 'PUT',
-      body: JSON.stringify({
-        id: id,
-        name: newName,
-        price: parseFloat(newPrice),
-        category: item.category,
-        emoji: item.emoji
-      })
-    });
-    alert('Menu item updated');
-    renderAdminMenu();
-  } catch(e) { alert(e.message); }
-}
-async function deleteMenuItem(id) { if(confirm('Delete?')){ await apiCall(`/menu-items.php?id=${id}`,{method:'DELETE'}); renderAdminMenu(); } }
-async function renderAccounts() {
-  const tbody = document.getElementById('accountRows');
-  try {
-    const users = await apiCall('/admin-users.php');
-    if (!users.length) { tbody.innerHTML = '<tr><td colspan="4">No users</div>'; return; }
-    tbody.innerHTML = users.map(u => `<tr><td>${u.name}</td><td>${u.email}</td><td>${u.role}</td><td><button class="btn btn-sm btn-danger" onclick="deleteUser(${u.id})">Delete</button></td>`).join('');
-  } catch(e) { tbody.innerHTML = '<td><td colspan="4">Error loading users</div>'; }
-}
-async function deleteUser(id) { if(confirm('Delete user?')){ await apiCall(`/admin-users.php?id=${id}`,{method:'DELETE'}); renderAccounts(); } }
-function sendFeedbackRequest() { alert('Feedback request sent (simulated).'); }
-async function renderRequests() {
-  const tbody = document.getElementById('requestRows');
-  try {
-    const requests = await apiCall('/admin-requests.php');
-    if (!requests.length) { tbody.innerHTML = '<tr><td colspan="5">No pending requests</div>'; return; }
-    tbody.innerHTML = requests.map(r => `<tr><td>${r.id}</td><td>Owner ID: ${r.owner_id||'?'}</td><td>${r.name}</td><td><span class="status pending">${r.status}</span></td><td><button class="btn btn-sm btn-success" onclick="approveRequest(${r.id})">Approve</button><button class="btn btn-sm btn-danger" onclick="rejectRequest(${r.id})">Reject</button></td>`).join('');
-  } catch(e) { tbody.innerHTML = '<td><td colspan="5">Error loading requests</div>'; }
-}
-async function approveRequest(id) { if(!confirm('Approve?')) return; await apiCall('/admin-requests.php',{method:'PUT',body:JSON.stringify({id,action:'approve'})}); alert('Approved'); renderRequests(); renderRestaurantTable(); }
-async function rejectRequest(id) { if(!confirm('Reject?')) return; await apiCall('/admin-requests.php',{method:'PUT',body:JSON.stringify({id,action:'reject'})}); alert('Rejected'); renderRequests(); }
-window.addEventListener('DOMContentLoaded', async () => { await nav(); await loadAdminData(); });
-</script>
-</body>
+    <script src="assets/js/app.js"></script>
+    <script>
+      window.addEventListener("DOMContentLoaded", () => {
+        const u = get("users", []);
+        const m = document.getElementById("userMetric");
+        if (m) m.textContent = u.length;
+      });
+    </script>
+  </body>
 </html>

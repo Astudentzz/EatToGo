@@ -14,7 +14,11 @@
 <nav class="navbar-etg">
   <div class="container d-flex align-items-center justify-content-between">
     <a class="logo" href="index.html">Eat<span>To</span>Go</a>
-    <div class="d-none d-md-flex gap-4" id="mainNav"></div>
+    <div class="d-none d-md-flex gap-4">
+      <a class="nav-link" href="search-results.html">Restaurants</a>
+      <a class="nav-link fw-bold" style="color:var(--orange)!important" href="booking-history.html">My Bookings</a>
+      <a class="nav-link" href="order-status.html">Order Status</a>
+    </div>
     <div id="authArea"></div>
   </div>
 </nav>
@@ -67,87 +71,45 @@
   <div class="footer-bottom">© 2026 EatToGo • Universiti Teknologi Malaysia (UTM)</div>
 </footer>
 
-<script src="assets/js/api.js"></script>
+<script src="assets/js/app.js"></script>
 <script>
-  async function renderMyBookings() {
-    const tbody = document.getElementById('myBookingRows');
-    if (!tbody) return;
-    try {
-      const session = await checkSession();
-      if (!session.loggedIn) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center">Please <a href="login.html">login</a> to view your bookings.</td></tr>';
-        return;
-      }
-      let bookings = await apiCall('/user-reservations.php');
-      if (!bookings.length) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No bookings yet. <a href="search-results.html">Make a reservation</a></td></tr>';
-        return;
-      }
-      tbody.innerHTML = bookings.map(b => `
-        <tr>
-          <td><b>${b.id}</b></td>
-          <td>${escapeHtml(b.restaurant_name)}</td>
-          <td>${b.reservation_date} ${b.reservation_time}</td>
-          <td>${b.num_people}</td>
-          <td><span class="status ${b.status}">${b.status}</span></td>
-          <td>${b.arrival_confirmed ? '<span class="status confirmed">Arrived</span>' : '<span class="text-muted">Not arrived</span>'}</td>
-          <td class="d-flex flex-wrap gap-1">
-            ${!b.arrival_confirmed && b.status !== 'rejected'
-              ? `<button class="btn btn-sm btn-etg" onclick="confirmArrival(${b.id})">Confirm Arrival</button>`
-              : ''}
-            ${b.arrival_confirmed
-              ? `<a href="feedback.html?reservation_id=${b.id}" class="btn btn-sm btn-outline-etg">Feedback</a>`
-              : ''}
-            <a href="order-status.html?reservation_id=${b.id}" class="btn btn-sm btn-outline-secondary">Track</a>
-          </td>
-        </tr>
-      `).join('');
-    } catch (err) {
-      console.error(err);
-      tbody.innerHTML = '<tr><td colspan="7" class="text-danger">Error loading bookings.</td></tr>';
-    }
+function renderMyBookings() {
+  const el = document.getElementById('myBookingRows');
+  if (!el) return;
+  const b = get('bookings', []);
+  if (!b.length) {
+    el.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No bookings yet. <a href="search-results.html">Make a reservation</a></td></tr>';
+    return;
   }
+  el.innerHTML = b.map(x => `
+    <tr>
+      <td><b>${x.id}</b></td>
+      <td>${x.restaurant}</td>
+      <td>${x.date} ${x.time}</td>
+      <td>${x.guests}</td>
+      <td><span class="status ${x.status}">${x.status}</span></td>
+      <td>${x.arrival === 'Arrived' ? '<span class="status confirmed">Arrived</span>' : '<span class="text-muted">Not arrived</span>'}</td>
+      <td class="d-flex flex-wrap gap-1">
+        ${x.arrival !== 'Arrived' && x.status !== 'rejected'
+          ? `<button class="btn btn-sm btn-etg" onclick="confirmArrivalById('${x.id}')">Confirm Arrival</button>`
+          : ''}
+        ${x.arrival === 'Arrived'
+          ? `<a href="feedback.html" class="btn btn-sm btn-outline-etg">Feedback</a>`
+          : ''}
+        <a href="order-status.html" class="btn btn-sm btn-outline-secondary">Track</a>
+      </td>
+    </tr>`).join('');
+}
 
-  async function confirmArrival(bookingId) {
-    try {
-      await apiCall('/arrival.php', {
-        method: 'POST',
-        body: JSON.stringify({ reservation_id: bookingId })
-      });
-      alert('Arrival confirmed. Restaurant staff has been notified. You will receive a feedback request after dining.');
-      await renderMyBookings(); // refresh the table
-    } catch (err) {
-      alert('Error: ' + err.message);
-    }
-  }
+function confirmArrivalById(id) {
+  const bookings = get('bookings', []);
+  const idx = bookings.findIndex(b => b.id === id);
+  if (idx !== -1) { bookings[idx].arrival = 'Arrived'; set('bookings', bookings); }
+  alert('Arrival confirmed. Restaurant staff has been notified. You will receive a feedback request after dining.');
+  renderMyBookings();
+}
 
-  function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
-  }
-
-  // Setup navigation based on session (same as other pages)
-  async function setupNav() {
-    const sessionData = await checkSession();
-    const session = sessionData.loggedIn ? sessionData.user : null;
-    const navDiv = document.getElementById('mainNav');
-    if (!navDiv) return;
-    if (!session || session.role === 'customer') {
-      navDiv.innerHTML = `<a class="nav-link" href="search-results.html">Restaurants</a><a class="nav-link" href="booking-history.html">My Bookings</a><a class="nav-link" href="order-status.html">Order Status</a>`;
-    } else if (session.role === 'staff') {
-      navDiv.innerHTML = `<a class="nav-link fw-bold" style="color:var(--orange)!important" href="staff-dashboard.html">↗ Go to Staff Dashboard</a>`;
-    } else if (session.role === 'owner') {
-      navDiv.innerHTML = `<a class="nav-link fw-bold" style="color:var(--orange)!important" href="owner-dashboard.html">↗ Go to Owner Dashboard</a>`;
-    } else if (session.role === 'admin') {
-      navDiv.innerHTML = `<a class="nav-link fw-bold" style="color:var(--orange)!important" href="admin.html">↗ Go to Admin Dashboard</a>`;
-    }
-  }
-
-  window.addEventListener('DOMContentLoaded', async () => {
-    await nav();        // updates authArea
-    await setupNav();   // updates mainNav
-    await renderMyBookings();
-  });
+window.addEventListener('DOMContentLoaded', () => { nav(); renderMyBookings(); });
 </script>
 </body>
 </html>
