@@ -4,13 +4,11 @@ session_start();
 require_once 'config/database.php';
 $pdo = getDB();
 
-if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+if (!isset($_SESSION['user']) || strtolower($_SESSION['user']['role']) !== 'admin') {
     http_response_code(403);
-    echo json_encode(['error' => 'Unauthorized']);
+    echo json_encode(['error' => 'Unauthorized', 'role_detected' => $_SESSION['user']['role'] ?? 'none']);
     exit;
 }
-
-// Fetch all reservations with restaurant and customer names
 $stmt = $pdo->prepare("
     SELECT r.*, u.name as customer_name, res.name as restaurant_name
     FROM reservations r
@@ -19,15 +17,5 @@ $stmt = $pdo->prepare("
     ORDER BY r.reservation_date DESC, r.reservation_time DESC
 ");
 $stmt->execute();
-$reservations = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-// Optionally include order information
-foreach ($reservations as &$res) {
-    $stmt = $pdo->prepare("SELECT status FROM orders WHERE reservation_id = ?");
-    $stmt->execute([$res['id']]);
-    $order = $stmt->fetch(PDO::FETCH_ASSOC);
-    $res['order_status'] = $order ? $order['status'] : null;
-}
-
-echo json_encode($reservations);
+echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
 ?>

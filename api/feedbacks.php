@@ -8,7 +8,6 @@ if (!$restaurant_id) {
     echo json_encode([]);
     exit;
 }
-
 $stmt = $pdo->prepare("
     SELECT f.rating, f.comment, u.name as customer_name, f.created_at
     FROM feedbacks f
@@ -18,7 +17,5 @@ $stmt = $pdo->prepare("
     ORDER BY f.created_at DESC
 ");
 $stmt->execute([$restaurant_id]);
-$feedbacks = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-echo json_encode($feedbacks);
+echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
 ?>

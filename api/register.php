@@ -15,8 +15,6 @@ if (!$name || !$email || !$password) {
     echo json_encode(['error' => 'Missing fields']);
     exit;
 }
-
-// Check if email exists
 $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
 $stmt->execute([$email]);
 if ($stmt->fetch()) {
@@ -24,12 +22,9 @@ if ($stmt->fetch()) {
     echo json_encode(['error' => 'Email already registered']);
     exit;
 }
-
-$hashed = md5($password); // For demo only, use password_hash() in production
+$hashed = md5($password);
 $stmt = $pdo->prepare("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)");
 $stmt->execute([$name, $email, $hashed, $role]);
-
-// After inserting user, fetch the newly created user
 $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
 $stmt->execute([$email]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);

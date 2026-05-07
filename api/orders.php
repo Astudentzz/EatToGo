@@ -12,9 +12,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     $data = json_decode(file_get_contents('php://input'), true);
     $reservation_id = $data['reservation_id'] ?? 0;
-    $items = $data['items'] ?? []; // array of {id, quantity}
+    $items = $data['items'] ?? [];
 
-    // Calculate total
     $total = 0;
     foreach ($items as $item) {
         $stmt = $pdo->prepare("SELECT price FROM menu_items WHERE id = ?");

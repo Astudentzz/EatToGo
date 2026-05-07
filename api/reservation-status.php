@@ -15,7 +15,7 @@ if (!isset($_SESSION['user']) || ($_SESSION['user']['role'] !== 'staff' && $_SES
 }
 $data = json_decode(file_get_contents('php://input'), true);
 $reservation_id = $data['reservation_id'] ?? 0;
-$status = $data['status'] ?? ''; // confirmed, rejected, completed
+$status = $data['status'] ?? '';
 $stmt = $pdo->prepare("UPDATE reservations SET status = ? WHERE id = ?");
 $stmt->execute([$status, $reservation_id]);
 echo json_encode(['success' => true]);

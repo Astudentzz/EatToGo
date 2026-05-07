@@ -14,9 +14,8 @@ $stmt = $pdo->prepare("SELECT r.*, res.name as restaurant_name FROM reservations
 $stmt->execute([$_SESSION['user']['id']]);
 $reservations = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Also fetch order status for each reservation
 foreach ($reservations as &$res) {
-    $stmt = $pdo->prepare("SELECT * FROM orders WHERE reservation_id = ?");
+    $stmt = $pdo->prepare("SELECT o.*, GROUP_CONCAT(CONCAT(mi.emoji, ' ', mi.name) SEPARATOR ', ') as items_summary FROM orders o LEFT JOIN order_items oi ON o.id = oi.order_id LEFT JOIN menu_items mi ON oi.menu_item_id = mi.id WHERE o.reservation_id = ? GROUP BY o.id");
     $stmt->execute([$res['id']]);
     $res['order'] = $stmt->fetch(PDO::FETCH_ASSOC);
 }

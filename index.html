@@ -67,31 +67,17 @@
 
 <script src="assets/js/api.js"></script>
 <script>
-  // Helper to escape HTML for security
-  function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
-  }
-
-  // Search function called from the search form
-  function searchHome(event) {
-    event.preventDefault();
-    const query = document.getElementById('q')?.value.trim() || '';
-    window.location.href = `search-results.html?q=${encodeURIComponent(query)}`;
-  }
-
+  function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
+  function searchHome(e) { e.preventDefault(); const q = document.getElementById('q')?.value.trim() || ''; window.location.href = `search-results.html?q=${encodeURIComponent(q)}`; }
   async function renderRestaurants() {
     const container = document.getElementById('restaurantList');
     try {
       const restaurants = await apiCall('/restaurants.php');
-      if (!restaurants.length) {
-        container.innerHTML = '<div class="col-12 text-center py-5">No restaurants found.</div>';
-        return;
-      }
+      if (!restaurants.length) { container.innerHTML = '<div class="col-12 text-center py-5">No restaurants found.</div>'; return; }
       container.innerHTML = restaurants.map(r => `
         <div class="col-md-4">
           <div class="rest-card">
-            <img src="${r.image || 'assets/img/default-restaurant.jpg'}">
+            <img src="${r.image || 'assets/img/default-restaurant.jpg'}" onerror="this.src='assets/img/default-restaurant.jpg'">
             <div class="card-body">
               <h3>${escapeHtml(r.name)}</h3>
               <p>${escapeHtml(r.category || 'Restaurant')} • ${escapeHtml(r.location || 'Malaysia')}</p>
@@ -100,33 +86,25 @@
           </div>
         </div>
       `).join('');
-    } catch (err) {
-      console.error(err);
-      container.innerHTML = '<div class="col-12 text-center text-danger">Failed to load restaurants.</div>';
-    }
+    } catch (err) { container.innerHTML = '<div class="col-12 text-center text-danger">Failed to load restaurants.</div>'; }
   }
-
   async function setupNav() {
-    const sessionData = await checkSession();
-    const nav = document.getElementById('mainNav');
-    if (!nav) return;
-    const session = sessionData.loggedIn ? sessionData.user : null;
-    if (!session || session.role === 'customer') {
-      nav.innerHTML = `<a class="nav-link" href="search-results.html">Restaurants</a><a class="nav-link" href="booking-history.html">My Bookings</a><a class="nav-link" href="order-status.html">Order Status</a>`;
-    } else if (session.role === 'staff') {
-      nav.innerHTML = `<a class="nav-link fw-bold" style="color:var(--orange)!important" href="staff-dashboard.html">↗ Go to Staff Dashboard</a>`;
-    } else if (session.role === 'owner') {
-      nav.innerHTML = `<a class="nav-link fw-bold" style="color:var(--orange)!important" href="owner-dashboard.html">↗ Go to Owner Dashboard</a>`;
-    } else if (session.role === 'admin') {
-      nav.innerHTML = `<a class="nav-link fw-bold" style="color:var(--orange)!important" href="admin.html">↗ Go to Admin Dashboard</a>`;
+    const session = await checkSession();
+    const navDiv = document.getElementById('mainNav');
+    if (!navDiv) return;
+    const u = session.loggedIn ? session.user : null;
+    if (!u || u.role === 'customer') {
+      navDiv.innerHTML = `<a class="nav-link" href="search-results.html">Restaurants</a><a class="nav-link" href="booking-history.html">My Bookings</a><a class="nav-link" href="order-status.html">Order Status</a>`;
+    } else if (u.role === 'staff') {
+      navDiv.innerHTML = `<a class="nav-link fw-bold" style="color:var(--orange)!important" href="staff-dashboard.html">↗ Go to Staff Dashboard</a>`;
+    } else if (u.role === 'owner') {
+      navDiv.innerHTML = `<a class="nav-link fw-bold" style="color:var(--orange)!important" href="owner-dashboard.html">↗ Go to Owner Dashboard</a>`;
+    } else if (u.role === 'admin') {
+      navDiv.innerHTML = `<a class="nav-link fw-bold" style="color:var(--orange)!important" href="admin.html">↗ Go to Admin Dashboard</a>`;
     }
   }
-
   window.addEventListener('DOMContentLoaded', async () => {
-    await nav();           // updates authArea
-    await setupNav();      // updates mainNav
-    await renderRestaurants();
-    
+    await nav(); await setupNav(); await renderRestaurants();
     const session = (await checkSession()).loggedIn ? (await checkSession()).user : null;
     if (session && (session.role === 'admin' || session.role === 'staff' || session.role === 'owner')) {
       if (session.role === 'admin') location.href = 'admin.html';

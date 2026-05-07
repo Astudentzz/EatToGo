@@ -10,7 +10,7 @@
   <style>
     .etg-toast { position: fixed; top: 24px; left: 50%; transform: translateX(-50%) translateY(-20px); background: #1C1208; color: white; border-radius: 16px; padding: 14px 24px; font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 12px; box-shadow: 0 12px 40px rgba(0,0,0,.25); opacity: 0; transition: all .35s; z-index: 9999; min-width: 300px; pointer-events: none; }
     .etg-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-    .etg-toast.error  { border-left: 5px solid #ef4444; }
+    .etg-toast.error { border-left: 5px solid #ef4444; }
     .etg-toast.success { border-left: 5px solid var(--green); }
     .etg-toast.warning { border-left: 5px solid var(--orange); }
   </style>
@@ -92,7 +92,7 @@
       let total = 0;
       if (order && order.items_summary) {
         itemsHtml = `<p><b>Items:</b> ${escapeHtml(order.items_summary)}</p>`;
-        total = order.total_amount || 0;
+        total = parseFloat(order.total_amount) || 0;
       } else {
         itemsHtml = '<p class="text-muted">No pre‑order items.</p>';
       }
@@ -102,11 +102,21 @@
         <p><b>Date/Time:</b> ${reservation.reservation_date} ${reservation.reservation_time}</p>
         <p><b>Guests:</b> ${reservation.num_people}</p>
         ${itemsHtml}
-        <hr><h4 class="text-end">Total: RM ${parseFloat(total).toFixed(2)}</h4>
+        <hr><h4 class="text-end">Total: RM ${total.toFixed(2)}</h4>
       `;
     } catch (err) {
       console.error(err);
       document.getElementById('checkoutSummary').innerHTML = '<p class="text-danger">Failed to load order.</p>';
+    }
+  }
+
+  async function prefillUserDetails() {
+    const session = await checkSession();
+    if (session.loggedIn) {
+      const user = session.user;
+      if (user.name) document.getElementById('fullName').value = user.name;
+      if (user.phone) document.getElementById('phone').value = user.phone;
+      if (user.email) document.getElementById('email').value = user.email;
     }
   }
 
@@ -161,6 +171,7 @@
       return;
     }
     await loadOrderSummary();
+    await prefillUserDetails();
     document.getElementById('checkoutForm').addEventListener('submit', submitCheckout);
   });
 </script>

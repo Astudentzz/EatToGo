@@ -9,57 +9,13 @@
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
-<nav class="navbar-etg">
-  <div class="container d-flex align-items-center justify-content-between">
-    <a class="logo" href="index.html">Eat<span>To</span>Go</a>
-    <div id="mainNav" class="d-none d-md-flex gap-4"></div>
-    <div id="authArea"></div>
-  </div>
-</nav>
-
-<section class="section">
-  <div class="container">
-    <div class="card-etg p-5 text-center mx-auto" style="max-width:760px">
-      <div style="font-size:90px">✅</div>
-      <h1 id="successTitle">Booking Confirmed!</h1>
-      <p id="successMessage" class="lead text-muted">Your reservation and pre‑order have been recorded. Restaurant staff will confirm your booking soon. You will pay at the counter upon arrival.</p>
-      <div class="d-flex justify-content-center gap-3 flex-wrap">
-        <a href="booking-history.html" class="btn btn-etg">View My Bookings</a>
-        <a href="search-results.html" class="btn btn-outline-etg">Browse More Restaurants</a>
-      </div>
-    </div>
-  </div>
-</section>
-
+<nav class="navbar-etg"><div class="container d-flex align-items-center justify-content-between"><a class="logo" href="index.html">Eat<span>To</span>Go</a><div id="mainNav" class="d-none d-md-flex gap-4"></div><div id="authArea"></div></div></nav>
+<section class="section"><div class="container"><div class="card-etg p-5 text-center mx-auto" style="max-width:760px"><div style="font-size:90px">✅</div><h1>Booking Confirmed!</h1><p class="lead">Your reservation and pre‑order have been recorded. You will pay at the counter.</p><div class="d-flex justify-content-center gap-3"><a href="booking-history.html" class="btn btn-etg">View My Bookings</a><a href="search-results.html" class="btn btn-outline-etg">Browse More</a></div></div></div></section>
 <footer class="minimal-footer">...</footer>
 <script src="assets/js/api.js"></script>
 <script>
-  const urlParams = new URLSearchParams(window.location.search);
-  const reservationId = urlParams.get('reservation_id');
-
-  async function setupNav() {
-    const session = await checkSession();
-    const navDiv = document.getElementById('mainNav');
-    if (!navDiv) return;
-    const u = session.loggedIn ? session.user : null;
-    if (!u || u.role === 'customer') {
-      navDiv.innerHTML = `<a class="nav-link" href="search-results.html">Restaurants</a><a class="nav-link" href="booking-history.html">My Bookings</a><a class="nav-link" href="order-status.html">Order Status</a>`;
-    } else if (u.role === 'staff') {
-      navDiv.innerHTML = `<a class="nav-link fw-bold" style="color:var(--orange)!important" href="staff-dashboard.html">↗ Go to Staff Dashboard</a>`;
-    } else if (u.role === 'owner') {
-      navDiv.innerHTML = `<a class="nav-link fw-bold" style="color:var(--orange)!important" href="owner-dashboard.html">↗ Go to Owner Dashboard</a>`;
-    } else if (u.role === 'admin') {
-      navDiv.innerHTML = `<a class="nav-link fw-bold" style="color:var(--orange)!important" href="admin.html">↗ Go to Admin Dashboard</a>`;
-    }
-  }
-  window.addEventListener('DOMContentLoaded', async () => {
-    await nav();
-    await setupNav();
-    if (reservationId) {
-      document.getElementById('successTitle').textContent = `Booking #${reservationId} Confirmed!`;
-      document.getElementById('successMessage').textContent = 'Your reservation and pre‑order have been recorded. Restaurant staff will confirm your booking soon. You will pay at the counter upon arrival.';
-    }
-  });
+  async function setupNav() { const s = await checkSession(); const navDiv = document.getElementById('mainNav'); if(!navDiv) return; const u = s.loggedIn ? s.user : null; if(!u || u.role==='customer') navDiv.innerHTML = `<a class="nav-link" href="search-results.html">Restaurants</a><a class="nav-link" href="booking-history.html">My Bookings</a><a class="nav-link" href="order-status.html">Order Status</a>`; else if(u.role==='staff') navDiv.innerHTML = `<a class="nav-link fw-bold" href="staff-dashboard.html">↗ Staff Dashboard</a>`; else if(u.role==='owner') navDiv.innerHTML = `<a class="nav-link fw-bold" href="owner-dashboard.html">↗ Owner Dashboard</a>`; else if(u.role==='admin') navDiv.innerHTML = `<a class="nav-link fw-bold" href="admin.html">↗ Admin Dashboard</a>`; }
+  window.addEventListener('DOMContentLoaded', async () => { await nav(); await setupNav(); });
 </script>
 </body>
 </html>

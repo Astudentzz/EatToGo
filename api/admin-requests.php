@@ -4,8 +4,9 @@ session_start();
 require_once 'config/database.php';
 $pdo = getDB();
 
-if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+if (!isset($_SESSION['user']) || strtolower($_SESSION['user']['role']) !== 'admin') {
     http_response_code(403);
+    echo json_encode(['error' => 'Unauthorized', 'role_detected' => $_SESSION['user']['role'] ?? 'none']);
     exit;
 }
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
