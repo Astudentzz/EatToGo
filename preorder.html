@@ -60,7 +60,21 @@
   async function checkout() { const session = await checkSession(); if (!session.loggedIn || session.user.role !== 'customer') { alert('Please login as customer.'); window.location.href='login.html'; return; } if (!reservationId) { alert('No reservation.'); window.location.href='search-results.html'; return; } const items = Object.entries(cart).map(([id,qty])=>({id:parseInt(id), quantity: qty})); if (items.length===0) { window.location.href=`checkout.html?reservation_id=${reservationId}`; return; } try { await apiCall('/orders.php', { method: 'POST', body: JSON.stringify({ reservation_id: parseInt(reservationId), items }) }); cart={}; window.location.href = `checkout.html?reservation_id=${reservationId}`; } catch(err) { alert('Error: '+err.message); } }
   function skipPreorder() { window.location.href = `checkout.html?reservation_id=${reservationId}`; }
   function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
-  async function setupNav() { const s = await checkSession(); const navDiv = document.getElementById('mainNav'); if (!navDiv) return; const u = s.loggedIn ? s.user : null; if (!u || u.role === 'customer') navDiv.innerHTML = `<a class="nav-link" href="search-results.html">Restaurants</a><a class="nav-link" href="booking-history.html">My Bookings</a><a class="nav-link" href="order-status.html">Order Status</a>`; else if (u.role === 'staff') navDiv.innerHTML = `<a class="nav-link fw-bold" href="staff-dashboard.html">↗ Staff Dashboard</a>`; else if (u.role === 'owner') navDiv.innerHTML = `<a class="nav-link fw-bold" href="owner-dashboard.html">↗ Owner Dashboard</a>`; else if (u.role === 'admin') navDiv.innerHTML = `<a class="nav-link fw-bold" href="admin.html">↗ Admin Dashboard</a>`; }
+  async function setupNav() {
+  const s = await checkSession();
+  const navDiv = document.getElementById('mainNav');
+  if (!navDiv) return;
+  const u = s.loggedIn ? s.user : null;
+  if (!u || u.role === 'customer') {
+    navDiv.innerHTML = `<a class="nav-link" href="index.html">Restaurants</a><a class="nav-link" href="booking-history.html">My Bookings</a><a class="nav-link" href="order-status.html">Order Status</a>`;
+  } else if (u.role === 'staff') {
+    navDiv.innerHTML = `<a class="nav-link fw-bold" href="staff-dashboard.html">↗ Staff Dashboard</a>`;
+  } else if (u.role === 'owner') {
+    navDiv.innerHTML = `<a class="nav-link fw-bold" href="owner-dashboard.html">↗ Owner Dashboard</a>`;
+  } else if (u.role === 'admin') {
+    navDiv.innerHTML = `<a class="nav-link fw-bold" href="admin.html">↗ Admin Dashboard</a>`;
+  }
+}
   window.addEventListener('DOMContentLoaded', async () => { await nav(); await setupNav(); await loadMenu(); });
 </script>
 </body>

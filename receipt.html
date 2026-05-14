@@ -18,7 +18,21 @@
   const urlParams = new URLSearchParams(window.location.search);
   const reservationId = urlParams.get('reservation_id');
   async function loadReceipt() { if (!reservationId) { document.getElementById('receiptBox').innerHTML = '<p class="text-danger">Missing reservation ID.</p>'; return; } try { const reservations = await apiCall('/user-reservations.php'); const r = reservations.find(rs => rs.id == reservationId); if (!r) throw new Error('Not found'); let itemsHtml = ''; let total = 0; if (r.order && r.order.items_summary) { itemsHtml = `<p><b>Ordered items:</b> ${escapeHtml(r.order.items_summary)}</p>`; total = parseFloat(r.order.total_amount) || 0; } document.getElementById('receiptBox').innerHTML = `<h3>Booking Receipt #${r.id}</h3><p><b>Restaurant:</b> ${escapeHtml(r.restaurant_name)}</p><p><b>Date/Time:</b> ${r.reservation_date} ${r.reservation_time}</p><p><b>Guests:</b> ${r.num_people}</p><hr><h5>Customer Details</h5><p><b>Name:</b> ${escapeHtml(r.customer_name || '-')}<br><b>Phone:</b> ${escapeHtml(r.customer_phone || '-')}<br><b>Email:</b> ${escapeHtml(r.customer_email || '-')}<br><b>Requests:</b> ${escapeHtml(r.special_requests || '-')}</p>${itemsHtml}<hr><h4 class="text-end">Total: RM ${parseFloat(total).toFixed(2)}</h4><div class="alert alert-warning">💵 Cash only – pay at counter.</div>`; document.getElementById('editLink').href = `checkout.html?reservation_id=${reservationId}`; document.getElementById('goPaymentBtn').onclick = () => window.location.href = `pay-counter.html?reservation_id=${reservationId}`; } catch(err) { console.error(err); document.getElementById('receiptBox').innerHTML = '<p class="text-danger">Error loading receipt.</p>'; } }
-  async function setupNav() { const s = await checkSession(); const navDiv = document.getElementById('mainNav'); if(!navDiv) return; const u = s.loggedIn ? s.user : null; if(!u || u.role==='customer') navDiv.innerHTML = `<a class="nav-link" href="search-results.html">Restaurants</a><a class="nav-link" href="booking-history.html">My Bookings</a><a class="nav-link" href="order-status.html">Order Status</a>`; else if(u.role==='staff') navDiv.innerHTML = `<a class="nav-link fw-bold" href="staff-dashboard.html">↗ Staff Dashboard</a>`; else if(u.role==='owner') navDiv.innerHTML = `<a class="nav-link fw-bold" href="owner-dashboard.html">↗ Owner Dashboard</a>`; else if(u.role==='admin') navDiv.innerHTML = `<a class="nav-link fw-bold" href="admin.html">↗ Admin Dashboard</a>`; }
+  async function setupNav() {
+  const s = await checkSession();
+  const navDiv = document.getElementById('mainNav');
+  if (!navDiv) return;
+  const u = s.loggedIn ? s.user : null;
+  if (!u || u.role === 'customer') {
+    navDiv.innerHTML = `<a class="nav-link" href="index.html">Restaurants</a><a class="nav-link" href="booking-history.html">My Bookings</a><a class="nav-link" href="order-status.html">Order Status</a>`;
+  } else if (u.role === 'staff') {
+    navDiv.innerHTML = `<a class="nav-link fw-bold" href="staff-dashboard.html">↗ Staff Dashboard</a>`;
+  } else if (u.role === 'owner') {
+    navDiv.innerHTML = `<a class="nav-link fw-bold" href="owner-dashboard.html">↗ Owner Dashboard</a>`;
+  } else if (u.role === 'admin') {
+    navDiv.innerHTML = `<a class="nav-link fw-bold" href="admin.html">↗ Admin Dashboard</a>`;
+  }
+}
   function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m=>m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
   window.addEventListener('DOMContentLoaded', async () => { await nav(); await setupNav(); await loadReceipt(); });
 </script>

@@ -22,7 +22,21 @@
   function showToast(msg, type='success', icon='✅') { const t=document.getElementById('etgToast'); t.className=`etg-toast ${type}`; document.getElementById('toastMsg').textContent=msg; document.getElementById('toastIcon').textContent=icon; clearTimeout(toastTimer); void t.offsetWidth; t.classList.add('show'); toastTimer=setTimeout(()=>t.classList.remove('show'),3800); }
   async function verifyAccess() { const session = await checkSession(); if(!session.loggedIn || session.user.role !== 'customer') { showToast('Please login as customer.','warning'); setTimeout(()=>window.location.href='login.html',1500); return false; } if(!reservationId) { showToast('No reservation ID.','error'); setTimeout(()=>window.location.href='booking-history.html',1500); return false; } try { const reservations = await apiCall('/user-reservations.php'); const valid = reservations.some(r=>r.id==reservationId); if(!valid) throw new Error(); return true; } catch(e) { showToast('Unauthorized.','error'); setTimeout(()=>window.location.href='booking-history.html',1500); return false; } }
   async function submitFeedback(e) { e.preventDefault(); const rating = document.getElementById('rating').value; const comment = document.getElementById('comment').value.trim(); if(!rating||!comment) { showToast('Please provide both.','warning'); return; } try { await apiCall('/feedback.php', { method:'POST', body:JSON.stringify({ reservation_id: parseInt(reservationId), rating, comment }) }); showToast('Thank you for your feedback!','success'); setTimeout(()=>window.location.href='booking-history.html',1500); } catch(err) { showToast(err.message,'error'); } }
-  async function setupNav() { const s = await checkSession(); const navDiv = document.getElementById('mainNav'); if(!navDiv) return; const u = s.loggedIn ? s.user : null; if(!u || u.role==='customer') navDiv.innerHTML = `<a class="nav-link" href="search-results.html">Restaurants</a><a class="nav-link" href="booking-history.html">My Bookings</a><a class="nav-link" href="order-status.html">Order Status</a>`; else if(u.role==='staff') navDiv.innerHTML = `<a class="nav-link fw-bold" href="staff-dashboard.html">↗ Staff Dashboard</a>`; else if(u.role==='owner') navDiv.innerHTML = `<a class="nav-link fw-bold" href="owner-dashboard.html">↗ Owner Dashboard</a>`; else if(u.role==='admin') navDiv.innerHTML = `<a class="nav-link fw-bold" href="admin.html">↗ Admin Dashboard</a>`; }
+  async function setupNav() {
+  const s = await checkSession();
+  const navDiv = document.getElementById('mainNav');
+  if (!navDiv) return;
+  const u = s.loggedIn ? s.user : null;
+  if (!u || u.role === 'customer') {
+    navDiv.innerHTML = `<a class="nav-link" href="index.html">Restaurants</a><a class="nav-link" href="booking-history.html">My Bookings</a><a class="nav-link" href="order-status.html">Order Status</a>`;
+  } else if (u.role === 'staff') {
+    navDiv.innerHTML = `<a class="nav-link fw-bold" href="staff-dashboard.html">↗ Staff Dashboard</a>`;
+  } else if (u.role === 'owner') {
+    navDiv.innerHTML = `<a class="nav-link fw-bold" href="owner-dashboard.html">↗ Owner Dashboard</a>`;
+  } else if (u.role === 'admin') {
+    navDiv.innerHTML = `<a class="nav-link fw-bold" href="admin.html">↗ Admin Dashboard</a>`;
+  }
+}
   window.addEventListener('DOMContentLoaded', async () => { await nav(); await setupNav(); const ok = await verifyAccess(); if(ok) document.getElementById('feedbackForm').addEventListener('submit', submitFeedback); else document.getElementById('feedbackForm').style.display='none'; });
 </script>
 </body>

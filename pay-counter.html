@@ -19,7 +19,21 @@
   const reservationId = urlParams.get('reservation_id');
   async function loadSummary() { if(!reservationId) return; try { const reservations = await apiCall('/user-reservations.php'); const r = reservations.find(rs=>rs.id==reservationId); if(r && r.order) document.getElementById('receiptBox').innerHTML = `<h5>Order Total</h5><p>RM ${parseFloat(r.order.total_amount||0).toFixed(2)}</p>`; else document.getElementById('receiptBox').innerHTML = '<p>No order.</p>'; } catch(e) { console.error(e); } }
   document.getElementById('confirmBtn').addEventListener('click', () => { window.location.href = `booking-success.html?reservation_id=${reservationId}`; });
-  async function setupNav() { const s = await checkSession(); const navDiv = document.getElementById('mainNav'); if(!navDiv) return; const u = s.loggedIn ? s.user : null; if(!u || u.role==='customer') navDiv.innerHTML = `<a class="nav-link" href="search-results.html">Restaurants</a><a class="nav-link" href="booking-history.html">My Bookings</a><a class="nav-link" href="order-status.html">Order Status</a>`; else if(u.role==='staff') navDiv.innerHTML = `<a class="nav-link fw-bold" href="staff-dashboard.html">↗ Staff Dashboard</a>`; else if(u.role==='owner') navDiv.innerHTML = `<a class="nav-link fw-bold" href="owner-dashboard.html">↗ Owner Dashboard</a>`; else if(u.role==='admin') navDiv.innerHTML = `<a class="nav-link fw-bold" href="admin.html">↗ Admin Dashboard</a>`; }
+  async function setupNav() {
+  const s = await checkSession();
+  const navDiv = document.getElementById('mainNav');
+  if (!navDiv) return;
+  const u = s.loggedIn ? s.user : null;
+  if (!u || u.role === 'customer') {
+    navDiv.innerHTML = `<a class="nav-link" href="index.html">Restaurants</a><a class="nav-link" href="booking-history.html">My Bookings</a><a class="nav-link" href="order-status.html">Order Status</a>`;
+  } else if (u.role === 'staff') {
+    navDiv.innerHTML = `<a class="nav-link fw-bold" href="staff-dashboard.html">↗ Staff Dashboard</a>`;
+  } else if (u.role === 'owner') {
+    navDiv.innerHTML = `<a class="nav-link fw-bold" href="owner-dashboard.html">↗ Owner Dashboard</a>`;
+  } else if (u.role === 'admin') {
+    navDiv.innerHTML = `<a class="nav-link fw-bold" href="admin.html">↗ Admin Dashboard</a>`;
+  }
+}
   window.addEventListener('DOMContentLoaded', async () => { await nav(); await setupNav(); await loadSummary(); });
 </script>
 </body>

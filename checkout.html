@@ -144,21 +144,21 @@
     }
   }
 
-  async function setupNav() {
-    const sessionData = await checkSession();
-    const navDiv = document.getElementById('mainNav');
-    if (!navDiv) return;
-    const u = sessionData.loggedIn ? sessionData.user : null;
-    if (!u || u.role === 'customer') {
-      navDiv.innerHTML = `<a class="nav-link" href="search-results.html">Restaurants</a><a class="nav-link" href="booking-history.html">My Bookings</a><a class="nav-link" href="order-status.html">Order Status</a>`;
-    } else if (u.role === 'staff') {
-      navDiv.innerHTML = `<a class="nav-link fw-bold" style="color:var(--orange)!important" href="staff-dashboard.html">↗ Go to Staff Dashboard</a>`;
-    } else if (u.role === 'owner') {
-      navDiv.innerHTML = `<a class="nav-link fw-bold" style="color:var(--orange)!important" href="owner-dashboard.html">↗ Go to Owner Dashboard</a>`;
-    } else if (u.role === 'admin') {
-      navDiv.innerHTML = `<a class="nav-link fw-bold" style="color:var(--orange)!important" href="admin.html">↗ Go to Admin Dashboard</a>`;
-    }
+ async function setupNav() {
+  const s = await checkSession();
+  const navDiv = document.getElementById('mainNav');
+  if (!navDiv) return;
+  const u = s.loggedIn ? s.user : null;
+  if (!u || u.role === 'customer') {
+    navDiv.innerHTML = `<a class="nav-link" href="index.html">Restaurants</a><a class="nav-link" href="booking-history.html">My Bookings</a><a class="nav-link" href="order-status.html">Order Status</a>`;
+  } else if (u.role === 'staff') {
+    navDiv.innerHTML = `<a class="nav-link fw-bold" href="staff-dashboard.html">↗ Staff Dashboard</a>`;
+  } else if (u.role === 'owner') {
+    navDiv.innerHTML = `<a class="nav-link fw-bold" href="owner-dashboard.html">↗ Owner Dashboard</a>`;
+  } else if (u.role === 'admin') {
+    navDiv.innerHTML = `<a class="nav-link fw-bold" href="admin.html">↗ Admin Dashboard</a>`;
   }
+}
 
   function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
 
