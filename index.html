@@ -17,23 +17,102 @@
     .rest-card img { width: 100%; height: 160px; object-fit: cover; }
     .rest-card .card-body { padding: 16px; }
     .rest-card h3 { font-size: 1.25rem; font-weight: 800; margin-bottom: 6px; }
-    .filter-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-    .filter-row .form-control, .filter-row .form-select { flex: 1; min-width: 200px; }
-    @media (min-width: 768px) {
-      .filter-row .form-control { flex: 2; }
-      .filter-row .form-select { flex: 1; }
+
+    /* Mobile sidebar styles */
+    .navbar-etg {
+      position: relative;
+    }
+    .hamburger {
+      display: none;
+      background: none;
+      border: none;
+      font-size: 28px;
+      color: var(--orange);
+      cursor: pointer;
+      padding: 0 10px;
+    }
+    .mobile-sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 260px;
+      height: 100%;
+      background: #1C1208;
+      z-index: 1100;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      padding: 60px 20px 20px;
+    }
+    .mobile-sidebar.open {
+      transform: translateX(0);
+    }
+    .mobile-sidebar a {
+      display: block;
+      color: rgba(255,255,255,.8);
+      text-decoration: none;
+      padding: 12px 16px;
+      font-weight: 700;
+      border-radius: 12px;
+      margin: 8px 0;
+    }
+    .mobile-sidebar a:hover, .mobile-sidebar a.active {
+      background: rgba(255,107,53,.2);
+      color: var(--orange);
+    }
+    .close-sidebar {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      font-size: 28px;
+      color: white;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+    .sidebar-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1050;
+      display: none;
+    }
+    .sidebar-overlay.active {
+      display: block;
+    }
+    @media (max-width: 768px) {
+      .hamburger { display: block; }
+      .desktop-nav { display: none; }
+      .navbar-etg .container { display: flex; justify-content: space-between; align-items: center; }
+    }
+    @media (min-width: 769px) {
+      .mobile-sidebar, .sidebar-overlay, .close-sidebar { display: none; }
+      .desktop-nav { display: flex; gap: 1rem; }
     }
   </style>
 </head>
 <body>
 
 <nav class="navbar-etg">
-  <div class="container d-flex align-items-center justify-content-between">
+  <div class="container">
     <a class="logo" href="index.html">Eat<span>To</span>Go</a>
-    <div class="d-none d-md-flex gap-4" id="mainNav"></div>
-    <div id="authArea"></div>
+    <!-- Desktop navigation -->
+    <div class="desktop-nav" id="mainNav"></div>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <button class="hamburger" id="hamburgerBtn">☰</button>
+      <div id="authArea"></div>
+    </div>
   </div>
 </nav>
+
+<!-- Mobile sidebar -->
+<div class="mobile-sidebar" id="mobileSidebar">
+  <button class="close-sidebar" id="closeSidebarBtn">×</button>
+  <div id="mobileNavLinks"></div>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
 
 <section class="hero">
   <div class="container text-center">
@@ -42,12 +121,18 @@
     <p class="lead text-muted mt-3">Search restaurants, choose time slots, pre-order meals, pay at counter, and confirm arrival.</p>
     <!-- Filter row: search input + cuisine dropdown -->
     <div class="search-card glass-card p-4">
-      <div class="filter-row">
-        <input type="text" id="searchInput" class="form-control form-control-lg" placeholder="Search by restaurant or cuisine..." autocomplete="off">
-        <select id="cuisineFilter" class="form-select form-select-lg">
-          <option value="">All Cuisines</option>
-        </select>
-        <button id="searchButton" class="btn btn-etg btn-lg">Search</button>
+      <div class="row g-3 justify-content-center">
+        <div class="col-md-6 col-lg-5">
+          <input type="text" id="searchInput" class="form-control form-control-lg" placeholder="Search by restaurant or cuisine..." autocomplete="off">
+        </div>
+        <div class="col-md-3 col-lg-2">
+          <select id="cuisineFilter" class="form-select form-select-lg">
+            <option value="">All Cuisines</option>
+          </select>
+        </div>
+        <div class="col-md-3 col-lg-2">
+          <button id="searchButton" class="btn btn-etg btn-lg w-100">Search</button>
+        </div>
       </div>
     </div>
   </div>
@@ -76,6 +161,7 @@
 </footer>
 
 <script src="assets/js/api.js"></script>
+<script src="assets/js/mobile-nav.js"></script>
 <script>
   let allRestaurants = [];
   let currentSearchTerm = '';
@@ -87,7 +173,6 @@
     const container = document.getElementById('restaurantList');
     try {
       allRestaurants = await apiCall('/restaurants.php');
-      // Populate cuisine dropdown with unique categories
       const cuisineSet = new Set();
       allRestaurants.forEach(r => { if (r.category) cuisineSet.add(r.category); });
       const cuisineSelect = document.getElementById('cuisineFilter');
@@ -141,33 +226,37 @@
   }
 
   async function setupNav() {
-  const s = await checkSession();
-  const navDiv = document.getElementById('mainNav');
-  if (!navDiv) return;
-  const u = s.loggedIn ? s.user : null;
-  if (!u || u.role === 'customer') {
-    navDiv.innerHTML = `<a class="nav-link" href="index.html">Restaurants</a><a class="nav-link" href="booking-history.html">My Bookings</a><a class="nav-link" href="order-status.html">Order Status</a>`;
-  } else if (u.role === 'staff') {
-    navDiv.innerHTML = `<a class="nav-link fw-bold" href="staff-dashboard.html">↗ Staff Dashboard</a>`;
-  } else if (u.role === 'owner') {
-    navDiv.innerHTML = `<a class="nav-link fw-bold" href="owner-dashboard.html">↗ Owner Dashboard</a>`;
-  } else if (u.role === 'admin') {
-    navDiv.innerHTML = `<a class="nav-link fw-bold" href="admin.html">↗ Admin Dashboard</a>`;
+    const s = await checkSession();
+    const desktopNav = document.getElementById('mainNav');
+    const mobileNav = document.getElementById('mobileNavLinks');
+    if (!desktopNav) return;
+    const u = s.loggedIn ? s.user : null;
+    let navHtml = '';
+    if (!u || u.role === 'customer') {
+      navHtml = `<a class="nav-link" href="index.html">Restaurants</a>
+                 <a class="nav-link" href="booking-history.html">My Bookings</a>
+                 <a class="nav-link" href="order-status.html">Order Status</a>`;
+    } else if (u.role === 'staff') {
+      navHtml = `<a class="nav-link fw-bold" href="staff-dashboard.html">↗ Staff Dashboard</a>`;
+    } else if (u.role === 'owner') {
+      navHtml = `<a class="nav-link fw-bold" href="owner-dashboard.html">↗ Owner Dashboard</a>`;
+    } else if (u.role === 'admin') {
+      navHtml = `<a class="nav-link fw-bold" href="admin.html">↗ Admin Dashboard</a>`;
+    }
+    desktopNav.innerHTML = navHtml;
+    if (mobileNav) mobileNav.innerHTML = navHtml;
   }
-}
 
   window.addEventListener('DOMContentLoaded', async () => {
     await nav();
     await setupNav();
     await renderRestaurants();
-    // Attach event listeners
     const searchInput = document.getElementById('searchInput');
     const cuisineSelect = document.getElementById('cuisineFilter');
     const searchButton = document.getElementById('searchButton');
     searchInput.addEventListener('input', updateFilters);
     cuisineSelect.addEventListener('change', updateFilters);
     searchButton.addEventListener('click', updateFilters);
-    // Redirect if admin/staff/owner logged in
     const session = (await checkSession()).loggedIn ? (await checkSession()).user : null;
     if (session && (session.role === 'admin' || session.role === 'staff' || session.role === 'owner')) {
       if (session.role === 'admin') location.href = 'admin.html';

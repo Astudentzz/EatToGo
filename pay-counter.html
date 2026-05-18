@@ -3,38 +3,144 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pay at Counter – EatToGo</title>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/style.css">
-  <title>Pay at Counter – EatToGo</title>
+  <style>
+    .mobile-nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; }
+    @media (max-width: 768px) { .mobile-nav { flex-direction: column; align-items: center; margin-top: 10px; } }
+  </style>
 </head>
 <body>
-<nav class="navbar-etg"><div class="container d-flex align-items-center justify-content-between"><a class="logo" href="index.html">Eat<span>To</span>Go</a><div id="mainNav" class="d-none d-md-flex gap-4"></div><div id="authArea"></div></div></nav>
-<section class="page-head"><div class="container"><div class="timeline"><span>Reserve Table</span><span>Pre-Order Food</span><span>Customer Details</span><span>Receipt</span><span class="active">Pay at Counter</span></div><h1>Payment Instruction</h1></div></section>
-<section class="section"><div class="container"><div class="row g-4 justify-content-center"><div class="col-lg-7"><div class="card-etg p-5 text-center"><div style="font-size:80px">💵</div><h1>Cash-Only / Pay at Counter</h1><p class="lead">Pay at the restaurant counter on your reservation date.</p><div class="alert alert-warning">No online payment.</div><button id="confirmBtn" class="btn btn-etg">Confirm Booking</button></div></div><div class="col-lg-5"><div id="receiptBox" class="card-etg p-4"></div></div></div></div></section>
-<footer class="minimal-footer">...</footer>
+<nav class="navbar-etg">
+  <div class="container">
+    <a class="logo" href="index.html">Eat<span>To</span>Go</a>
+    <!-- Desktop navigation -->
+    <div class="desktop-nav" id="mainNav"></div>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <button class="hamburger" id="hamburgerBtn">☰</button>
+      <div id="authArea"></div>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile sidebar -->
+<div class="mobile-sidebar" id="mobileSidebar">
+  <button class="close-sidebar" id="closeSidebarBtn">×</button>
+  <div id="mobileNavLinks"></div>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<section class="page-head">
+  <div class="container">
+    <div class="timeline"><span>Reserve Table</span><span>Pre-Order Food</span><span>Customer Details</span><span>Receipt</span><span class="active">Pay at Counter</span></div>
+    <h1 class="mt-3">Payment Instruction</h1>
+    <p class="text-muted">No online payment is collected in this frontend prototype.</p>
+  </div>
+</section>
+<section class="section">
+  <div class="container">
+    <div class="row g-4 justify-content-center">
+      <div class="col-lg-7">
+        <div class="card-etg p-5 text-center">
+          <div style="font-size: 80px">💵</div>
+          <h1>Cash-Only / Pay at Counter</h1>
+          <p class="lead text-muted">Your booking receipt has been generated. Please pay at the restaurant counter on your reservation date and time.</p>
+          <div class="alert alert-warning text-start"><b>Important:</b> Restaurant owner controls payment/pricing matters. Staff can only update preparation and arrival status.</div>
+          <button id="confirmBtn" class="btn btn-etg">I Understand, Confirm Booking</button>
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div id="receiptBox" class="card-etg p-4">
+          <h4>Order Summary</h4>
+          <div id="summaryContent">Loading...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<footer class="minimal-footer">
+  <div class="container d-flex justify-content-between flex-wrap gap-5">
+    <div class="footer-brand"><h2>Eat<span>To</span>Go</h2><p>Final Year Project – Restaurant and Food Reservation System.</p></div>
+    <div class="footer-members"><h4>Project Team</h4><ul class="list-unstyled"><li>Navin Ramu</li><li>Muhamamd Nazim</li><li>Hadif</li><li>Ng Yue Yang</li></ul></div>
+  </div>
+  <div class="footer-bottom">© 2026 EatToGo • Universiti Teknologi Malaysia (UTM)</div>
+</footer>
 <script src="assets/js/api.js"></script>
+<script src="assets/js/mobile-nav.js"></script>
 <script>
   const urlParams = new URLSearchParams(window.location.search);
   const reservationId = urlParams.get('reservation_id');
-  async function loadSummary() { if(!reservationId) return; try { const reservations = await apiCall('/user-reservations.php'); const r = reservations.find(rs=>rs.id==reservationId); if(r && r.order) document.getElementById('receiptBox').innerHTML = `<h5>Order Total</h5><p>RM ${parseFloat(r.order.total_amount||0).toFixed(2)}</p>`; else document.getElementById('receiptBox').innerHTML = '<p>No order.</p>'; } catch(e) { console.error(e); } }
-  document.getElementById('confirmBtn').addEventListener('click', () => { window.location.href = `booking-success.html?reservation_id=${reservationId}`; });
-  async function setupNav() {
-  const s = await checkSession();
-  const navDiv = document.getElementById('mainNav');
-  if (!navDiv) return;
-  const u = s.loggedIn ? s.user : null;
-  if (!u || u.role === 'customer') {
-    navDiv.innerHTML = `<a class="nav-link" href="index.html">Restaurants</a><a class="nav-link" href="booking-history.html">My Bookings</a><a class="nav-link" href="order-status.html">Order Status</a>`;
-  } else if (u.role === 'staff') {
-    navDiv.innerHTML = `<a class="nav-link fw-bold" href="staff-dashboard.html">↗ Staff Dashboard</a>`;
-  } else if (u.role === 'owner') {
-    navDiv.innerHTML = `<a class="nav-link fw-bold" href="owner-dashboard.html">↗ Owner Dashboard</a>`;
-  } else if (u.role === 'admin') {
-    navDiv.innerHTML = `<a class="nav-link fw-bold" href="admin.html">↗ Admin Dashboard</a>`;
+
+  async function loadSummary() {
+    const summaryDiv = document.getElementById('summaryContent');
+    if (!reservationId) {
+      summaryDiv.innerHTML = '<p class="text-muted">No reservation ID provided.</p>';
+      return;
+    }
+    try {
+      const session = await checkSession();
+      if (!session.loggedIn) {
+        summaryDiv.innerHTML = '<p class="text-muted">Please login to view order summary.</p>';
+        return;
+      }
+      const reservations = await apiCall('/user-reservations.php');
+      const reservation = reservations.find(r => r.id == reservationId);
+      if (!reservation) {
+        summaryDiv.innerHTML = '<p class="text-danger">Reservation not found.</p>';
+        return;
+      }
+      const order = reservation.order || null;
+      let total = 0;
+      if (order && order.total_amount) {
+        total = parseFloat(order.total_amount);
+      }
+      let itemsHtml = '';
+      if (order && order.items_summary) {
+        itemsHtml = `<p><b>Items:</b> ${escapeHtml(order.items_summary)}</p>`;
+      } else {
+        itemsHtml = '<p class="text-muted">No pre‑order items.</p>';
+      }
+      summaryDiv.innerHTML = `
+        <p><b>Restaurant:</b> ${escapeHtml(reservation.restaurant_name)}</p>
+        ${itemsHtml}
+        <hr>
+        <h5 class="text-end">Total: RM ${total.toFixed(2)}</h5>
+        <p class="small text-muted mt-2">You will pay this amount at the counter.</p>
+      `;
+    } catch (err) {
+      console.error(err);
+      summaryDiv.innerHTML = '<p class="text-danger">Error loading order summary.</p>';
+    }
   }
-}
-  window.addEventListener('DOMContentLoaded', async () => { await nav(); await setupNav(); await loadSummary(); });
+
+  function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
+
+  document.getElementById('confirmBtn').addEventListener('click', () => {
+    window.location.href = `booking-success.html?reservation_id=${reservationId}`;
+  });
+
+  async function setupNav() {
+    const s = await checkSession();
+    const navDiv = document.getElementById('mainNav');
+    if (!navDiv) return;
+    const u = s.loggedIn ? s.user : null;
+    if (!u || u.role === 'customer') {
+      navDiv.innerHTML = `<a class="nav-link" href="index.html">Restaurants</a><a class="nav-link" href="booking-history.html">My Bookings</a><a class="nav-link" href="order-status.html">Order Status</a>`;
+    } else if (u.role === 'staff') {
+      navDiv.innerHTML = `<a class="nav-link fw-bold" href="staff-dashboard.html">↗ Staff Dashboard</a>`;
+    } else if (u.role === 'owner') {
+      navDiv.innerHTML = `<a class="nav-link fw-bold" href="owner-dashboard.html">↗ Owner Dashboard</a>`;
+    } else if (u.role === 'admin') {
+      navDiv.innerHTML = `<a class="nav-link fw-bold" href="admin.html">↗ Admin Dashboard</a>`;
+    }
+  }
+
+  window.addEventListener('DOMContentLoaded', async () => {
+    await nav();
+    await setupNav();
+    await loadSummary();
+  });
 </script>
 </body>
 </html>

@@ -3,48 +3,71 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Status – EatToGo</title>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/style.css">
-  <title>Order Status – EatToGo</title>
   <style>
-    .tracker-step { display: flex; gap: 20px; margin-bottom: 20px; align-items: flex-start; }
-    .step-dot { width: 40px; height: 40px; border-radius: 50%; background: white; border: 3px solid var(--cream-dark); display: flex; align-items: center; justify-content: center; font-weight: bold; }
+    .order-tracker { display: flex; flex-direction: column; gap: 0; position: relative; margin-top: 20px; }
+    .tracker-step { display: flex; gap: 20px; align-items: flex-start; position: relative; padding-bottom: 30px; }
+    .step-dot { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; border: 3px solid var(--cream-dark); background: white; z-index: 1; }
     .step-dot.done { background: var(--green); border-color: var(--green); color: white; }
-    .step-dot.active { background: var(--orange); border-color: var(--orange); color: white; box-shadow: 0 0 0 4px rgba(255,107,53,.2); }
-    .status-badge { display: inline-block; padding: 4px 12px; border-radius: 999px; font-weight: 800; font-size: 12px; }
-    .status-badge.ready { background: #dbeafe; color: #1d4ed8; }
-    .status-badge.pending { background: #fff3cd; color: #9a6700; }
+    .step-dot.active { background: var(--orange); border-color: var(--orange); color: white; box-shadow: 0 0 0 6px rgba(255,107,53,.18); }
+    .step-dot.pending { background: white; border-color: var(--cream-dark); color: var(--gray); }
+    .mobile-nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; }
+    @media (max-width: 768px) {
+      .mobile-nav { flex-direction: column; align-items: center; margin-top: 10px; }
+    }
   </style>
 </head>
 <body>
-<nav class="navbar-etg"><div class="container d-flex align-items-center justify-content-between"><a class="logo" href="index.html">Eat<span>To</span>Go</a><div id="mainNav" class="d-none d-md-flex gap-4"></div><div id="authArea"></div></div></nav>
-<section class="page-head"><div class="container"><h1>Order Status</h1></div></section>
-<section class="section"><div class="container"><div class="row g-4"><div class="col-lg-8"><div class="card-etg p-4"><h3>Tracking Progress</h3><div id="trackerContainer"></div><div id="orderDetails"></div></div></div><div class="col-lg-4"><div class="card-etg p-4"><h3>Arrival Confirmation</h3><button id="arrivalBtn" class="btn btn-etg w-100">I Have Arrived</button><div id="arrivalMsg" class="mt-2 small text-muted"></div></div></div></div></div></section>
-<footer class="minimal-footer">...</footer>
+<nav class="navbar-etg">
+  <div class="container">
+    <a class="logo" href="index.html">Eat<span>To</span>Go</a>
+    <!-- Desktop navigation -->
+    <div class="desktop-nav" id="mainNav"></div>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <button class="hamburger" id="hamburgerBtn">☰</button>
+      <div id="authArea"></div>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile sidebar -->
+<div class="mobile-sidebar" id="mobileSidebar">
+  <button class="close-sidebar" id="closeSidebarBtn">×</button>
+  <div id="mobileNavLinks"></div>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<section class="page-head"><div class="container"><h1>Order Status</h1><p class="text-muted">Track your reservation and pre-order.</p></div></section>
+<section class="section"><div class="container"><div class="row g-4"><div class="col-lg-8"><div class="card-etg p-4"><h3>Booking Progress</h3><div id="trackerContainer"></div><div id="receiptBox" class="mt-4"></div></div></div><div class="col-lg-4"><div class="card-etg p-4"><h3>Arrival Confirmation</h3><p class="text-muted">Confirm only when you reach the restaurant.</p><button id="arrivalBtn" class="btn btn-etg w-100" onclick="confirmArrival()">I Have Arrived</button><div id="arrivalMsg" class="mt-2 small text-muted"></div></div></div></div></div></section>
+<footer class="minimal-footer">
+  <div class="container d-flex justify-content-between flex-wrap gap-5">
+    <div class="footer-brand">
+      <h2>Eat<span>To</span>Go</h2>
+      <p>Final Year Project – Restaurant and Food Reservation System.</p>
+    </div>
+    <div class="footer-members">
+      <h4>Project Team</h4>
+      <ul class="list-unstyled">
+        <li>Navin Ramu</li>
+        <li>Muhamamd Nazim</li>
+        <li>Hadif</li>
+        <li>Ng Yue Yang</li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">© 2026 EatToGo • Universiti Teknologi Malaysia (UTM)</div>
+</footer>
 <script src="assets/js/api.js"></script>
+<script src="assets/js/mobile-nav.js"></script>
 <script>
-  const urlParams = new URLSearchParams(window.location.search);
-  let reservationId = urlParams.get('reservation_id');
-  let currentReservation = null;
-  async function getReservationId() { if(reservationId) return parseInt(reservationId); const s = await checkSession(); if(!s.loggedIn) return null; const r = await apiCall('/user-reservations.php'); if(!r.length) return null; r.sort((a,b)=>b.id-a.id); return r[0].id; }
-  async function loadOrderStatus() { const rid = await getReservationId(); if(!rid) { document.getElementById('trackerContainer').innerHTML = '<p>No reservation found.</p>'; return; } try { const reservations = await apiCall('/user-reservations.php'); const r = reservations.find(rs=>rs.id==rid); if(!r) throw new Error('Not found'); currentReservation = r; const order = r.order || null; const steps = [ {label:'Reservation Submitted', desc:`Booking #${r.id} ${r.reservation_date} ${r.reservation_time}`, done:true}, {label:'Reservation Confirmed', desc:r.status==='confirmed'?'Confirmed': (r.status==='rejected'?'Rejected':'Pending'), done:r.status==='confirmed', active:r.status==='pending', rejected:r.status==='rejected'}, {label:'Pre-Order Received', desc:order?'Order placed':'No order', done:!!order, active:r.status==='confirmed'&&!order}, {label:'Being Prepared', desc:order?(order.status==='ready'?'Ready!':(order.status==='preparing'?'Preparing...':'Pending')):'-', done:order&&order.status==='ready', active:order&&(order.status==='pending'||order.status==='preparing')}, {label:'Ready – Pay at Counter', desc:order&&order.status==='ready'?'Food ready':'Not ready', done:order&&order.status==='ready'&&r.arrival_confirmed, active:order&&order.status==='ready'&&!r.arrival_confirmed}, {label:'Arrived', desc:r.arrival_confirmed?'Confirmed':'Not yet', done:r.arrival_confirmed} ]; const html = steps.map(s=>`<div class="tracker-step"><div class="step-dot ${s.rejected?'pending':s.done?'done':s.active?'active':'pending'}">${s.done?'✓':s.active?'●':'○'}</div><div><h5>${s.label}</h5><p class="text-muted">${s.desc}</p></div></div>`).join(''); document.getElementById('trackerContainer').innerHTML = html; document.getElementById('orderDetails').innerHTML = order ? `<p><b>Order total:</b> RM ${order.total_amount||0}</p>` : ''; const arrivalBtn = document.getElementById('arrivalBtn'); if(r.status!=='confirmed') { arrivalBtn.disabled=true; document.getElementById('arrivalMsg').innerText = 'Awaiting staff confirmation.'; } else if(r.arrival_confirmed) { arrivalBtn.disabled=true; document.getElementById('arrivalMsg').innerText = 'Arrival already confirmed.'; } else { arrivalBtn.disabled=false; arrivalBtn.onclick=()=>confirmArrival(rid); document.getElementById('arrivalMsg').innerText = 'Click when you arrive.'; } } catch(err) { console.error(err); document.getElementById('trackerContainer').innerHTML='<p>Error loading status.</p>'; } }
-  async function confirmArrival(rid) { try { await apiCall('/arrival.php', { method:'POST', body:JSON.stringify({ reservation_id: rid }) }); alert('Arrival confirmed!'); window.location.reload(); } catch(err) { alert('Error: '+err.message); } }
-  async function setupNav() {
-  const s = await checkSession();
-  const navDiv = document.getElementById('mainNav');
-  if (!navDiv) return;
-  const u = s.loggedIn ? s.user : null;
-  if (!u || u.role === 'customer') {
-    navDiv.innerHTML = `<a class="nav-link" href="index.html">Restaurants</a><a class="nav-link" href="booking-history.html">My Bookings</a><a class="nav-link" href="order-status.html">Order Status</a>`;
-  } else if (u.role === 'staff') {
-    navDiv.innerHTML = `<a class="nav-link fw-bold" href="staff-dashboard.html">↗ Staff Dashboard</a>`;
-  } else if (u.role === 'owner') {
-    navDiv.innerHTML = `<a class="nav-link fw-bold" href="owner-dashboard.html">↗ Owner Dashboard</a>`;
-  } else if (u.role === 'admin') {
-    navDiv.innerHTML = `<a class="nav-link fw-bold" href="admin.html">↗ Admin Dashboard</a>`;
-  }
-}
+  let currentReservation = null, currentOrder = null;
+  async function getReservationId() { const urlParams = new URLSearchParams(window.location.search); let rid = urlParams.get('reservation_id'); if (rid) return parseInt(rid); const session = await checkSession(); if (!session.loggedIn) return null; const reservations = await apiCall('/user-reservations.php'); if (!reservations.length) return null; reservations.sort((a,b) => b.id - a.id); return reservations[0].id; }
+  async function loadOrderStatus() { const trackerDiv = document.getElementById('trackerContainer'); const receiptDiv = document.getElementById('receiptBox'); const arrivalBtn = document.getElementById('arrivalBtn'); const arrivalMsg = document.getElementById('arrivalMsg'); try { const rid = await getReservationId(); if (!rid) { trackerDiv.innerHTML = '<p class="text-muted">No reservation found. <a href="search-results.html">Make a reservation</a> first.</p>'; arrivalBtn.disabled = true; arrivalMsg.innerText = 'No active reservation.'; return; } const reservations = await apiCall('/user-reservations.php'); currentReservation = reservations.find(r => r.id === rid); if (!currentReservation) throw new Error('Reservation not found'); currentOrder = currentReservation.order || null; const steps = [ { label: 'Reservation Submitted', desc: `Booking #${currentReservation.id} • ${currentReservation.reservation_date} ${currentReservation.reservation_time}`, done: true }, { label: 'Reservation Confirmed', desc: currentReservation.status === 'confirmed' ? 'Confirmed by staff.' : (currentReservation.status === 'rejected' ? 'Rejected.' : 'Pending confirmation.'), done: currentReservation.status === 'confirmed', active: currentReservation.status === 'pending', rejected: currentReservation.status === 'rejected' }, { label: 'Pre-Order Received', desc: currentOrder ? 'Order received.' : 'No pre-order placed.', done: !!currentOrder, active: currentReservation.status === 'confirmed' && !currentOrder }, { label: 'Being Prepared', desc: currentOrder ? (currentOrder.status === 'ready' ? 'Ready for pickup.' : (currentOrder.status === 'preparing' ? 'Preparing...' : 'Pending')) : '—', done: currentOrder && currentOrder.status === 'ready', active: currentOrder && (currentOrder.status === 'pending' || currentOrder.status === 'preparing') }, { label: 'Ready – Pay at Counter', desc: 'Pay when you arrive.', done: currentOrder && currentOrder.status === 'ready' && currentReservation.arrival_confirmed, active: currentOrder && currentOrder.status === 'ready' && !currentReservation.arrival_confirmed }, { label: 'Arrived', desc: currentReservation.arrival_confirmed ? '✅ Arrival confirmed.' : 'Confirm when at restaurant.', done: currentReservation.arrival_confirmed } ]; const stepsHtml = steps.map(s => { let cls = s.rejected ? 'pending' : s.done ? 'done' : s.active ? 'active' : 'pending'; let icon = s.rejected ? '✕' : s.done ? '✓' : s.active ? '●' : '○'; return `<div class="tracker-step"><div class="step-dot ${cls}">${icon}</div><div class="step-body"><h5>${s.label}</h5><p>${s.desc}</p></div></div>`; }).join(''); trackerDiv.innerHTML = `<div class="order-tracker">${stepsHtml}</div>`; receiptDiv.innerHTML = `<div class="receipt-card"><h5>Booking Receipt</h5><p><b>Restaurant:</b> ${escapeHtml(currentReservation.restaurant_name)}</p><p><b>Date/Time:</b> ${currentReservation.reservation_date} ${currentReservation.reservation_time}</p><p><b>Guests:</b> ${currentReservation.num_people}</p>${currentOrder ? `<p><b>Order Status:</b> <span class="status-badge ${currentOrder.status}">${currentOrder.status}</span></p>` : ''}</div>`; if (currentReservation.status !== 'confirmed') { arrivalBtn.disabled = true; arrivalMsg.innerText = 'Awaiting staff confirmation.'; } else if (currentReservation.arrival_confirmed) { arrivalBtn.disabled = true; arrivalMsg.innerText = 'Already confirmed.'; } else { arrivalBtn.disabled = false; arrivalMsg.innerText = 'Confirm only when physically at the restaurant.'; } } catch(err) { console.error(err); trackerDiv.innerHTML = '<p class="text-danger">Failed to load order status.</p>'; } }
+  async function confirmArrival() { if (!currentReservation) return; try { await apiCall('/arrival.php', { method: 'POST', body: JSON.stringify({ reservation_id: currentReservation.id }) }); alert('Arrival confirmed! Enjoy your meal.'); window.location.reload(); } catch(err) { alert('Error: ' + err.message); } }
+  function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
+  async function setupNav() { const s = await checkSession(); const navDiv = document.getElementById('mainNav'); if (!navDiv) return; const u = s.loggedIn ? s.user : null; if (!u || u.role === 'customer') { navDiv.innerHTML = `<a class="nav-link" href="index.html">Restaurants</a><a class="nav-link" href="booking-history.html">My Bookings</a><a class="nav-link" href="order-status.html">Order Status</a>`; } else if (u.role === 'staff') { navDiv.innerHTML = `<a class="nav-link fw-bold" href="staff-dashboard.html">↗ Staff Dashboard</a>`; } else if (u.role === 'owner') { navDiv.innerHTML = `<a class="nav-link fw-bold" href="owner-dashboard.html">↗ Owner Dashboard</a>`; } else if (u.role === 'admin') { navDiv.innerHTML = `<a class="nav-link fw-bold" href="admin.html">↗ Admin Dashboard</a>`; } }
   window.addEventListener('DOMContentLoaded', async () => { await nav(); await setupNav(); await loadOrderStatus(); });
 </script>
 </body>
