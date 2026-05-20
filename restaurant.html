@@ -15,6 +15,7 @@
     .review-card { background: var(--cream); border-radius: 16px; padding: 16px; margin-bottom: 12px; }
     .restaurant-img { max-width: 100%; height: auto; border-radius: 24px; margin-top: 20px; max-height: 300px; object-fit: cover; width: auto; box-shadow: 0 4px 12px rgba(0,0,0,.1); }
     .mobile-nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; }
+    .menu-img { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; }
     @media (max-width: 768px) {
       .mobile-nav { flex-direction: column; align-items: center; margin-top: 10px; }
       .restaurant-hero-img { padding: 20px 15px; }
@@ -22,6 +23,7 @@
       .slot { padding: 6px 12px; font-size: 14px; }
       .hero-meta { gap: 12px; font-size: 12px; }
       .summary-card { position: static; margin-top: 1.5rem; }
+      .menu-img { width: 40px; height: 40px; }
     }
   </style>
 </head>
@@ -29,7 +31,6 @@
 <nav class="navbar-etg">
   <div class="container">
     <a class="logo" href="index.html">Eat<span>To</span>Go</a>
-    <!-- Desktop navigation -->
     <div class="desktop-nav" id="mainNav"></div>
     <div style="display: flex; align-items: center; gap: 10px;">
       <button class="hamburger" id="hamburgerBtn">☰</button>
@@ -37,39 +38,28 @@
     </div>
   </div>
 </nav>
-
-<!-- Mobile sidebar -->
 <div class="mobile-sidebar" id="mobileSidebar">
   <button class="close-sidebar" id="closeSidebarBtn">×</button>
   <div id="mobileNavLinks"></div>
 </div>
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 <div id="restaurantDetail" class="container mt-4"></div>
+
 <footer class="minimal-footer">
   <div class="container d-flex justify-content-between flex-wrap gap-5">
-    <div class="footer-brand">
-      <h2>Eat<span>To</span>Go</h2>
-      <p>Final Year Project – Restaurant and Food Reservation System.</p>
-    </div>
-    <div class="footer-members">
-      <h4>Project Team</h4>
-      <ul class="list-unstyled">
-        <li>Navin Ramu</li>
-        <li>Muhamamd Nazim</li>
-        <li>Hadif</li>
-        <li>Ng Yue Yang</li>
-      </ul>
-    </div>
+    <div class="footer-brand"><h2>Eat<span>To</span>Go</h2><p>Final Year Project – Restaurant and Food Reservation System.</p></div>
+    <div class="footer-members"><h4>Project Team</h4><ul class="list-unstyled"><li>Navin Ramu</li><li>Muhamamd Nazim</li><li>Hadif</li><li>Ng Yue Yang</li></ul></div>
   </div>
   <div class="footer-bottom">© 2026 EatToGo • Universiti Teknologi Malaysia (UTM)</div>
 </footer>
+
 <script src="assets/js/api.js"></script>
-<script src="assets/js/mobile-nav.js"></script>
 <script>
   const urlParams = new URLSearchParams(window.location.search);
   const restaurantId = urlParams.get('id');
   let currentRestaurant = null;
   function formatPrice(price) { const num = parseFloat(price); return isNaN(num) ? '0.00' : num.toFixed(2); }
+  const defaultMenuSvg = "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23ddd%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2255%22%20font-size%3D%2212%22%20text-anchor%3D%22middle%22%20fill%3D%22%23666%22%3ENo%20Img%3C%2Ftext%3E%3C%2Fsvg%3E";
   async function loadRestaurantDetail() {
     const container = document.getElementById('restaurantDetail');
     if (!restaurantId) { container.innerHTML = '<div class="alert alert-danger">No restaurant specified.</div>'; return; }
@@ -102,7 +92,6 @@
         <div class="col-lg-8">
           <div class="card-etg p-4 mb-4">
             <h2>Reserve Your Table</h2>
-            <p class="text-muted">Choose reservation details first.</p>
             <div class="row g-3">
               <div class="col-md-6"><label>Date</label><input id="resDate" type="date" class="form-control" value="${today}"></div>
               <div class="col-md-6"><label>Guests</label><select id="guests" class="form-select"><option>2</option><option>4</option><option>6</option><option>8</option></select></div>
@@ -119,7 +108,14 @@
           <div class="card-etg p-4 mb-4">
             <h2>Menu Preview</h2>
             <div class="row g-3">
-              ${menu.map(item => `<div class="col-md-6"><div class="d-flex align-items-center gap-3 p-2 border rounded-3"><span style="font-size:32px">${item.emoji || '🍽️'}</span><div><b>${escapeHtml(item.name)}</b><br><small>RM ${formatPrice(item.price)} • ${escapeHtml(item.category)}</small></div></div></div>`).join('')}
+              ${menu.map(item => `
+                <div class="col-md-6">
+                  <div class="d-flex align-items-center gap-3 p-2 border rounded-3">
+                    ${item.image ? `<img src="${item.image}" class="menu-img" onerror="this.src='${defaultMenuSvg}'">` : `<span style="font-size:32px">${item.emoji || '🍽️'}</span>`}
+                    <div><b>${escapeHtml(item.name)}</b><br><small class="text-muted">RM ${formatPrice(item.price)} • ${escapeHtml(item.category)}</small></div>
+                  </div>
+                </div>
+              `).join('')}
             </div>
           </div>
           <div class="card-etg p-4">
@@ -167,6 +163,16 @@
     } else if (u.role === 'admin') {
       navDiv.innerHTML = `<a class="nav-link fw-bold" href="admin.html">↗ Admin Dashboard</a>`;
     }
+  }
+  // Sidebar toggle
+  const hamburger = document.getElementById('hamburgerBtn');
+  const sidebar = document.getElementById('mobileSidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  const closeBtn = document.getElementById('closeSidebarBtn');
+  if (hamburger && sidebar && overlay && closeBtn) {
+    hamburger.addEventListener('click', () => { sidebar.classList.add('open'); overlay.style.display = 'block'; });
+    closeBtn.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.style.display = 'none'; });
+    overlay.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.style.display = 'none'; });
   }
   window.addEventListener('DOMContentLoaded', async () => { await nav(); await setupNav(); await loadRestaurantDetail(); });
 </script>
