@@ -8,7 +8,6 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/style.css">
   <style>
-    /* Responsive sidebar and topbar */
     @media (max-width: 768px) {
       .sidebar { position: fixed; transform: translateX(-100%); transition: transform 0.3s ease; width: 260px; z-index: 1050; height: 100%; overflow-y: auto; background: #1C1208; }
       .sidebar.show { transform: translateX(0); }
@@ -31,6 +30,13 @@
       .topbar .right-group { display: flex; align-items: center; gap: 15px; }
     }
     #authArea { white-space: nowrap; }
+    .section-card { margin-bottom: 2rem; border-radius: 1rem; background: white; border: 1px solid #f0e8de; }
+    .section-header { background: #fff8f0; padding: 1rem 1.5rem; border-bottom: 1px solid #f0e8de; border-radius: 1rem 1rem 0 0; }
+    .section-body { padding: 1.5rem; }
+    .stat-card { background: white; border-radius: 1rem; padding: 1.2rem; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border: 1px solid #f0e8de; }
+    .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .btn-sm { margin: 2px; }
+    .modal-lg { max-width: 800px; }
   </style>
 </head>
 <body>
@@ -53,48 +59,120 @@
       <span id="authArea"></span>
     </div>
   </div>
+
   <div class="p-4">
     <!-- Stats -->
     <div class="row g-3 mb-4">
-      <div class="col-md-3"><div class="dash-card p-4"><b>Total Bookings</b><h2 id="statTotal">—</h2></div></div>
-      <div class="col-md-3"><div class="dash-card p-4"><b>Pending</b><h2 id="statPending">—</h2></div></div>
-      <div class="col-md-3"><div class="dash-card p-4"><b>Pre-Orders</b><h2 id="statOrders">—</h2></div></div>
-      <div class="col-md-3"><div class="dash-card p-4"><b>Restaurants</b><h2 id="statRestaurants">—</h2></div></div>
+      <div class="col-md-3"><div class="stat-card"><b>Total Bookings</b><h2 id="statTotal">—</h2></div></div>
+      <div class="col-md-3"><div class="stat-card"><b>Pending</b><h2 id="statPending">—</h2></div></div>
+      <div class="col-md-3"><div class="stat-card"><b>Pre-Orders</b><h2 id="statOrders">—</h2></div></div>
+      <div class="col-md-3"><div class="stat-card"><b>Restaurants</b><h2 id="statRestaurants">—</h2></div></div>
     </div>
 
     <!-- Bookings -->
-    <section id="bookings" class="card-etg p-4 mb-4">
-      <h3>📅 Booking Management</h3>
-      <div class="table-responsive"><table class="table"><thead><tr><th>ID</th><th>Customer</th><th>Restaurant</th><th>Date & Time</th><th>Guests</th><th>Status</th><th>Arrival</th><th>Action</th></td></thead><tbody id="bookingRows"></tbody></table></div>
-    </section>
+    <div id="bookings" class="section-card">
+      <div class="section-header"><h3 class="mb-0">📅 Booking Management</h3></div>
+      <div class="section-body">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead>
+              <tr><th>ID</th><th>Customer</th><th>Restaurant</th><th>Date & Time</th><th>Guests</th><th>Status</th><th>Arrival</th><th>Action</th></tr>
+            </thead>
+            <tbody id="bookingRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
 
     <!-- Restaurants -->
-    <section id="restaurants" class="card-etg p-4 mb-4">
-      <h3>🏪 Restaurant Information Management</h3>
-      <div class="row g-2 mb-3 align-items-end">
-        <div class="col-md-3"><label>Restaurant Name</label><input id="restNameInput" class="form-control" placeholder="Name"></div>
-        <div class="col-md-2"><label>Cuisine</label><input id="restCuisine" class="form-control" placeholder="Cuisine"></div>
-        <div class="col-md-2"><label>Location</label><input id="restLoc" class="form-control" placeholder="Location"></div>
-        <div class="col-md-2"><label>Price Range</label><input id="restPrice" class="form-control" placeholder="RM10-30"></div>
-        <div class="col-md-3"><button class="btn btn-etg w-100" onclick="addRestaurant()">+ Add Restaurant</button></div>
+    <div id="restaurants" class="section-card">
+      <div class="section-header"><h3 class="mb-0">🏪 Restaurant Management</h3></div>
+      <div class="section-body">
+        <div class="row g-2 mb-4 align-items-end">
+          <div class="col-md-3"><label class="form-label fw-bold">Name</label><input id="restNameInput" class="form-control" placeholder="Restaurant name"></div>
+          <div class="col-md-2"><label class="form-label fw-bold">Cuisine</label><input id="restCuisine" class="form-control" placeholder="Cuisine"></div>
+          <div class="col-md-2"><label class="form-label fw-bold">Location</label><input id="restLoc" class="form-control" placeholder="Location"></div>
+          <div class="col-md-2"><label class="form-label fw-bold">Price Range</label><input id="restPrice" class="form-control" placeholder="RM10-30"></div>
+          <div class="col-md-3"><button class="btn btn-etg w-100" onclick="addRestaurant()">+ Add Restaurant</button></div>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead>
+              <tr><th>Name</th><th>Cuisine</th><th>Location</th><th>Price Range</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="restaurantRows"></tbody>
+          </table>
+        </div>
       </div>
-      <div class="table-responsive"><table class="table"><thead><tr><th>Name</th><th>Cuisine</th><th>Location</th><th>Price</th><th>Action</th></tr></thead><tbody id="restaurantRows"></tbody></table></div>
-    </section>
+    </div>
 
     <!-- Accounts -->
-    <section id="accounts" class="card-etg p-4 mb-4">
-      <h3>👥 Accounts</h3>
-      <div class="table-responsive"><table class="table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Action</th></tr></thead><tbody id="accountRows"></tbody></table></div>
-      <div class="mt-3"><button class="btn btn-outline-etg btn-sm" onclick="sendFeedbackRequest()">📨 Send Feedback Request</button></div>
-    </section>
+    <div id="accounts" class="section-card">
+      <div class="section-header"><h3 class="mb-0">👥 Account Management</h3></div>
+      <div class="section-body">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead>
+              <tr><th>Name</th><th>Email</th><th>Role</th><th>Action</th></tr>
+            </thead>
+            <tbody id="accountRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
 
     <!-- Requests -->
-    <section id="requests" class="card-etg p-4">
-      <h3>📝 Restaurant Requests (from Owners)</h3>
-      <div class="table-responsive"><table class="table"><thead><tr><th>ID</th><th>Owner</th><th>Restaurant</th><th>Status</th><th>Action</th></tr></thead><tbody id="requestRows"></tbody></table></div>
-    </section>
+    <div id="requests" class="section-card">
+      <div class="section-header"><h3 class="mb-0">📝 Restaurant Requests (from Owners)</h3></div>
+      <div class="section-body">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead>
+              <tr><th>ID</th><th>Owner ID</th><th>Restaurant Name</th><th>Status</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="requestRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
 </main>
+
+<!-- Edit Restaurant Modal -->
+<div class="modal fade" id="editRestaurantModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Edit Restaurant Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editRestaurantForm">
+          <input type="hidden" id="editRestaurantId">
+          <input type="hidden" id="editImageCurrent">
+          <div class="row g-3">
+            <div class="col-md-6"><label class="form-label">Restaurant Name</label><input id="editName" class="form-control" required></div>
+            <div class="col-md-6"><label class="form-label">Cuisine</label><input id="editCuisine" class="form-control" required></div>
+            <div class="col-md-6"><label class="form-label">Location</label><input id="editLocation" class="form-control" required></div>
+            <div class="col-md-6"><label class="form-label">Price Range</label><input id="editPriceRange" class="form-control" placeholder="RM10-30"></div>
+            <div class="col-12"><label class="form-label">Description</label><textarea id="editDescription" class="form-control" rows="2"></textarea></div>
+            <div class="col-md-6"><label class="form-label">Operating Hours</label><input id="editHours" class="form-control" placeholder="10:00 AM - 10:00 PM"></div>
+            <div class="col-md-6"><label class="form-label">Promotion / Deal</label><input id="editDeal" class="form-control" placeholder="Special offer"></div>
+            <div class="col-12">
+              <label class="form-label">Restaurant Image</label>
+              <input type="file" id="editImageFile" class="form-control" accept="image/*">
+              <small class="text-muted">Leave empty to keep current image. Upload a new image to replace.</small>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-etg" id="saveRestaurantChanges">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <footer class="minimal-footer">
   <div class="container d-flex justify-content-between flex-wrap gap-5">
@@ -105,12 +183,15 @@
 </footer>
 
 <script src="assets/js/api.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+  // ==================== Admin Dashboard Functions ====================
   async function loadAdminData() {
     const session = await checkSession();
     if (!session.loggedIn || session.user.role !== 'admin') { alert('Unauthorized'); window.location.href='login.html'; return; }
     await renderStats(); await renderBookings(); await renderRestaurantTable(); await renderAccounts(); await renderRequests();
   }
+
   async function renderStats() {
     let bookings = await apiCall('/admin-bookings.php');
     let orders = await apiCall('/staff-orders.php');
@@ -120,57 +201,173 @@
     document.getElementById('statOrders').innerText = orders.length;
     document.getElementById('statRestaurants').innerText = restaurants.length;
   }
+
   async function renderBookings() {
     try {
       let b = await apiCall('/admin-bookings.php');
-      document.getElementById('bookingRows').innerHTML = b.map(b=>`<tr><td><b>${b.id}</b></td><td>${escapeHtml(b.customer_name)}</td><td>${escapeHtml(b.restaurant_name)}</td><td>${b.reservation_date} ${b.reservation_time}</td><td>${b.num_people}</td><td><span class="status ${b.status}">${b.status}</span></td><td>${b.arrival_confirmed?'Arrived':'No'}</td><td><button class="btn btn-sm btn-warning" onclick="alert('Edit not implemented')">Edit</button></td></tr>`).join('');
-    } catch(e) { document.getElementById('bookingRows').innerHTML='<tr><td colspan="8">Error loading bookings</div>'; }
+      document.getElementById('bookingRows').innerHTML = b.map(b=>`<tr>
+        <td><b>${b.id}</b></div>
+        <td>${escapeHtml(b.customer_name)}</div>
+        <td>${escapeHtml(b.restaurant_name)}</div>
+        <td>${b.reservation_date} ${b.reservation_time}</div>
+        <td>${b.num_people}</div>
+        <td><span class="status ${b.status}">${b.status}</span></div>
+        <td>${b.arrival_confirmed?'Arrived':'No'}</div>
+        <td><button class="btn btn-sm btn-danger" onclick="cancelBooking(${b.id})">Cancel Booking</button></div>
+      </tr>`).join('');
+    } catch(e) { document.getElementById('bookingRows').innerHTML='</td><td colspan="8">Error loading bookings</div>'; }
   }
+
+  async function cancelBooking(id) {
+    if (!confirm('Cancel this booking? This will also delete any associated order and feedback.')) return;
+    try {
+      await apiCall(`/admin-cancel-booking.php?id=${id}`, { method: 'DELETE' });
+      alert('Booking cancelled');
+      renderBookings(); renderStats();
+    } catch(e) { alert('Error: ' + e.message); }
+  }
+
   async function renderRestaurantTable() {
     let r = await apiCall('/admin-restaurants.php');
-    document.getElementById('restaurantRows').innerHTML = r.map(r=>`<tr><td>${escapeHtml(r.name)}</td><td>${escapeHtml(r.category)}</td><td>${escapeHtml(r.location)}</td><td>${escapeHtml(r.price_range)}</td><td><button class="btn btn-sm btn-warning" onclick="editRestaurant(${r.id})">Edit</button> <button class="btn btn-sm btn-danger" onclick="deleteRestaurant(${r.id})">Delete</button></td><table>`).join('');
+    document.getElementById('restaurantRows').innerHTML = r.map(r=>`<tr>
+        <td>${escapeHtml(r.name)}</div>
+        <td>${escapeHtml(r.category)}</div>
+        <td>${escapeHtml(r.location)}</div>
+        <td>${escapeHtml(r.price_range)}</div>
+        <td><button class="btn btn-sm btn-warning" onclick="openEditRestaurantModal(${r.id})">Edit</button> <button class="btn btn-sm btn-danger" onclick="deleteRestaurant(${r.id})">Delete</button></div>
+      </tr>`).join('');
   }
+
+  function openEditRestaurantModal(id) {
+    fetchRestaurantData(id);
+    const modal = new bootstrap.Modal(document.getElementById('editRestaurantModal'));
+    modal.show();
+  }
+
+  async function fetchRestaurantData(id) {
+    const restaurants = await apiCall('/admin-restaurants.php');
+    const r = restaurants.find(rest => rest.id == id);
+    if (!r) return;
+    document.getElementById('editRestaurantId').value = r.id;
+    document.getElementById('editName').value = r.name;
+    document.getElementById('editCuisine').value = r.category || '';
+    document.getElementById('editLocation').value = r.location || '';
+    document.getElementById('editPriceRange').value = r.price_range || '';
+    document.getElementById('editDescription').value = r.description || '';
+    document.getElementById('editHours').value = r.hours || '';
+    document.getElementById('editDeal').value = r.deal || '';
+    document.getElementById('editImageCurrent').value = r.image || '';
+    document.getElementById('editImageFile').value = '';
+  }
+
+  async function saveRestaurantChanges() {
+    const id = document.getElementById('editRestaurantId').value;
+    const name = document.getElementById('editName').value.trim();
+    const category = document.getElementById('editCuisine').value.trim();
+    const location = document.getElementById('editLocation').value.trim();
+    const price_range = document.getElementById('editPriceRange').value.trim();
+    const description = document.getElementById('editDescription').value.trim();
+    const hours = document.getElementById('editHours').value.trim();
+    const deal = document.getElementById('editDeal').value.trim();
+    const currentImage = document.getElementById('editImageCurrent').value;
+    const imageFile = document.getElementById('editImageFile').files[0];
+
+    if (!name || !category || !location) { alert('Name, cuisine and location are required'); return; }
+
+    let imagePath = currentImage;
+    if (imageFile) {
+      const formData = new FormData();
+      formData.append('image', imageFile);
+      try {
+        const uploadRes = await fetch(`${API_BASE}/admin-upload-image.php`, {
+          method: 'POST',
+          body: formData,
+          credentials: 'same-origin'
+        });
+        const uploadData = await uploadRes.json();
+        if (uploadData.success) {
+          imagePath = uploadData.imagePath;
+        } else {
+          alert('Image upload failed: ' + (uploadData.error || 'Unknown error'));
+          return;
+        }
+      } catch(e) {
+        alert('Error uploading image: ' + e.message);
+        return;
+      }
+    }
+
+    try {
+      await apiCall('/admin-restaurants.php', {
+        method: 'PUT',
+        body: JSON.stringify({ id, name, category, location, price_range, description, hours, deal, image: imagePath })
+      });
+      alert('Restaurant updated');
+      bootstrap.Modal.getInstance(document.getElementById('editRestaurantModal')).hide();
+      renderRestaurantTable(); renderStats();
+    } catch(e) { alert('Error: ' + e.message); }
+  }
+
   async function addRestaurant() {
     let name = document.getElementById('restNameInput').value.trim();
     if (!name) { alert('Name required'); return; }
     await apiCall('/admin-restaurants.php', { method:'POST', body: JSON.stringify({ name, category: document.getElementById('restCuisine').value, location: document.getElementById('restLoc').value, price_range: document.getElementById('restPrice').value }) });
     alert('Added'); renderRestaurantTable(); renderStats();
   }
-  async function editRestaurant(id) {
-    let newName = prompt('New name:'); if(!newName) return;
-    await apiCall('/admin-restaurants.php', { method:'PUT', body: JSON.stringify({ id, name: newName }) });
-    renderRestaurantTable();
-  }
+
   async function deleteRestaurant(id) {
-    if(confirm('Delete?')) { await apiCall(`/admin-restaurants.php?id=${id}`, { method:'DELETE' }); renderRestaurantTable(); renderStats(); }
+    if(confirm('Delete this restaurant? All associated data will be removed.')) {
+      await apiCall(`/admin-restaurants.php?id=${id}`, { method:'DELETE' });
+      renderRestaurantTable(); renderStats();
+    }
   }
+
   async function renderAccounts() {
     let u = await apiCall('/admin-users.php');
-    document.getElementById('accountRows').innerHTML = u.map(u=>`<tr><td>${escapeHtml(u.name)}</td><td>${escapeHtml(u.email)}</td><td>${u.role}</td><td><button class="btn btn-sm btn-danger" onclick="deleteUser(${u.id})">Delete</button></td></tr>`).join('');
+    document.getElementById('accountRows').innerHTML = u.map(u=>`<tr>
+        <td>${escapeHtml(u.name)}</div>
+        <td>${escapeHtml(u.email)}</div>
+        <td>${u.role}</div>
+        <td><button class="btn btn-sm btn-danger" onclick="deleteUser(${u.id})">Delete</button></div>
+      </tr>`).join('');
   }
+
   async function deleteUser(id) {
     if(confirm('Delete user?')) { await apiCall(`/admin-users.php?id=${id}`, { method:'DELETE' }); renderAccounts(); }
   }
-  function sendFeedbackRequest() { alert('Feedback request sent (simulated).'); }
+
   async function renderRequests() {
     let req = await apiCall('/admin-requests.php');
-    document.getElementById('requestRows').innerHTML = req.map(r=>`<tr><td>${r.id}</td><td>Owner ID: ${r.owner_id||'?'}</td><td>${escapeHtml(r.name)}</td><td><span class="status pending">${r.status}</span></td><td><button class="btn btn-sm btn-success" onclick="approveRequest(${r.id})">Approve</button> <button class="btn btn-sm btn-danger" onclick="rejectRequest(${r.id})">Reject</button></td></tr>`).join('');
+    document.getElementById('requestRows').innerHTML = req.map(r=>`<td>
+        <td>${r.id}</div>
+        <td>Owner ID: ${r.owner_id||'?'}</div>
+        <td>${escapeHtml(r.name)}</div>
+        <td><span class="status pending">${r.status}</span></div>
+        <td><button class="btn btn-sm btn-success" onclick="approveRequest(${r.id})">Approve</button> <button class="btn btn-sm btn-danger" onclick="rejectRequest(${r.id})">Reject</button></div>
+      </tr>`).join('');
   }
+
   async function approveRequest(id) {
     await apiCall('/admin-requests.php', { method:'PUT', body: JSON.stringify({ id, action:'approve' }) });
     alert('Approved'); renderRequests(); renderRestaurantTable();
   }
+
   async function rejectRequest(id) {
     await apiCall('/admin-requests.php', { method:'PUT', body: JSON.stringify({ id, action:'reject' }) });
     alert('Rejected'); renderRequests();
   }
+
   function escapeHtml(s) { if(!s) return ''; return s.replace(/[&<>]/g, m=>m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
+
+  // Sidebar toggle
   const menuToggle = document.getElementById('menuToggle');
   const sidebar = document.querySelector('.sidebar');
   if (menuToggle && sidebar) {
     menuToggle.addEventListener('click', () => sidebar.classList.toggle('show'));
     document.addEventListener('click', (e) => { if (window.innerWidth <= 768 && !sidebar.contains(e.target) && e.target !== menuToggle) sidebar.classList.remove('show'); });
   }
+
+  document.getElementById('saveRestaurantChanges').addEventListener('click', saveRestaurantChanges);
   window.addEventListener('DOMContentLoaded', async () => { await nav(); await loadAdminData(); });
 </script>
 </body>

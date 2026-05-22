@@ -8,7 +8,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/style.css">
   <style>
-    /* Responsive sidebar and topbar (same as admin) */
+    /* responsive sidebar & topbar (same as admin) */
     @media (max-width: 768px) {
       .sidebar { position: fixed; transform: translateX(-100%); transition: transform 0.3s ease; width: 260px; z-index: 1050; height: 100%; overflow-y: auto; background: #1C1208; }
       .sidebar.show { transform: translateX(0); }
@@ -68,10 +68,10 @@
     <!-- Reservations -->
     <section id="reservations" class="card-etg p-4 mb-4">
       <h3>📅 Incoming Reservations</h3>
-      <div class="table-responsive"><table class="table"><thead><tr><th>ID</th><th>Customer</th><th>Date/Time</th><th>Guests</th><th>Status</th><th>Arrival</th><th>Order</th></tr></thead><tbody id="reservationCards"></tbody></tr></div>
+      <div class="table-responsive"><table class="table"><thead><tr><th>ID</th><th>Customer</th><th>Date/Time</th><th>Guests</th><th>Status</th><th>Arrival</th><th>Order</th></tr></thead><tbody id="reservationCards"></tbody></table></div>
     </section>
 
-    <!-- My Restaurants (all owned) -->
+    <!-- My Restaurants -->
     <section id="my-restaurants" class="card-etg p-4 mb-4">
       <h3>🏪 My Restaurants</h3>
       <div id="restaurantsContainer"></div>
@@ -85,8 +85,12 @@
         <div class="col-md-3"><input id="restName" class="form-control" placeholder="Restaurant name" required></div>
         <div class="col-md-3"><input id="location" class="form-control" placeholder="Location" required></div>
         <div class="col-md-2"><select id="cuisine" class="form-select"><option>Japanese</option><option>Indian</option><option>Western</option><option>Malay</option><option>Chinese</option></select></div>
-        <div class="col-md-1"><button type="submit" class="btn btn-etg w-100">Submit</button></div>
+        <div class="col-md-12"><textarea id="description" class="form-control" rows="2" placeholder="Restaurant description"></textarea></div>
+        <div class="col-md-4"><input id="price_range" class="form-control" placeholder="Price range (e.g., RM10-30)"></div>
+        <div class="col-md-4"><input id="hours" class="form-control" placeholder="Operating hours (e.g., 10:00 AM - 10:00 PM)"></div>
+        <div class="col-md-4"><input id="deal" class="form-control" placeholder="Promotion / Deal (e.g., 10% off)"></div>
         <div class="col-md-12"><input type="file" id="restImage" class="form-control" accept="image/*"></div>
+        <div class="col-md-12"><button type="submit" class="btn btn-etg w-100">Submit Listing Request</button></div>
       </form>
       <div class="mt-4"><h5>Request History</h5><div class="table-responsive"><table class="table"><thead><tr><th>Restaurant</th><th>Status</th><th>Admin Response</th></tr></thead><tbody id="ownerRequests"></tbody></table></div></div>
     </section>
@@ -109,20 +113,71 @@
           <div class="col-md-1"><button type="submit" class="btn btn-etg w-100">Add</button></div>
         </form>
         <div class="table-responsive">
-          <table class="table"><thead><tr><th>Name</th><th>Email</th><th>Action</th></tr></thead><tbody id="staffList"></tbody></table>
+          <table class="table">
+            <thead>
+              <tr><th>Name</th><th>Email</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="staffList"></tbody>
+          </table>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<footer class="minimal-footer">
-  <div class="container d-flex justify-content-between flex-wrap gap-5">
-    <div class="footer-brand"><h2>Eat<span>To</span>Go</h2><p>Final Year Project – Restaurant and Food Reservation System.</p></div>
-    <div class="footer-members"><h4>Project Team</h4><ul class="list-unstyled"><li>Navin Ramu</li><li>Muhamamd Nazim</li><li>Hadif</li><li>Ng Yue Yang</li></ul></div>
+<!-- Edit Staff Modal -->
+<div class="modal fade" id="editStaffModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Edit Staff Member</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editStaffForm">
+          <input type="hidden" id="editStaffId">
+          <input type="hidden" id="editStaffRestaurantId">
+          <div class="mb-3"><label class="form-label">Name</label><input id="editStaffName" class="form-control" required></div>
+          <div class="mb-3"><label class="form-label">New Password <span class="text-muted">(leave blank to keep current)</span></label><input type="password" id="editStaffPassword" class="form-control"></div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-etg" id="saveStaffChanges">Save</button>
+      </div>
+    </div>
   </div>
-  <div class="footer-bottom">© 2026 EatToGo • Universiti Teknologi Malaysia (UTM)</div>
-</footer>
+</div>
+
+<!-- Edit Restaurant Modal (unchanged) -->
+<div class="modal fade" id="editRestaurantModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Edit Restaurant Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editRestaurantForm">
+          <input type="hidden" id="editRestaurantId">
+          <div class="mb-3"><label class="form-label">Restaurant Name</label><input id="editName" class="form-control" required></div>
+          <div class="mb-3"><label class="form-label">Location</label><input id="editLocation" class="form-control" required></div>
+          <div class="mb-3"><label class="form-label">Cuisine</label><input id="editCategory" class="form-control" required></div>
+          <div class="mb-3"><label class="form-label">Description</label><textarea id="editDescription" class="form-control" rows="2"></textarea></div>
+          <div class="mb-3"><label class="form-label">Price Range</label><input id="editPriceRange" class="form-control" placeholder="RM10-30"></div>
+          <div class="mb-3"><label class="form-label">Operating Hours</label><input id="editHours" class="form-control" placeholder="10:00 AM - 10:00 PM"></div>
+          <div class="mb-3"><label class="form-label">Promotion / Deal</label><input id="editDeal" class="form-control" placeholder="Special offer"></div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-etg" id="saveRestaurantChanges">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="minimal-footer">...</footer>
 
 <script src="assets/js/api.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -159,12 +214,14 @@
           <p>${escapeHtml(r.location)} • ${escapeHtml(r.category)}</p>
           <span class="status ${r.status}">${r.status}</span>
           ${r.status === 'approved' ? `<button class="btn btn-sm btn-outline-etg ms-2" onclick="openStaffModal(${r.id}, '${escapeHtml(r.name)}')">👥 Manage Staff</button>` : ''}
+          ${r.status === 'approved' ? `<button class="btn btn-sm btn-outline-etg ms-2" onclick="openEditModal(${r.id})">✏️ Edit Details</button>` : ''}
         </div>
         <img src="${r.image || 'assets/img/default-restaurant.jpg'}" alt="${escapeHtml(r.name)}">
       </div>
     `).join('');
   }
 
+  // Staff management
   function openStaffModal(restaurantId, restaurantName) {
     currentRestaurantId = restaurantId;
     document.getElementById('modalRestaurantName').innerText = restaurantName;
@@ -177,16 +234,51 @@
     try {
       const staff = await apiCall(`/owner-staff.php?restaurant_id=${restaurantId}`);
       const tbody = document.getElementById('staffList');
-      if (!staff.length) { tbody.innerHTML = '</td><td colspan="3">No staff yet. Add staff above.</div>'; return; }
+      if (!staff.length) { tbody.innerHTML = '<tr><td colspan="3">No staff yet. Add staff above.</div>'; return; }
       tbody.innerHTML = staff.map(s => `
         <tr>
           <td>${escapeHtml(s.name)}</div>
           <td>${escapeHtml(s.email)}</div>
-          <td><button class="btn btn-sm btn-danger" onclick="deleteStaff(${s.id}, ${restaurantId})">Remove</button></div>
+          <td class="d-flex gap-1">
+            <button class="btn btn-sm btn-warning" onclick="openEditStaffModal(${s.id}, '${escapeHtml(s.name)}', ${restaurantId})">✏️ Edit</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteStaff(${s.id}, ${restaurantId})">🗑️ Remove</button>
+          </td>
         </tr>
       `).join('');
     } catch(e) { console.error(e); tbody.innerHTML = '<tr><td colspan="3">Error loading staff.</div>'; }
   }
+
+  // Edit staff modal
+  let currentEditStaffId = null;
+  let currentEditRestaurantId = null;
+
+  function openEditStaffModal(staffId, staffName, restaurantId) {
+    currentEditStaffId = staffId;
+    currentEditRestaurantId = restaurantId;
+    document.getElementById('editStaffId').value = staffId;
+    document.getElementById('editStaffName').value = staffName;
+    document.getElementById('editStaffPassword').value = '';
+    document.getElementById('editStaffRestaurantId').value = restaurantId;
+    const modal = new bootstrap.Modal(document.getElementById('editStaffModal'));
+    modal.show();
+  }
+
+  document.getElementById('saveStaffChanges').addEventListener('click', async () => {
+    const staffId = document.getElementById('editStaffId').value;
+    const restaurantId = document.getElementById('editStaffRestaurantId').value;
+    const name = document.getElementById('editStaffName').value.trim();
+    const password = document.getElementById('editStaffPassword').value;
+    if (!name) { alert('Name is required'); return; }
+    try {
+      await apiCall('/update-staff.php', {
+        method: 'PUT',
+        body: JSON.stringify({ id: staffId, restaurant_id: restaurantId, name, password })
+      });
+      alert('Staff updated');
+      bootstrap.Modal.getInstance(document.getElementById('editStaffModal')).hide();
+      loadStaffList(restaurantId);
+    } catch(e) { alert('Error: ' + e.message); }
+  });
 
   async function addStaff(e) {
     e.preventDefault();
@@ -214,6 +306,47 @@
     } catch(e) { alert(e.message); }
   }
 
+  // Edit restaurant modal
+  function openEditModal(restaurantId) {
+    const restaurant = allRestaurants.find(r => r.id == restaurantId);
+    if (!restaurant) return;
+    document.getElementById('editRestaurantId').value = restaurant.id;
+    document.getElementById('editName').value = restaurant.name;
+    document.getElementById('editLocation').value = restaurant.location;
+    document.getElementById('editCategory').value = restaurant.category;
+    document.getElementById('editDescription').value = restaurant.description || '';
+    document.getElementById('editPriceRange').value = restaurant.price_range || '';
+    document.getElementById('editHours').value = restaurant.hours || '';
+    document.getElementById('editDeal').value = restaurant.deal || '';
+    const modal = new bootstrap.Modal(document.getElementById('editRestaurantModal'));
+    modal.show();
+  }
+
+  document.getElementById('saveRestaurantChanges').addEventListener('click', async () => {
+    const id = document.getElementById('editRestaurantId').value;
+    const name = document.getElementById('editName').value.trim();
+    const location = document.getElementById('editLocation').value.trim();
+    const category = document.getElementById('editCategory').value.trim();
+    const description = document.getElementById('editDescription').value.trim();
+    const price_range = document.getElementById('editPriceRange').value.trim();
+    const hours = document.getElementById('editHours').value.trim();
+    const deal = document.getElementById('editDeal').value.trim();
+    if (!name || !location || !category) {
+      alert('Name, location and cuisine are required');
+      return;
+    }
+    try {
+      await apiCall('/update-restaurant.php', {
+        method: 'PUT',
+        body: JSON.stringify({ id, name, location, category, description, price_range, hours, deal })
+      });
+      alert('Restaurant details updated');
+      bootstrap.Modal.getInstance(document.getElementById('editRestaurantModal')).hide();
+      await loadRestaurants();
+    } catch(e) { alert('Error: ' + e.message); }
+  });
+
+  // Stats, reservations, request history (unchanged)
   async function renderStats() {
     try {
       const res = await apiCall('/owner-reservations.php');
@@ -242,26 +375,41 @@
 
   async function renderOwnerRequests() {
     try {
-      const req = await apiCall('/owner-requests.php');
-      document.getElementById('ownerRequests').innerHTML = req.map(r=>`<tr>
-        <td>${escapeHtml(r.name)}</div>
-        <td><span class="status ${r.status}">${r.status}</span></div>
-        <td>${r.status==='approved'?'Approved':r.status==='rejected'?'Rejected':'Pending'}</div>
-      </tr>`).join('');
+        const req = await apiCall('/owner-requests.php');
+        const tbody = document.getElementById('ownerRequests');
+        if (!req.length) {
+            tbody.innerHTML = '</table><td colspan="3" class="text-muted">No requests yet. </div>';
+            return;
+        }
+        tbody.innerHTML = req.map(r => `
+            <tr>
+                <td>${escapeHtml(r.name)}</td>
+                <td><span class="status ${r.status}">${r.status}</span></td>
+                <td>${r.status === 'approved' ? '✅ Approved' : (r.status === 'rejected' ? '❌ Rejected' : '⏳ Pending admin review')}</td>
+            </tr>
+        `).join('');
     } catch(e) { console.error(e); }
-  }
+}
 
   document.getElementById('listingForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const restName = document.getElementById('restName').value.trim();
     const location = document.getElementById('location').value.trim();
     const cuisine = document.getElementById('cuisine').value;
+    const description = document.getElementById('description').value.trim();
+    const price_range = document.getElementById('price_range').value.trim();
+    const hours = document.getElementById('hours').value.trim();
+    const deal = document.getElementById('deal').value.trim();
     const imageFile = document.getElementById('restImage').files[0];
     if (!restName || !location) { alert('Restaurant name and location required'); return; }
     const formData = new FormData();
     formData.append('restaurant_name', restName);
     formData.append('location', location);
     formData.append('cuisine', cuisine);
+    if (description) formData.append('description', description);
+    if (price_range) formData.append('price_range', price_range);
+    if (hours) formData.append('hours', hours);
+    if (deal) formData.append('deal', deal);
     if (imageFile) formData.append('image', imageFile);
     try {
       const res = await fetch(`${API_BASE}/owner-request.php`, { method: 'POST', body: formData, credentials: 'same-origin' });

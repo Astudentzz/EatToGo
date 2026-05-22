@@ -14,6 +14,10 @@ $owner_id = $_SESSION['user']['id'];
 $restaurant_name = $_POST['restaurant_name'] ?? '';
 $location = $_POST['location'] ?? '';
 $cuisine = $_POST['cuisine'] ?? '';
+$description = $_POST['description'] ?? '';
+$price_range = $_POST['price_range'] ?? '';
+$hours = $_POST['hours'] ?? '';
+$deal = $_POST['deal'] ?? '';
 
 if (!$restaurant_name || !$location) {
     http_response_code(400);
@@ -38,8 +42,8 @@ if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
     }
 }
 
-$stmt = $pdo->prepare("INSERT INTO restaurants (name, location, category, status, owner_id, image) VALUES (?, ?, ?, 'pending', ?, ?)");
-$stmt->execute([$restaurant_name, $location, $cuisine, $owner_id, $imagePath]);
+$stmt = $pdo->prepare("INSERT INTO restaurants (name, location, category, description, price_range, hours, deal, status, owner_id, image) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)");
+$stmt->execute([$restaurant_name, $location, $cuisine, $description, $price_range, $hours, $deal, $owner_id, $imagePath]);
 
 echo json_encode(['success' => true, 'message' => 'Request submitted for admin approval']);
 ?>
