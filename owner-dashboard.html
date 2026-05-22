@@ -7,149 +7,242 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/style.css">
-  <style>
-    @media (max-width: 768px) {
-      .sidebar { position: fixed; transform: translateX(-100%); transition: transform 0.3s; width: 260px; z-index: 1050; height: 100%; overflow-y: auto; background: #1C1208; }
-      .sidebar.show { transform: translateX(0); }
-      .owner-main { margin-left: 0 !important; }
-    }
-    @media (min-width: 769px) {
-      .sidebar { position: fixed; width: 260px; min-height: 100vh; }
-      .owner-main { margin-left: 260px; }
-    }
-    .topbar { background: white; padding: 12px 20px; box-shadow: 0 2px 10px rgba(0,0,0,.06); }
-    @media (max-width: 768px) {
-      .topbar { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; }
-      .topbar h2 { grid-column: 1; grid-row: 1; margin: 0; font-size: 1.2rem; }
-      .topbar .right-group { grid-column: 2; grid-row: 1; display: flex; gap: 10px; align-items: center; }
-      .topbar .hamburger { grid-column: 1; grid-row: 2; justify-self: start; background: none; border: none; font-size: 24px; padding: 0; color: var(--orange); cursor: pointer; }
-    }
-    @media (min-width: 769px) {
-      .topbar { display: flex; justify-content: space-between; align-items: center; }
-      .topbar .hamburger { display: none; }
-      .topbar .right-group { display: flex; align-items: center; gap: 15px; }
-    }
-    #authArea { white-space: nowrap; }
-  </style>
 </head>
 <body>
-<aside class="sidebar">
-  <a class="logo" href="index.html">Eat<span>To</span>Go</a>
-  <hr>
-  <a class="active" href="owner-dashboard.html">📊 Overview</a>
-  <a href="#reservations">📅 Reservations</a>
-  <a href="#listing">📝 Listing Request</a>
-  <a href="#staff">👥 Manage Staff</a>
-  <a href="#" onclick="logout(); return false;">🚪 Sign Out</a>
-</aside>
-
-<main class="owner-main">
-  <div class="topbar">
-    <h2>Owner Dashboard</h2>
-    <button class="hamburger" id="menuToggle">☰</button>
-    <div class="right-group">
-      <span id="authArea"></span>
+  <aside class="sidebar">
+    <a class="logo" href="index.html">Eat<span>To</span>Go</a>
+    <hr>
+    <a class="active" href="#overview">📊 Overview</a>
+    <a href="#reservations">📅 Reservations</a>
+    <a href="#listing">📝 Listing Request</a>
+    <a href="#staff">👥 Manage Staff</a>
+    <a href="owner-profile.html">👤 My Profile</a>
+    <a href="#" onclick="logout(); return false;">🚪 Sign Out</a>
+  </aside>
+  <main class="admin-main">
+    <div class="topbar d-flex justify-content-between">
+      <h2>Owner Dashboard</h2>
+      <div id="authArea"></div>
     </div>
-  </div>
-  <div class="p-4">
-    <div class="row g-3 mb-4">
-      <div class="col-md-3"><div class="dash-card p-4"><b>📅 Today</b><h2 id="statToday">—</h2></div></div>
-      <div class="col-md-3"><div class="dash-card p-4"><b>📋 Total Reservations</b><h2 id="statTotal">—</h2></div></div>
-      <div class="col-md-3"><div class="dash-card p-4"><b>✅ Confirmed</b><h2 id="statConfirmed">—</h2></div></div>
-      <div class="col-md-3"><div class="dash-card p-4"><b>⏳ Pending</b><h2 id="statPending">—</h2></div></div>
-    </div>
-    <section id="reservations" class="card-etg p-4 mb-4">
-      <h3>📅 Incoming Reservations</h3>
-      <div class="table-responsive"><table class="table"><thead><tr><th>ID</th><th>Customer</th><th>Date/Time</th><th>Guests</th><th>Status</th><th>Arrival</th><th>Order</th></tr></thead><tbody id="reservationCards"></tbody></table></div>
-    </section>
-    <section id="listing" class="card-etg p-4 mb-4">
-      <h3>📝 Apply for Restaurant Listing</h3>
-      <form id="listingForm" class="row g-3">
-        <div class="col-md-3"><input id="ownerName" class="form-control" placeholder="Owner name" required></div>
-        <div class="col-md-3"><input id="restName" class="form-control" placeholder="Restaurant name" required></div>
-        <div class="col-md-3"><input id="location" class="form-control" placeholder="Location" required></div>
-        <div class="col-md-2"><select id="cuisine" class="form-select"><option>Japanese</option><option>Indian</option><option>Western</option><option>Malay</option><option>Chinese</option></select></div>
-        <div class="col-md-1"><button type="submit" class="btn btn-etg w-100">Submit</button></div>
-      </form>
-      <div class="mt-4"><h5>Request History</h5><div class="table-responsive"><table class="table"><thead><tr><th>Restaurant</th><th>Status</th><th>Admin Response</th></tr></thead><tbody id="ownerRequests"></tbody></table></div></div>
-    </section>
-    <section id="staff" class="card-etg p-4">
-      <h3>👥 Manage Staff</h3>
-      <div id="staffMsg" class="alert alert-warning" style="display:none">You need an approved restaurant first.</div>
-      <div id="staffActive" style="display:none">
-        <form id="addStaffForm" class="row g-3 mb-3">
-          <div class="col-md-4"><input id="staffName" class="form-control" placeholder="Name" required></div>
-          <div class="col-md-4"><input id="staffEmail" class="form-control" placeholder="Email" required></div>
-          <div class="col-md-3"><input id="staffPassword" type="password" class="form-control" placeholder="Password" required></div>
-          <div class="col-md-1"><button type="submit" class="btn btn-etg w-100">Add</button></div>
-        </form>
-        <div class="table-responsive"><table class="table"><thead><tr><th>Name</th><th>Email</th><th>Action</th></tr></thead><tbody id="staffList"></tbody></table></div>
+    <div class="p-4">
+      <div class="row g-3 mb-4">
+        <div class="col-md-3"><div class="dash-card p-4"><b>📅 Today</b><h2 id="statToday">—</h2></div></div>
+        <div class="col-md-3"><div class="dash-card p-4"><b>📋 Total Reservations</b><h2 id="statTotal">—</h2></div></div>
+        <div class="col-md-3"><div class="dash-card p-4"><b>✅ Confirmed</b><h2 id="statConfirmed">—</h2></div></div>
+        <div class="col-md-3"><div class="dash-card p-4"><b>⏳ Pending</b><h2 id="statPending">—</h2></div></div>
       </div>
-    </section>
-  </div>
-</main>
 
-<footer class="minimal-footer">
-  <div class="container d-flex justify-content-between flex-wrap gap-5">
-    <div class="footer-brand"><h2>Eat<span>To</span>Go</h2><p>Final Year Project – Restaurant and Food Reservation System.</p></div>
-    <div class="footer-members"><h4>Project Team</h4><ul class="list-unstyled"><li>Navin Ramu</li><li>Muhamamd Nazim</li><li>Hadif</li><li>Ng Yue Yang</li></ul></div>
-  </div>
-  <div class="footer-bottom">© 2026 EatToGo • Universiti Teknologi Malaysia (UTM)</div>
-</footer>
+      <section id="reservations" class="card-etg p-4 mb-4">
+        <h3>📅 Incoming Reservations</h3>
+        <div class="table-responsive"><table class="table"><thead><tr><th>ID</th><th>Customer</th><th>Date/Time</th><th>Guests</th><th>Status</th><th>Arrival</th><th>Order</th></tr></thead><tbody id="reservationCards"></tbody></table></div>
+      </section>
 
-<script src="assets/js/api.js"></script>
-<script>
-  let ownerRestaurantId = null;
-  async function loadOwnerData() {
-    const session = await checkSession();
-    if (!session.loggedIn || session.user.role !== 'owner') { alert('Unauthorized'); window.location.href='login.html'; return; }
-    ownerRestaurantId = session.user.restaurant_id;
-    await renderStats(); await renderOwnerReservations(); await renderOwnerRequests();
-    if (ownerRestaurantId) { document.getElementById('staffActive').style.display = 'block'; document.getElementById('staffMsg').style.display = 'none'; loadStaffList(); }
-    else { document.getElementById('staffActive').style.display = 'none'; document.getElementById('staffMsg').style.display = 'block'; }
+      <section id="listing" class="card-etg p-4 mb-4">
+  <h3 class="mb-4">📝 Apply for Restaurant Listing</h3>
+  <div class="row g-4">
+    <div class="col-lg-5">
+      <form id="listingForm" class="d-flex flex-column gap-3" enctype="multipart/form-data">
+        <div>
+          <label class="fw-bold mb-1">Owner Name</label>
+          <input id="ownerName" class="form-control" placeholder="Your full name" required>
+        </div>
+        <div>
+          <label class="fw-bold mb-1">Restaurant Name</label>
+          <input id="restName" class="form-control" placeholder="Restaurant name" required>
+        </div>
+        <div>
+          <label class="fw-bold mb-1">Location</label>
+          <input id="location" class="form-control" placeholder="e.g. Johor Bahru, Skudai" required>
+        </div>
+        <div>
+          <label class="fw-bold mb-1">Cuisine Type</label>
+          <select id="cuisine" class="form-select" required>
+            <option value="Japanese">Japanese</option>
+            <option value="Indian">Indian</option>
+            <option value="Western">Western</option>
+            <option value="Malay">Malay</option>
+            <option value="Chinese">Chinese</option>
+            <option value="Italian">Italian</option>
+          </select>
+        </div>
+        <div>
+          <label class="fw-bold mb-1">Restaurant Image</label>
+          <input type="file" id="restImage" class="form-control" accept="image/jpeg,image/png,image/jpg">
+          <small class="text-muted">Upload a photo of the restaurant (optional)</small>
+        </div>
+        <button type="submit" class="btn btn-etg w-100">Submit Listing Request</button>
+      </form>
+    </div>
+    <div class="col-lg-7">
+      <h5 class="mb-3">Request History</h5>
+      <div class="table-responsive">
+        <table class="table">
+          <thead><tr><th>Restaurant</th><th>Status</th><th>Admin Response</th></tr></thead>
+          <tbody id="ownerRequests"></tbody>
+        </table>
+      </div>
+      <p class="text-muted" style="font-size:13px">ℹ️ Once admin approves your listing, customers can find and book your restaurant. Staff will handle day-to-day reservations.</p>
+    </div>
+  </div>
+</section>
+
+      <section id="staff" class="card-etg p-4">
+        <h3>👥 Manage Staff</h3>
+        <div id="staffMsg" class="alert alert-warning" style="display:none">You need an approved restaurant first.</div>
+        <div id="staffActive">
+          <form id="addStaffForm" class="row g-3 mb-3">
+            <div class="col-md-4"><input id="staffName" class="form-control" placeholder="Staff name" required></div>
+            <div class="col-md-4"><input id="staffEmail" class="form-control" placeholder="Email" required></div>
+            <div class="col-md-3"><input id="staffPassword" type="password" class="form-control" placeholder="Password" required></div>
+            <div class="col-md-1"><button type="submit" class="btn btn-etg w-100">Add</button></div>
+          </form>
+          <table class="table"><thead><tr><th>Name</th><th>Email</th><th>Action</th></tr></thead><tbody id="staffList"></tbody></table>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="assets/js/api.js"></script>
+  <script>
+    let ownerRestaurantId = null;
+
+    async function loadOwnerData() {
+      const session = await checkSession();
+      if (!session.loggedIn || session.user.role !== 'owner') {
+        alert('Unauthorized. Please login as owner.');
+        window.location.href = 'login.html';
+        return;
+      }
+      ownerRestaurantId = session.user.restaurant_id;
+      renderStats();
+      renderOwnerReservations();
+      renderOwnerRequests();
+      if (ownerRestaurantId) {
+        document.getElementById('staffActive').style.display = 'block';
+        document.getElementById('staffMsg').style.display = 'none';
+        loadStaffList();
+      } else {
+        document.getElementById('staffActive').style.display = 'none';
+        document.getElementById('staffMsg').style.display = 'block';
+      }
+    }
+
+    async function renderStats() {
+      try {
+        const reservations = await apiCall('/owner-reservations.php');
+        const today = new Date().toISOString().slice(0,10);
+        document.getElementById('statToday').innerText = reservations.filter(r => r.reservation_date === today).length;
+        document.getElementById('statTotal').innerText = reservations.length;
+        document.getElementById('statConfirmed').innerText = reservations.filter(r => r.status === 'confirmed').length;
+        document.getElementById('statPending').innerText = reservations.filter(r => r.status === 'pending').length;
+      } catch(e) { console.error(e); }
+    }
+
+    async function renderOwnerReservations() {
+      const tbody = document.getElementById('reservationCards');
+      try {
+        const bookings = await apiCall('/owner-reservations.php');
+        if (!bookings.length) { tbody.innerHTML = '<tr><td colspan="7">No reservations.</td></tr>'; return; }
+        tbody.innerHTML = bookings.map(b => `
+          <tr>
+            <td>${b.id}</td><td>${escapeHtml(b.customer_name)}</td>
+            <td>${b.reservation_date} ${b.reservation_time}</td><td>${b.num_people}</td>
+            <td><span class="status ${b.status}">${b.status}</span></td>
+            <td>${b.arrival_confirmed ? 'Arrived' : 'Not arrived'}</td>
+            <td>${b.order ? b.order.status : '-'}</td>
+          </tr>`).join('');
+      } catch(e) { console.error(e); }
+    }
+
+    async function renderOwnerRequests() {
+      const tbody = document.getElementById('ownerRequests');
+      try {
+        const requests = await apiCall('/owner-requests.php');
+        if (!requests.length) { tbody.innerHTML = '<tr><td colspan="3">No requests yet.</td></tr>'; return; }
+        tbody.innerHTML = requests.map(r => `<tr><td>${escapeHtml(r.name)}</td><td><span class="status ${r.status}">${r.status}</span></td><td>${r.status === 'approved' ? 'Approved' : (r.status === 'rejected' ? 'Rejected' : 'Pending')}</td>`).join('');
+      } catch(e) { console.error(e); }
+    }
+
+    async function ownerRequest(e) {
+  e.preventDefault();
+  const ownerName = document.getElementById('ownerName').value.trim();
+  const restName = document.getElementById('restName').value.trim();
+  const location = document.getElementById('location').value.trim();
+  const cuisine = document.getElementById('cuisine').value;
+  const imageFile = document.getElementById('restImage').files[0];
+
+  if (!restName || !location) {
+    alert('Restaurant name and location required');
+    return;
   }
-  async function renderStats() {
-    try {
-      const res = await apiCall('/owner-reservations.php');
-      const today = new Date().toISOString().slice(0,10);
-      document.getElementById('statToday').innerText = res.filter(r=>r.reservation_date===today).length;
-      document.getElementById('statTotal').innerText = res.length;
-      document.getElementById('statConfirmed').innerText = res.filter(r=>r.status==='confirmed').length;
-      document.getElementById('statPending').innerText = res.filter(r=>r.status==='pending').length;
-    } catch(e) { console.error(e); }
+
+  const formData = new FormData();
+  formData.append('owner_name', ownerName);
+  formData.append('restaurant_name', restName);
+  formData.append('location', location);
+  formData.append('cuisine', cuisine);
+  if (imageFile) {
+    formData.append('image', imageFile);
   }
-  async function renderOwnerReservations() {
-    try {
-      const r = await apiCall('/owner-reservations.php');
-      document.getElementById('reservationCards').innerHTML = r.map(r=>`<tr><td>${r.id}</td><td>${escapeHtml(r.customer_name)}</td><td>${r.reservation_date} ${r.reservation_time}</td><td>${r.num_people}</td><td><span class="status ${r.status}">${r.status}</span></td><td>${r.arrival_confirmed?'Arrived':'Not arrived'}</td><td>${r.order?r.order.status:'-'}</td></tr>`).join('');
-    } catch(e) { document.getElementById('reservationCards').innerHTML='<tr><td colspan="7">Error loading bookings</div>'; }
+
+  try {
+    const response = await fetch(`${API_BASE}/owner-request.php`, {
+      method: 'POST',
+      body: formData,
+      credentials: 'same-origin'
+    });
+    const result = await response.json();
+    if (result.success) {
+      alert('Request submitted! Admin will review it.');
+      document.getElementById('listingForm').reset();
+      renderOwnerRequests();
+    } else {
+      alert(result.error || 'Submission failed.');
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Error: ' + err.message);
   }
-  async function renderOwnerRequests() {
-    try {
-      const req = await apiCall('/owner-requests.php');
-      document.getElementById('ownerRequests').innerHTML = req.map(r=>`<tr><td>${escapeHtml(r.name)}</td><td><span class="status ${r.status}">${r.status}</span></td><td>${r.status==='approved'?'Approved':r.status==='rejected'?'Rejected':'Pending'}</td></tr>`).join('');
-    } catch(e) { console.error(e); }
-  }
-  document.getElementById('listingForm')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const restName = document.getElementById('restName').value.trim(), location = document.getElementById('location').value.trim(), cuisine = document.getElementById('cuisine').value;
-    if (!restName || !location) { alert('Name and location required'); return; }
-    try { await apiCall('/owner-request.php', { method:'POST', body: JSON.stringify({ restaurant_name: restName, location, cuisine }) }); alert('Request submitted'); e.target.reset(); await renderOwnerRequests(); } catch(err) { alert(err.message); }
-  });
-  async function loadStaffList() {
-    try { const staff = await apiCall('/owner-staff.php'); document.getElementById('staffList').innerHTML = staff.map(s=>`<tr><td>${escapeHtml(s.name)}</td><td>${escapeHtml(s.email)}</td><td><button class="btn btn-sm btn-danger" onclick="deleteStaff(${s.id})">Remove</button></td></tr>`).join(''); } catch(e) { console.error(e); }
-  }
-  async function addStaff(e) { e.preventDefault(); const name = document.getElementById('staffName').value, email = document.getElementById('staffEmail').value, password = document.getElementById('staffPassword').value; if(!name||!email||!password) { alert('All fields required'); return; } await apiCall('/owner-staff.php', { method:'POST', body: JSON.stringify({ name, email, password }) }); alert('Staff added'); document.getElementById('addStaffForm').reset(); loadStaffList(); }
-  async function deleteStaff(id) { if(confirm('Remove staff?')) { await apiCall(`/owner-staff.php?id=${id}`, { method:'DELETE' }); loadStaffList(); } }
-  document.getElementById('addStaffForm')?.addEventListener('submit', addStaff);
-  function escapeHtml(s) { if(!s) return ''; return s.replace(/[&<>]/g, m=>m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
-  const menuToggle = document.getElementById('menuToggle');
-  const sidebar = document.querySelector('.sidebar');
-  if (menuToggle && sidebar) {
-    menuToggle.addEventListener('click', () => sidebar.classList.toggle('show'));
-    document.addEventListener('click', (e) => { if (window.innerWidth <= 768 && !sidebar.contains(e.target) && e.target !== menuToggle) sidebar.classList.remove('show'); });
-  }
-  window.addEventListener('DOMContentLoaded', async () => { await nav(); await loadOwnerData(); });
-</script>
+}
+
+// Attach event listener to form
+document.getElementById('listingForm').addEventListener('submit', ownerRequest);
+
+    async function loadStaffList() {
+      const tbody = document.getElementById('staffList');
+      try {
+        const staff = await apiCall('/owner-staff.php');
+        if (!staff.length) { tbody.innerHTML = '<tr><td colspan="3">No staff yet.</td></tr>'; return; }
+        tbody.innerHTML = staff.map(s => `<tr><td>${escapeHtml(s.name)}</td><td>${escapeHtml(s.email)}</td><td><button class="btn btn-sm btn-danger" onclick="deleteStaff(${s.id})">Remove</button></td>`).join('');
+      } catch(e) { console.error(e); }
+    }
+
+    async function addStaff(e) {
+      e.preventDefault();
+      const name = document.getElementById('staffName').value.trim();
+      const email = document.getElementById('staffEmail').value.trim();
+      const password = document.getElementById('staffPassword').value;
+      if (!name || !email || !password) { alert('All fields required'); return; }
+      try {
+        await apiCall('/owner-staff.php', { method: 'POST', body: JSON.stringify({ name, email, password }) });
+        alert('Staff added');
+        document.getElementById('staffName').value = '';
+        document.getElementById('staffEmail').value = '';
+        document.getElementById('staffPassword').value = '';
+        loadStaffList();
+      } catch(e) { alert(e.message); }
+    }
+
+    async function deleteStaff(id) {
+      if (!confirm('Remove staff?')) return;
+      try {
+        await apiCall(`/owner-staff.php?id=${id}`, { method: 'DELETE' });
+        loadStaffList();
+      } catch(e) { alert(e.message); }
+    }
+
+    document.getElementById('addStaffForm')?.addEventListener('submit', addStaff);
+    window.addEventListener('DOMContentLoaded', async () => { await nav(); await loadOwnerData(); });
+  </script>
 </body>
 </html>
