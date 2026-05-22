@@ -18,9 +18,16 @@
     .rest-card .card-body { padding: 16px; }
     .rest-card h3 { font-size: 1.25rem; font-weight: 800; margin-bottom: 6px; }
 
-    /* Mobile sidebar styles */
-    .navbar-etg {
-      position: relative;
+    /* Navbar layout */
+    .navbar-etg .container {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .desktop-nav {
+      display: flex;
+      gap: 1rem;
     }
     .hamburger {
       display: none;
@@ -29,8 +36,47 @@
       font-size: 28px;
       color: var(--orange);
       cursor: pointer;
-      padding: 0 10px;
+      padding: 0;
     }
+    /* Mobile layout: hamburger below logo, auth area top-right */
+    @media (max-width: 768px) {
+      .navbar-etg .container {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 8px;
+      }
+      .logo {
+        grid-column: 1;
+        grid-row: 1;
+        justify-self: start;
+      }
+      .right-group {
+        grid-column: 2;
+        grid-row: 1;
+        justify-self: end;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .hamburger {
+        display: block;
+        grid-column: 1;
+        grid-row: 2;
+        justify-self: start;
+        margin-top: 4px;
+      }
+      .desktop-nav {
+        display: none;
+      }
+    }
+    @media (min-width: 769px) {
+      .hamburger, .mobile-sidebar, .sidebar-overlay, .close-sidebar {
+        display: none;
+      }
+    }
+
+    /* Mobile sidebar (slide-out) */
     .mobile-sidebar {
       position: fixed;
       top: 0;
@@ -82,15 +128,6 @@
     .sidebar-overlay.active {
       display: block;
     }
-    @media (max-width: 768px) {
-      .hamburger { display: block; }
-      .desktop-nav { display: none; }
-      .navbar-etg .container { display: flex; justify-content: space-between; align-items: center; }
-    }
-    @media (min-width: 769px) {
-      .mobile-sidebar, .sidebar-overlay, .close-sidebar { display: none; }
-      .desktop-nav { display: flex; gap: 1rem; }
-    }
   </style>
 </head>
 <body>
@@ -100,10 +137,10 @@
     <a class="logo" href="index.html">Eat<span>To</span>Go</a>
     <!-- Desktop navigation -->
     <div class="desktop-nav" id="mainNav"></div>
-    <div style="display: flex; align-items: center; gap: 10px;">
-      <button class="hamburger" id="hamburgerBtn">☰</button>
+    <div class="right-group">
       <div id="authArea"></div>
     </div>
+    <button class="hamburger" id="hamburgerBtn">☰</button>
   </div>
 </nav>
 
@@ -119,7 +156,6 @@
     <span class="badge-etg">Reserve + Pre-Order • EatToGo</span>
     <h1 class="mt-4">Book your table, <span class="highlight">pre-order food</span> &amp; enjoy faster dining</h1>
     <p class="lead text-muted mt-3">Search restaurants, choose time slots, pre-order meals, pay at counter, and confirm arrival.</p>
-    <!-- Filter row: search input + cuisine dropdown -->
     <div class="search-card glass-card p-4">
       <div class="row g-3 justify-content-center">
         <div class="col-md-6 col-lg-5">
@@ -161,8 +197,18 @@
 </footer>
 
 <script src="assets/js/api.js"></script>
-<script src="assets/js/mobile-nav.js"></script>
 <script>
+  // Sidebar toggle logic
+  const hamburger = document.getElementById('hamburgerBtn');
+  const sidebar = document.getElementById('mobileSidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  const closeBtn = document.getElementById('closeSidebarBtn');
+  function openSidebar() { sidebar.classList.add('open'); overlay.classList.add('active'); }
+  function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('active'); }
+  if (hamburger) hamburger.addEventListener('click', openSidebar);
+  if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+  if (overlay) overlay.addEventListener('click', closeSidebar);
+
   let allRestaurants = [];
   let currentSearchTerm = '';
   let currentCuisine = '';
