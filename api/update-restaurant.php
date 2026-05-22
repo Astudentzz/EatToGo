@@ -20,6 +20,7 @@ $description = $data['description'] ?? '';
 $price_range = $data['price_range'] ?? '';
 $hours = $data['hours'] ?? '';
 $deal = $data['deal'] ?? '';
+$total_seats = (int)($data['total_seats'] ?? 0);
 
 if (!$restaurant_id || !$name || !$location) {
     http_response_code(400);
@@ -27,7 +28,6 @@ if (!$restaurant_id || !$name || !$location) {
     exit;
 }
 
-// Verify ownership
 $stmt = $pdo->prepare("SELECT id FROM restaurants WHERE id = ? AND owner_id = ?");
 $stmt->execute([$restaurant_id, $owner_id]);
 if (!$stmt->fetch()) {
@@ -36,8 +36,8 @@ if (!$stmt->fetch()) {
     exit;
 }
 
-$stmt = $pdo->prepare("UPDATE restaurants SET name = ?, location = ?, category = ?, description = ?, price_range = ?, hours = ?, deal = ? WHERE id = ?");
-$stmt->execute([$name, $location, $category, $description, $price_range, $hours, $deal, $restaurant_id]);
+$stmt = $pdo->prepare("UPDATE restaurants SET name = ?, location = ?, category = ?, description = ?, price_range = ?, hours = ?, deal = ?, total_seats = ? WHERE id = ?");
+$stmt->execute([$name, $location, $category, $description, $price_range, $hours, $deal, $total_seats, $restaurant_id]);
 
 echo json_encode(['success' => true]);
 ?>

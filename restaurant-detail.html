@@ -96,7 +96,20 @@
             </div></div>
             <div class="card-etg p-4"><h2>Customer Reviews</h2>${reviewsHtml}</div>
           </div>
-          <div class="col-lg-4"><div class="card-etg p-4 summary-card sticky-top"><h3>Restaurant Info</h3><p><b>Cuisine:</b> ${escapeHtml(restaurant.category || '-')}</p><p><b>Location:</b> ${escapeHtml(restaurant.location || '-')}</p><p><b>Hours:</b> ${escapeHtml(restaurant.hours || '10:00 AM - 10:00 PM')}</p><p><b>Price Range:</b> ${escapeHtml(restaurant.price_range || '-')}</p><p><b>Promotion:</b> ${escapeHtml(restaurant.deal || 'Check latest deals')}</p><hr><a class="btn btn-etg w-100" href="restaurant.html?id=${restaurant.id}">Reserve a Table →</a><a class="btn btn-outline-etg w-100 mt-2" href="index.html">← Browse All</a></div></div>
+          <div class="col-lg-4">
+            <div class="card-etg p-4 summary-card sticky-top">
+              <h3>Restaurant Info</h3>
+              <p><b>Cuisine:</b> ${escapeHtml(restaurant.category || '-')}</p>
+              <p><b>Location:</b> ${escapeHtml(restaurant.location || '-')}</p>
+              <p><b>Hours:</b> ${escapeHtml(restaurant.hours || '10:00 AM - 10:00 PM')}</p>
+              <p><b>Price Range:</b> ${escapeHtml(restaurant.price_range || '-')}</p>
+              <p><b>Promotion:</b> ${escapeHtml(restaurant.deal || 'Check latest deals')}</p>
+              <p><b>Total Seats:</b> ${restaurant.total_seats || 'N/A'}</p>
+              <hr>
+              <a class="btn btn-etg w-100" href="restaurant.html?id=${restaurant.id}">Reserve a Table →</a>
+              <a class="btn btn-outline-etg w-100 mt-2" href="index.html">← Browse All</a>
+            </div>
+          </div>
         </div>
       `;
       document.getElementById('restaurantInfoPage').innerHTML = html;

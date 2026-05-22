@@ -60,6 +60,35 @@
   let currentRestaurant = null;
   function formatPrice(price) { const num = parseFloat(price); return isNaN(num) ? '0.00' : num.toFixed(2); }
   const defaultMenuSvg = "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23ddd%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2255%22%20font-size%3D%2212%22%20text-anchor%3D%22middle%22%20fill%3D%22%23666%22%3ENo%20Img%3C%2Ftext%3E%3C%2Fsvg%3E";
+
+  async function checkAvailability() {
+    const date = document.getElementById('resDate')?.value;
+    const time = document.getElementById('selectedTime')?.innerText;
+    if (!date || !time || !restaurantId) return;
+    try {
+      const data = await apiCall(`/check-availability.php?restaurant_id=${restaurantId}&date=${date}&time=${encodeURIComponent(time)}`);
+      const available = data.available;
+      const totalSeats = data.total;
+      const msgEl = document.getElementById('availabilityMsg');
+      if (msgEl) {
+        if (available <= 0) {
+          msgEl.innerHTML = `<span class="text-danger">❌ Fully booked for ${time} on ${date}. Please choose another time.</span>`;
+        } else {
+          msgEl.innerHTML = `✅ ${available} of ${totalSeats} seats available for ${time} on ${date}`;
+        }
+      }
+      // Optionally limit the guests dropdown max
+      const guestsSelect = document.getElementById('guests');
+      if (guestsSelect) {
+        const currentGuests = parseInt(guestsSelect.value);
+        if (currentGuests > available) {
+          guestsSelect.value = Math.min(available, 8);
+          alert(`Only ${available} seat(s) available. Guests adjusted.`);
+        }
+      }
+    } catch(e) { console.error(e); }
+  }
+
   async function loadRestaurantDetail() {
     const container = document.getElementById('restaurantDetail');
     if (!restaurantId) { container.innerHTML = '<div class="alert alert-danger">No restaurant specified.</div>'; return; }
@@ -70,6 +99,7 @@
       renderPage(data.restaurant, data.menu, feedbacks);
     } catch (err) { console.error(err); container.innerHTML = `<div class="alert alert-danger">Failed to load restaurant details: ${err.message}</div>`; }
   }
+
   function renderPage(restaurant, menu, feedbacks) {
     const today = new Date().toISOString().split('T')[0];
     const reviewsHtml = feedbacks.length ? feedbacks.map(f => `<div class="review-card"><b>⭐ ${f.rating} — ${escapeHtml(f.customer_name)}</b><p>${escapeHtml(f.comment)}</p><small>${new Date(f.created_at).toLocaleDateString()}</small></div>`).join('') : '<p class="text-muted">No reviews yet.</p>';
@@ -93,8 +123,17 @@
           <div class="card-etg p-4 mb-4">
             <h2>Reserve Your Table</h2>
             <div class="row g-3">
-              <div class="col-md-6"><label>Date</label><input id="resDate" type="date" class="form-control" value="${today}"></div>
-              <div class="col-md-6"><label>Guests</label><select id="guests" class="form-select"><option>2</option><option>4</option><option>6</option><option>8</option></select></div>
+              <div class="col-md-6">
+                <label>Date</label>
+                <input id="resDate" type="date" class="form-control" value="${today}" onchange="checkAvailability()">
+              </div>
+              <div class="col-md-6">
+                <label>Guests</label>
+                <select id="guests" class="form-select" onchange="checkAvailability()">
+                  <option>2</option><option>4</option><option>6</option><option>8</option>
+                </select>
+                <small id="availabilityMsg" class="text-muted d-block mt-1"></small>
+              </div>
             </div>
             <h5 class="mt-4">Available Time Slots</h5>
             <div class="d-flex gap-2 flex-wrap" id="slotArea">
@@ -128,6 +167,7 @@
             <h3>Booking Summary</h3>
             <p><b>Restaurant:</b> ${escapeHtml(restaurant.name)}</p>
             <p><b>Selected Time:</b> <span id="selectedTime">7:00 PM</span></p>
+            <p><b>Total Seats:</b> ${restaurant.total_seats || 'N/A'}</p>
             <button onclick="reserve()" class="btn btn-etg w-100 mb-2">Reserve Table & Pre-Order →</button>
             <a href="restaurant-detail.html?id=${restaurant.id}" class="btn btn-outline-etg w-100">View Restaurant Details</a>
           </div>
@@ -135,8 +175,16 @@
       </div>
     `;
     document.getElementById('restaurantDetail').innerHTML = html;
+    checkAvailability(); // initial check for the default time slot
   }
-  function selectSlot(el) { document.querySelectorAll('.slot').forEach(s => s.classList.remove('active')); el.classList.add('active'); document.getElementById('selectedTime').innerText = el.getAttribute('data-time') || el.textContent; }
+
+  function selectSlot(el) {
+    document.querySelectorAll('.slot').forEach(s => s.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('selectedTime').innerText = el.getAttribute('data-time') || el.textContent;
+    checkAvailability();
+  }
+
   async function reserve() {
     const session = await checkSession();
     if (!session.loggedIn || session.user.role !== 'customer') { alert('Please login as customer.'); window.location.href = 'login.html'; return; }
@@ -148,7 +196,9 @@
       else alert('Failed to create reservation.');
     } catch(err) { alert('Error: ' + err.message); }
   }
+
   function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
+
   async function setupNav() {
     const s = await checkSession();
     const navDiv = document.getElementById('mainNav');
@@ -164,6 +214,7 @@
       navDiv.innerHTML = `<a class="nav-link fw-bold" href="admin.html">↗ Admin Dashboard</a>`;
     }
   }
+
   // Sidebar toggle
   const hamburger = document.getElementById('hamburgerBtn');
   const sidebar = document.getElementById('mobileSidebar');
@@ -174,6 +225,7 @@
     closeBtn.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.style.display = 'none'; });
     overlay.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.style.display = 'none'; });
   }
+
   window.addEventListener('DOMContentLoaded', async () => { await nav(); await setupNav(); await loadRestaurantDetail(); });
 </script>
 </body>

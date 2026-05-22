@@ -16,7 +16,7 @@ if ($method === 'GET') {
 }
 elseif ($method === 'POST') {
     $data = json_decode(file_get_contents('php://input'), true);
-    $stmt = $pdo->prepare("INSERT INTO restaurants (name, category, description, image, location, price_range, hours, deal, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'approved')");
+    $stmt = $pdo->prepare("INSERT INTO restaurants (name, category, description, image, location, price_range, hours, deal, total_seats, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved')");
     $stmt->execute([
         $data['name'],
         $data['category'] ?? '',
@@ -25,14 +25,15 @@ elseif ($method === 'POST') {
         $data['location'],
         $data['price_range'] ?? '',
         $data['hours'] ?? '',
-        $data['deal'] ?? ''
+        $data['deal'] ?? '',
+        (int)($data['total_seats'] ?? 0)
     ]);
     echo json_encode(['success' => true]);
 }
 elseif ($method === 'PUT') {
     $data = json_decode(file_get_contents('php://input'), true);
     $id = $data['id'] ?? 0;
-    $stmt = $pdo->prepare("UPDATE restaurants SET name=?, category=?, location=?, price_range=?, description=?, hours=?, deal=?, image=? WHERE id=?");
+    $stmt = $pdo->prepare("UPDATE restaurants SET name=?, category=?, location=?, price_range=?, description=?, hours=?, deal=?, image=?, total_seats=? WHERE id=?");
     $stmt->execute([
         $data['name'],
         $data['category'],
@@ -42,6 +43,7 @@ elseif ($method === 'PUT') {
         $data['hours'],
         $data['deal'],
         $data['image'] ?? '',
+        (int)($data['total_seats'] ?? 0),
         $id
     ]);
     echo json_encode(['success' => true]);
