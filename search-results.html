@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <title>Search Results – EatToGo</title>
+  <style>
+    .rest-card { border-radius: 18px; background: white; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,.08); transition: .2s; }
+    .rest-card:hover { transform: translateY(-4px); box-shadow: 0 12px 28px rgba(0,0,0,.12); }
+    .rest-card img { width: 100%; height: 160px; object-fit: cover; }
+    .rest-card .card-body { padding: 16px; }
+    .rest-card h3 { font-size: 1.25rem; font-weight: 800; margin-bottom: 6px; }
+  </style>
+</head>
+<body>
+<nav class="navbar-etg">
+  <div class="container d-flex align-items-center justify-content-between">
+    <a class="logo" href="index.html">Eat<span>To</span>Go</a>
+    <div class="d-none d-md-flex gap-4">
+      <a class="nav-link" href="search-results.html">Restaurants</a>
+      <a class="nav-link" href="booking-history.html">My Bookings</a>
+      <a class="nav-link" href="order-status.html">Order Status</a>
+    </div>
+    <div id="authArea"></div>
+  </div>
+</nav>
+
+<section class="page-head">
+  <div class="container">
+    <h1>Search Results</h1>
+    <p class="text-muted">Filter restaurants by name or cuisine.</p>
+    <div class="glass-card p-3 row g-3">
+      <div class="col-md-6"><input id="searchInput" class="form-control" placeholder="Restaurant name or cuisine" onkeyup="filterResults()"></div>
+      <div class="col-md-4"><select id="cuisineSelect" class="form-select" onchange="filterResults()"><option value="">All Cuisines</option></select></div>
+      <div class="col-md-2"><button class="btn btn-etg w-100" onclick="filterResults()">Filter</button></div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="row g-4" id="restaurantList"></div>
+    <div id="emptyResults" class="card-etg p-4 text-center mt-4 d-none">No restaurants found. Try another cuisine or keyword.</div>
+  </div>
+</section>
+
+<footer class="minimal-footer">
+  <div class="container d-flex justify-content-between flex-wrap gap-5">
+    <div class="footer-brand"><h2>Eat<span>To</span>Go</h2><p>Final Year Project – Restaurant and Food Reservation System.</p></div>
+    <div class="footer-members"><h4>Project Team</h4><ul class="list-unstyled"><li>Navin Ramu</li><li>Muhamamd Nazim</li><li>Hadif</li><li>Ng Yue Yang</li></ul></div>
+  </div>
+  <div class="footer-bottom">© 2026 EatToGo • Universiti Teknologi Malaysia (UTM)</div>
+</footer>
+<script src="assets/js/api.js"></script>
+<script>
+  let allRestaurants = [];
+  function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
+  async function loadRestaurants() {
+    try {
+      allRestaurants = await apiCall('/restaurants.php');
+      const cuisineSelect = document.getElementById('cuisineSelect');
+      const cuisines = [...new Set(allRestaurants.map(r => r.category).filter(c => c))];
+      cuisineSelect.innerHTML = '<option value="">All Cuisines</option>' + cuisines.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+      filterResults();
+    } catch(e) { document.getElementById('restaurantList').innerHTML = '<div class="col-12 text-danger">Failed to load restaurants.</div>'; }
+  }
+  function filterResults() {
+    const term = document.getElementById('searchInput').value.toLowerCase().trim();
+    const cuisine = document.getElementById('cuisineSelect').value;
+    let filtered = allRestaurants.filter(r => {
+      if (term && !r.name.toLowerCase().includes(term) && !(r.category && r.category.toLowerCase().includes(term))) return false;
+      if (cuisine && r.category !== cuisine) return false;
+      return true;
+    });
+    const container = document.getElementById('restaurantList');
+    const emptyDiv = document.getElementById('emptyResults');
+    if (!filtered.length) { container.innerHTML = ''; emptyDiv.classList.remove('d-none'); return; }
+    emptyDiv.classList.add('d-none');
+    container.innerHTML = filtered.map(r => `
+      <div class="col-md-4">
+        <div class="rest-card">
+          <img src="${r.image || 'assets/img/default-restaurant.jpg'}" onerror="this.src='assets/img/default-restaurant.jpg'">
+          <div class="card-body">
+            <h3>${escapeHtml(r.name)}</h3>
+            <p>${escapeHtml(r.category || 'Restaurant')} • ${escapeHtml(r.location || 'Malaysia')}</p>
+            <a href="restaurant.html?id=${r.id}" class="btn btn-etg btn-sm">View & Book</a>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+  window.addEventListener('DOMContentLoaded', async () => { await nav(); await loadRestaurants(); });
+</script>
+</body>
+</html>
