@@ -4,6 +4,7 @@ session_start();
 require_once 'config/database.php';
 $pdo = getDB();
 
+// Only owner can access
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'owner') {
     http_response_code(403);
     echo json_encode(['error' => 'Unauthorized']);
@@ -11,48 +12,44 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'owner') {
 }
 
 $owner_id = $_SESSION['user']['id'];
+// Get the owner's restaurant_id from the users table
+$stmt = $pdo->prepare("SELECT restaurant_id FROM users WHERE id = ?");
+$stmt->execute([$owner_id]);
+$restaurant_id = $stmt->fetchColumn();
 
-function verifyOwnership($pdo, $owner_id, $restaurant_id) {
-    $stmt = $pdo->prepare("SELECT id FROM restaurants WHERE id = ? AND owner_id = ?");
-    $stmt->execute([$restaurant_id, $owner_id]);
-    return $stmt->fetch() !== false;
+if (!$restaurant_id) {
+    // Owner hasn't been assigned a restaurant yet
+    if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+        echo json_encode([]);
+        exit;
+    } else {
+        http_response_code(400);
+        echo json_encode(['error' => 'You do not own any restaurant yet.']);
+        exit;
+    }
 }
 
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'GET') {
-    $restaurant_id = $_GET['restaurant_id'] ?? 0;
-    if (!$restaurant_id) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Missing restaurant_id']);
-        exit;
-    }
-    if (!verifyOwnership($pdo, $owner_id, $restaurant_id)) {
-        http_response_code(403);
-        echo json_encode(['error' => 'You do not own this restaurant']);
-        exit;
-    }
-    $stmt = $pdo->prepare("SELECT id, name, email, created_at FROM users WHERE restaurant_id = ? AND role = 'staff'");
+    // Fetch staff members for this restaurant
+    $stmt = $pdo->prepare("SELECT id, name, email, role, created_at FROM users WHERE restaurant_id = ? AND role = 'staff'");
     $stmt->execute([$restaurant_id]);
-    echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
+    $staff = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    echo json_encode($staff);
 }
 elseif ($method === 'POST') {
+    // Create new staff account
     $data = json_decode(file_get_contents('php://input'), true);
     $name = $data['name'] ?? '';
     $email = $data['email'] ?? '';
     $password = $data['password'] ?? '';
-    $restaurant_id = $data['restaurant_id'] ?? 0;
-    if (!$name || !$email || !$password || !$restaurant_id) {
+    if (!$name || !$email || !$password) {
         http_response_code(400);
-        echo json_encode(['error' => 'Missing fields (name, email, password, restaurant_id)']);
+        echo json_encode(['error' => 'Name, email and password required']);
         exit;
     }
-    if (!verifyOwnership($pdo, $owner_id, $restaurant_id)) {
-        http_response_code(403);
-        echo json_encode(['error' => 'You do not own this restaurant']);
-        exit;
-    }
-    // Check if email exists
+    // Check if email already exists
     $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
     $stmt->execute([$email]);
     if ($stmt->fetch()) {
@@ -63,23 +60,21 @@ elseif ($method === 'POST') {
     $hashed = md5($password);
     $stmt = $pdo->prepare("INSERT INTO users (name, email, password, role, restaurant_id) VALUES (?, ?, ?, 'staff', ?)");
     $stmt->execute([$name, $email, $hashed, $restaurant_id]);
-    echo json_encode(['success' => true]);
+    echo json_encode(['success' => true, 'message' => 'Staff account created']);
 }
 elseif ($method === 'DELETE') {
+    // Remove staff account
     $staff_id = $_GET['id'] ?? 0;
-    $restaurant_id = $_GET['restaurant_id'] ?? 0;
-    if (!$staff_id || !$restaurant_id) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Missing staff_id or restaurant_id']);
-        exit;
-    }
-    if (!verifyOwnership($pdo, $owner_id, $restaurant_id)) {
-        http_response_code(403);
-        echo json_encode(['error' => 'You do not own this restaurant']);
-        exit;
-    }
-    $stmt = $pdo->prepare("DELETE FROM users WHERE id = ? AND restaurant_id = ? AND role = 'staff'");
+    // Ensure this staff belongs to owner's restaurant
+    $stmt = $pdo->prepare("SELECT id FROM users WHERE id = ? AND restaurant_id = ? AND role = 'staff'");
     $stmt->execute([$staff_id, $restaurant_id]);
+    if (!$stmt->fetch()) {
+        http_response_code(403);
+        echo json_encode(['error' => 'Not authorized to delete this staff']);
+        exit;
+    }
+    $stmt = $pdo->prepare("DELETE FROM users WHERE id = ?");
+    $stmt->execute([$staff_id]);
     echo json_encode(['success' => true]);
 }
 else {
