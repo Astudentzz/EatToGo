@@ -17,30 +17,124 @@
     .rest-card img { width: 100%; height: 160px; object-fit: cover; }
     .rest-card .card-body { padding: 16px; }
     .rest-card h3 { font-size: 1.25rem; font-weight: 800; margin-bottom: 6px; }
+
+    /* Mobile sidebar styles */
+    .navbar-etg {
+      position: relative;
+    }
+    .hamburger {
+      display: none;
+      background: none;
+      border: none;
+      font-size: 28px;
+      color: var(--orange);
+      cursor: pointer;
+      padding: 0 10px;
+    }
+    .mobile-sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 260px;
+      height: 100%;
+      background: #1C1208;
+      z-index: 1100;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      padding: 60px 20px 20px;
+    }
+    .mobile-sidebar.open {
+      transform: translateX(0);
+    }
+    .mobile-sidebar a {
+      display: block;
+      color: rgba(255,255,255,.8);
+      text-decoration: none;
+      padding: 12px 16px;
+      font-weight: 700;
+      border-radius: 12px;
+      margin: 8px 0;
+    }
+    .mobile-sidebar a:hover, .mobile-sidebar a.active {
+      background: rgba(255,107,53,.2);
+      color: var(--orange);
+    }
+    .close-sidebar {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      font-size: 28px;
+      color: white;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+    .sidebar-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1050;
+      display: none;
+    }
+    .sidebar-overlay.active {
+      display: block;
+    }
+    @media (max-width: 768px) {
+      .hamburger { display: block; }
+      .desktop-nav { display: none; }
+      .navbar-etg .container { display: flex; justify-content: space-between; align-items: center; }
+    }
+    @media (min-width: 769px) {
+      .mobile-sidebar, .sidebar-overlay, .close-sidebar { display: none; }
+      .desktop-nav { display: flex; gap: 1rem; }
+    }
   </style>
 </head>
 <body>
 
 <nav class="navbar-etg">
-  <div class="container d-flex align-items-center justify-content-between">
+  <div class="container">
     <a class="logo" href="index.html">Eat<span>To</span>Go</a>
-    <div class="d-none d-md-flex gap-4" id="mainNav"></div>
-    <div id="authArea"></div>
+    <!-- Desktop navigation -->
+    <div class="desktop-nav" id="mainNav"></div>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <button class="hamburger" id="hamburgerBtn">☰</button>
+      <div id="authArea"></div>
+    </div>
   </div>
 </nav>
+
+<!-- Mobile sidebar -->
+<div class="mobile-sidebar" id="mobileSidebar">
+  <button class="close-sidebar" id="closeSidebarBtn">×</button>
+  <div id="mobileNavLinks"></div>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
 
 <section class="hero">
   <div class="container text-center">
     <span class="badge-etg">Reserve + Pre-Order • EatToGo</span>
     <h1 class="mt-4">Book your table, <span class="highlight">pre-order food</span> &amp; enjoy faster dining</h1>
     <p class="lead text-muted mt-3">Search restaurants, choose time slots, pre-order meals, pay at counter, and confirm arrival.</p>
-    <form onsubmit="searchHome(event)" class="search-card glass-card row g-3 text-start">
-      <div class="col-md-4"><label>Restaurant / Cuisine</label><input id="q" class="form-control" placeholder="Sushi, Indian, pasta…"></div>
-      <div class="col-md-2"><label>Date</label><input class="form-control" type="date"></div>
-      <div class="col-md-2"><label>Time</label><input class="form-control" type="time"></div>
-      <div class="col-md-2"><label>People</label><select class="form-select"><option>2</option><option>4</option><option>6</option></select></div>
-      <div class="col-md-2 d-grid align-items-end"><button class="btn btn-etg">Search</button></div>
-    </form>
+    <!-- Filter row: search input + cuisine dropdown -->
+    <div class="search-card glass-card p-4">
+      <div class="row g-3 justify-content-center">
+        <div class="col-md-6 col-lg-5">
+          <input type="text" id="searchInput" class="form-control form-control-lg" placeholder="Search by restaurant or cuisine..." autocomplete="off">
+        </div>
+        <div class="col-md-3 col-lg-2">
+          <select id="cuisineFilter" class="form-select form-select-lg">
+            <option value="">All Cuisines</option>
+          </select>
+        </div>
+        <div class="col-md-3 col-lg-2">
+          <button id="searchButton" class="btn btn-etg btn-lg w-100">Search</button>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -54,6 +148,7 @@
     <div class="row g-4" id="restaurantList">
       <div class="col-12 text-center py-5">Loading restaurants...</div>
     </div>
+    <div id="noResultsMsg" class="col-12 text-center py-4 text-muted" style="display: none;">No restaurants match your search.</div>
   </div>
 </section>
 
@@ -66,45 +161,102 @@
 </footer>
 
 <script src="assets/js/api.js"></script>
+<script src="assets/js/mobile-nav.js"></script>
 <script>
+  let allRestaurants = [];
+  let currentSearchTerm = '';
+  let currentCuisine = '';
+
   function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
-  function searchHome(e) { e.preventDefault(); const q = document.getElementById('q')?.value.trim() || ''; window.location.href = `search-results.html?q=${encodeURIComponent(q)}`; }
+
   async function renderRestaurants() {
     const container = document.getElementById('restaurantList');
     try {
-      const restaurants = await apiCall('/restaurants.php');
-      if (!restaurants.length) { container.innerHTML = '<div class="col-12 text-center py-5">No restaurants found.</div>'; return; }
-      container.innerHTML = restaurants.map(r => `
-        <div class="col-md-4">
-          <div class="rest-card">
-            <img src="${r.image || 'assets/img/default-restaurant.jpg'}" onerror="this.src='assets/img/default-restaurant.jpg'">
-            <div class="card-body">
-              <h3>${escapeHtml(r.name)}</h3>
-              <p>${escapeHtml(r.category || 'Restaurant')} • ${escapeHtml(r.location || 'Malaysia')}</p>
-              <a href="restaurant.html?id=${r.id}" class="btn btn-etg btn-sm">View & Book</a>
-            </div>
-          </div>
-        </div>
-      `).join('');
-    } catch (err) { container.innerHTML = '<div class="col-12 text-center text-danger">Failed to load restaurants.</div>'; }
-  }
-  async function setupNav() {
-    const session = await checkSession();
-    const navDiv = document.getElementById('mainNav');
-    if (!navDiv) return;
-    const u = session.loggedIn ? session.user : null;
-    if (!u || u.role === 'customer') {
-      navDiv.innerHTML = `<a class="nav-link" href="search-results.html">Restaurants</a><a class="nav-link" href="booking-history.html">My Bookings</a><a class="nav-link" href="order-status.html">Order Status</a>`;
-    } else if (u.role === 'staff') {
-      navDiv.innerHTML = `<a class="nav-link fw-bold" style="color:var(--orange)!important" href="staff-dashboard.html">↗ Go to Staff Dashboard</a>`;
-    } else if (u.role === 'owner') {
-      navDiv.innerHTML = `<a class="nav-link fw-bold" style="color:var(--orange)!important" href="owner-dashboard.html">↗ Go to Owner Dashboard</a>`;
-    } else if (u.role === 'admin') {
-      navDiv.innerHTML = `<a class="nav-link fw-bold" style="color:var(--orange)!important" href="admin.html">↗ Go to Admin Dashboard</a>`;
+      allRestaurants = await apiCall('/restaurants.php');
+      const cuisineSet = new Set();
+      allRestaurants.forEach(r => { if (r.category) cuisineSet.add(r.category); });
+      const cuisineSelect = document.getElementById('cuisineFilter');
+      cuisineSelect.innerHTML = '<option value="">All Cuisines</option>' + 
+        Array.from(cuisineSet).sort().map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+      applyFilter();
+    } catch (err) {
+      container.innerHTML = '<div class="col-12 text-center text-danger">Failed to load restaurants.</div>';
     }
   }
+
+  function applyFilter() {
+    const container = document.getElementById('restaurantList');
+    const noResults = document.getElementById('noResultsMsg');
+    const term = currentSearchTerm.trim().toLowerCase();
+    const cuisine = currentCuisine;
+    let filtered = allRestaurants;
+    if (term) {
+      filtered = filtered.filter(r => 
+        r.name.toLowerCase().includes(term) || 
+        (r.category && r.category.toLowerCase().includes(term))
+      );
+    }
+    if (cuisine) {
+      filtered = filtered.filter(r => r.category === cuisine);
+    }
+    if (filtered.length === 0) {
+      container.innerHTML = '';
+      noResults.style.display = 'block';
+      return;
+    }
+    noResults.style.display = 'none';
+    container.innerHTML = filtered.map(r => `
+      <div class="col-md-4">
+        <div class="rest-card">
+          <img src="${r.image || 'assets/img/default-restaurant.jpg'}" onerror="this.src='assets/img/default-restaurant.jpg'">
+          <div class="card-body">
+            <h3>${escapeHtml(r.name)}</h3>
+            <p>${escapeHtml(r.category || 'Restaurant')} • ${escapeHtml(r.location || 'Malaysia')}</p>
+            <a href="restaurant.html?id=${r.id}" class="btn btn-etg btn-sm">View & Book</a>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function updateFilters() {
+    currentSearchTerm = document.getElementById('searchInput').value;
+    currentCuisine = document.getElementById('cuisineFilter').value;
+    applyFilter();
+  }
+
+  async function setupNav() {
+    const s = await checkSession();
+    const desktopNav = document.getElementById('mainNav');
+    const mobileNav = document.getElementById('mobileNavLinks');
+    if (!desktopNav) return;
+    const u = s.loggedIn ? s.user : null;
+    let navHtml = '';
+    if (!u || u.role === 'customer') {
+      navHtml = `<a class="nav-link" href="index.html">Restaurants</a>
+                 <a class="nav-link" href="booking-history.html">My Bookings</a>
+                 <a class="nav-link" href="order-status.html">Order Status</a>`;
+    } else if (u.role === 'staff') {
+      navHtml = `<a class="nav-link fw-bold" href="staff-dashboard.html">↗ Staff Dashboard</a>`;
+    } else if (u.role === 'owner') {
+      navHtml = `<a class="nav-link fw-bold" href="owner-dashboard.html">↗ Owner Dashboard</a>`;
+    } else if (u.role === 'admin') {
+      navHtml = `<a class="nav-link fw-bold" href="admin.html">↗ Admin Dashboard</a>`;
+    }
+    desktopNav.innerHTML = navHtml;
+    if (mobileNav) mobileNav.innerHTML = navHtml;
+  }
+
   window.addEventListener('DOMContentLoaded', async () => {
-    await nav(); await setupNav(); await renderRestaurants();
+    await nav();
+    await setupNav();
+    await renderRestaurants();
+    const searchInput = document.getElementById('searchInput');
+    const cuisineSelect = document.getElementById('cuisineFilter');
+    const searchButton = document.getElementById('searchButton');
+    searchInput.addEventListener('input', updateFilters);
+    cuisineSelect.addEventListener('change', updateFilters);
+    searchButton.addEventListener('click', updateFilters);
     const session = (await checkSession()).loggedIn ? (await checkSession()).user : null;
     if (session && (session.role === 'admin' || session.role === 'staff' || session.role === 'owner')) {
       if (session.role === 'admin') location.href = 'admin.html';

@@ -13,7 +13,8 @@ if (!$restaurant) {
     exit;
 }
 
-$stmt = $pdo->prepare("SELECT id, name, price, category, emoji FROM menu_items WHERE restaurant_id = ? AND is_available = 1");
+// Include 'image' column
+$stmt = $pdo->prepare("SELECT id, name, price, category, emoji, image FROM menu_items WHERE restaurant_id = ? AND is_available = 1");
 $stmt->execute([$id]);
 $menu = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
