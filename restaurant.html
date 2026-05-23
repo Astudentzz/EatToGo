@@ -12,17 +12,25 @@
     .hero-meta { display: flex; justify-content: center; gap: 20px; margin-top: 16px; margin-bottom: 20px; flex-wrap: wrap; }
     .slot { border: 2px solid var(--cream-dark); border-radius: 999px; padding: 9px 15px; background: white; font-weight: 700; transition: .2s; cursor: pointer; }
     .slot.active { background: var(--orange); border-color: var(--orange); color: white; }
+    .slot.disabled { opacity: 0.5; cursor: not-allowed; background: #f0f0f0; }
     .review-card { background: var(--cream); border-radius: 16px; padding: 16px; margin-bottom: 12px; }
     .restaurant-img { max-width: 100%; height: auto; border-radius: 24px; margin-top: 20px; max-height: 300px; object-fit: cover; width: auto; box-shadow: 0 4px 12px rgba(0,0,0,.1); }
     .mobile-nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; }
     .menu-img { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; }
+    .summary-card {
+      position: sticky;
+      top: 90px;   /* increased to avoid overlapping with fixed navbar */
+    }
     @media (max-width: 768px) {
       .mobile-nav { flex-direction: column; align-items: center; margin-top: 10px; }
       .restaurant-hero-img { padding: 20px 15px; }
       .restaurant-img { max-height: 200px; }
       .slot { padding: 6px 12px; font-size: 14px; }
       .hero-meta { gap: 12px; font-size: 12px; }
-      .summary-card { position: static; margin-top: 1.5rem; }
+      .summary-card {
+        position: static;
+        margin-top: 1.5rem;
+      }
       .menu-img { width: 40px; height: 40px; }
     }
   </style>
@@ -60,6 +68,7 @@
   let currentRestaurant = null;
   function formatPrice(price) { const num = parseFloat(price); return isNaN(num) ? '0.00' : num.toFixed(2); }
   const defaultMenuSvg = "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23ddd%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2255%22%20font-size%3D%2212%22%20text-anchor%3D%22middle%22%20fill%3D%22%23666%22%3ENo%20Img%3C%2Ftext%3E%3C%2Fsvg%3E";
+
   async function loadRestaurantDetail() {
     const container = document.getElementById('restaurantDetail');
     if (!restaurantId) { container.innerHTML = '<div class="alert alert-danger">No restaurant specified.</div>'; return; }
@@ -70,6 +79,70 @@
       renderPage(data.restaurant, data.menu, feedbacks);
     } catch (err) { console.error(err); container.innerHTML = `<div class="alert alert-danger">Failed to load restaurant details: ${err.message}</div>`; }
   }
+
+  async function loadTimeSlots(date) {
+    if (!date || !restaurantId) return [];
+    try {
+      const slots = await apiCall(`/restaurant-timeslots.php?restaurant_id=${restaurantId}&date=${date}`);
+      return slots;
+    } catch(e) {
+      console.error(e);
+      return [];
+    }
+  }
+
+  async function renderTimeSlots(date) {
+    const slotArea = document.getElementById('slotArea');
+    if (!slotArea) return;
+    const slots = await loadTimeSlots(date);
+    if (slots.length === 0) {
+      slotArea.innerHTML = '<p class="text-muted">No available time slots for this date.</p>';
+      return;
+    }
+    slotArea.innerHTML = slots.map(slot => `
+      <button onclick="selectSlot(this)" class="slot" data-time="${slot.time}" data-available="${slot.available}">
+        ${slot.time} (${slot.available} seats)
+      </button>
+    `).join('');
+    const firstSlot = document.querySelector('.slot');
+    if (firstSlot) selectSlot(firstSlot);
+  }
+
+  function selectSlot(el) {
+    document.querySelectorAll('.slot').forEach(s => s.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('selectedTime').innerText = el.getAttribute('data-time');
+    document.getElementById('selectedAvailable').innerText = el.getAttribute('data-available');
+    checkAvailability();
+  }
+
+  async function checkAvailability() {
+    const date = document.getElementById('resDate')?.value;
+    const time = document.getElementById('selectedTime')?.innerText;
+    if (!date || !time || !restaurantId) return;
+    try {
+      const data = await apiCall(`/check-availability.php?restaurant_id=${restaurantId}&date=${date}&time=${encodeURIComponent(time)}`);
+      const available = data.available;
+      const totalSeats = data.total;
+      const msgEl = document.getElementById('availabilityMsg');
+      const guestsInput = document.getElementById('guests');
+      if (msgEl) {
+        if (available <= 0) {
+          msgEl.innerHTML = `<span class="text-danger">❌ Fully booked for ${time}. Please choose another time.</span>`;
+        } else {
+          msgEl.innerHTML = `✅ ${available} of ${totalSeats} seats available for ${time}`;
+        }
+      }
+      if (guestsInput) {
+        const maxGuests = Math.min(available, 20);
+        guestsInput.max = maxGuests;
+        if (parseInt(guestsInput.value) > maxGuests) {
+          guestsInput.value = maxGuests;
+        }
+      }
+    } catch(e) { console.error(e); }
+  }
+
   function renderPage(restaurant, menu, feedbacks) {
     const today = new Date().toISOString().split('T')[0];
     const reviewsHtml = feedbacks.length ? feedbacks.map(f => `<div class="review-card"><b>⭐ ${f.rating} — ${escapeHtml(f.customer_name)}</b><p>${escapeHtml(f.comment)}</p><small>${new Date(f.created_at).toLocaleDateString()}</small></div>`).join('') : '<p class="text-muted">No reviews yet.</p>';
@@ -93,16 +166,18 @@
           <div class="card-etg p-4 mb-4">
             <h2>Reserve Your Table</h2>
             <div class="row g-3">
-              <div class="col-md-6"><label>Date</label><input id="resDate" type="date" class="form-control" value="${today}"></div>
-              <div class="col-md-6"><label>Guests</label><select id="guests" class="form-select"><option>2</option><option>4</option><option>6</option><option>8</option></select></div>
+              <div class="col-md-6">
+                <label>Date</label>
+                <input id="resDate" type="date" class="form-control" value="${today}" onchange="renderTimeSlots(this.value)">
+              </div>
+              <div class="col-md-6">
+                <label>Guests</label>
+                <input type="number" id="guests" class="form-control" min="1" max="20" value="2" onchange="checkAvailability()">
+                <small id="availabilityMsg" class="text-muted d-block mt-1"></small>
+              </div>
             </div>
             <h5 class="mt-4">Available Time Slots</h5>
-            <div class="d-flex gap-2 flex-wrap" id="slotArea">
-              <button onclick="selectSlot(this)" class="slot active" data-time="7:00 PM">7:00 PM</button>
-              <button onclick="selectSlot(this)" class="slot" data-time="7:30 PM">7:30 PM</button>
-              <button onclick="selectSlot(this)" class="slot" data-time="8:00 PM">8:00 PM</button>
-              <button class="slot text-muted" disabled>Full – 8:30 PM</button>
-            </div>
+            <div class="d-flex gap-2 flex-wrap" id="slotArea"></div>
             <div class="alert alert-warning mt-3">💵 Cash-only payment — pay at counter.</div>
           </div>
           <div class="card-etg p-4 mb-4">
@@ -124,10 +199,12 @@
           </div>
         </div>
         <div class="col-lg-4">
-          <div class="card-etg p-4 summary-card sticky-top" style="top:20px">
+          <div class="card-etg p-4 summary-card">
             <h3>Booking Summary</h3>
             <p><b>Restaurant:</b> ${escapeHtml(restaurant.name)}</p>
             <p><b>Selected Time:</b> <span id="selectedTime">7:00 PM</span></p>
+            <p><b>Available Seats:</b> <span id="selectedAvailable">0</span></p>
+            <p><b>Total Seats:</b> ${restaurant.total_seats || 'N/A'}</p>
             <button onclick="reserve()" class="btn btn-etg w-100 mb-2">Reserve Table & Pre-Order →</button>
             <a href="restaurant-detail.html?id=${restaurant.id}" class="btn btn-outline-etg w-100">View Restaurant Details</a>
           </div>
@@ -135,20 +212,32 @@
       </div>
     `;
     document.getElementById('restaurantDetail').innerHTML = html;
+    renderTimeSlots(today);
   }
-  function selectSlot(el) { document.querySelectorAll('.slot').forEach(s => s.classList.remove('active')); el.classList.add('active'); document.getElementById('selectedTime').innerText = el.getAttribute('data-time') || el.textContent; }
+
   async function reserve() {
     const session = await checkSession();
     if (!session.loggedIn || session.user.role !== 'customer') { alert('Please login as customer.'); window.location.href = 'login.html'; return; }
-    const date = document.getElementById('resDate').value, time = document.getElementById('selectedTime').innerText, guests = parseInt(document.getElementById('guests').value);
+    const date = document.getElementById('resDate').value;
+    const time = document.getElementById('selectedTime').innerText;
+    const guests = parseInt(document.getElementById('guests').value);
     if (!date) { alert('Select a date'); return; }
+    if (isNaN(guests) || guests < 1) { alert('Please enter a valid number of guests.'); return; }
+    const availableSpan = document.getElementById('selectedAvailable');
+    const maxGuests = parseInt(availableSpan.innerText);
+    if (!isNaN(maxGuests) && guests > maxGuests) {
+      alert(`Only ${maxGuests} seat(s) available for this time slot. Please reduce the number of guests.`);
+      return;
+    }
     try {
       const result = await apiCall('/reservations.php', { method: 'POST', body: JSON.stringify({ restaurant_id: restaurantId, date, time, guests }) });
       if (result.id) window.location.href = `preorder.html?reservation_id=${result.id}&restaurant_id=${restaurantId}`;
       else alert('Failed to create reservation.');
     } catch(err) { alert('Error: ' + err.message); }
   }
+
   function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
+
   async function setupNav() {
     const s = await checkSession();
     const navDiv = document.getElementById('mainNav');
@@ -164,7 +253,7 @@
       navDiv.innerHTML = `<a class="nav-link fw-bold" href="admin.html">↗ Admin Dashboard</a>`;
     }
   }
-  // Sidebar toggle
+
   const hamburger = document.getElementById('hamburgerBtn');
   const sidebar = document.getElementById('mobileSidebar');
   const overlay = document.getElementById('sidebarOverlay');
@@ -174,6 +263,7 @@
     closeBtn.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.style.display = 'none'; });
     overlay.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.style.display = 'none'; });
   }
+
   window.addEventListener('DOMContentLoaded', async () => { await nav(); await setupNav(); await loadRestaurantDetail(); });
 </script>
 </body>

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Profile – EatToGo Owner</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <style>
+    @media (max-width: 768px) {
+      .sidebar { position: fixed; transform: translateX(-100%); transition: transform 0.3s; width: 260px; z-index: 1050; height: 100%; overflow-y: auto; background: #1C1208; }
+      .sidebar.show { transform: translateX(0); }
+      .admin-main { margin-left: 0 !important; }
+    }
+    @media (min-width: 769px) {
+      .sidebar { position: fixed; width: 260px; min-height: 100vh; }
+      .admin-main { margin-left: 260px; }
+    }
+    .topbar { background: white; padding: 12px 20px; box-shadow: 0 2px 10px rgba(0,0,0,.06); }
+    @media (max-width: 768px) {
+      .topbar { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; }
+      .topbar h2 { grid-column: 1; grid-row: 1; margin: 0; font-size: 1.2rem; }
+      .topbar .right-group { grid-column: 2; grid-row: 1; display: flex; gap: 10px; align-items: center; }
+      .topbar .hamburger { grid-column: 1; grid-row: 2; justify-self: start; background: none; border: none; font-size: 24px; padding: 0; color: var(--orange); cursor: pointer; }
+    }
+    @media (min-width: 769px) {
+      .topbar { display: flex; justify-content: space-between; align-items: center; }
+      .topbar .hamburger { display: none; }
+      .topbar .right-group { display: flex; align-items: center; gap: 15px; }
+    }
+    #authArea { white-space: nowrap; }
+    .profile-avatar { width: 88px; height: 88px; border-radius: 50%; background: linear-gradient(135deg, #FF6B35, #E5531F); display: flex; align-items: center; justify-content: center; font-size: 38px; color: white; font-weight: 900; box-shadow: 0 8px 24px rgba(255,107,53,.35); flex-shrink: 0; }
+    .info-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid #f0e8de; }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { font-size: 13px; font-weight: 700; color: #9a7a5a; text-transform: uppercase; letter-spacing: .6px; }
+    .info-value { font-size: 16px; font-weight: 700; color: #4A2C17; }
+    .branch-badge { display: inline-flex; align-items: center; gap: 8px; background: #fff4ee; border: 1.5px solid rgba(255,107,53,.2); border-radius: 14px; padding: 12px 16px; margin-bottom: 10px; width: 100%; }
+    .branch-status { font-size: 11px; font-weight: 800; border-radius: 999px; padding: 3px 10px; }
+    .branch-status.approved { background: #dcfce7; color: #166534; }
+    .branch-status.pending  { background: #fff3cd; color: #9a6700; }
+    .branch-status.rejected { background: #fee2e2; color: #991b1b; }
+    .copy-btn { background: none; border: none; cursor: pointer; font-size: 16px; padding: 4px 6px; border-radius: 8px; transition: background .15s; }
+    .copy-btn:hover { background: #ffe8d6; }
+    .edit-section input { border: 2px solid #f0e8de; border-radius: 14px; padding: 11px 14px; width: 100%; font-family: inherit; font-size: 15px; }
+    .edit-section input:focus { outline: none; border-color: #FF6B35; }
+    #saveMsg { display: none; }
+  </style>
+</head>
+<body>
+<aside class="sidebar">
+  <a class="logo" href="index.html">Eat<span>To</span>Go</a>
+  <hr>
+  <a href="owner-dashboard.html">📊 Overview</a>
+  <a href="owner-dashboard.html#reservations">📅 Reservations</a>
+  <a href="owner-dashboard.html#listing">📝 Listing Request</a>
+  <a href="owner-dashboard.html#staff">👥 Manage Staff</a>
+  <a class="active" href="owner-profile.html">👤 My Profile</a>
+  <a href="#" onclick="logout(); return false;">🚪 Sign Out</a>
+</aside>
+
+<main class="admin-main">
+  <div class="topbar">
+    <h2>My Profile</h2>
+    <button class="hamburger" id="menuToggle">☰</button>
+    <div class="right-group">
+      <span id="authArea"></span>
+    </div>
+  </div>
+  <div class="p-4" id="profileContent">
+    <div id="loadingState" class="text-center py-5 text-muted">Loading profile…</div>
+    <div id="profileBody" style="display:none;">
+      <div class="row g-4">
+        <div class="col-lg-5">
+          <div class="card-etg p-4">
+            <div class="d-flex align-items-center gap-3 mb-4">
+              <div class="profile-avatar" id="avatarLetter">?</div>
+              <div><h4 class="mb-0" id="profileName">—</h4><span class="badge-etg mt-1" style="font-size:12px;">🏪 Shop Owner</span></div>
+            </div>
+            <div class="info-row"><span class="info-label">Account ID</span><span class="info-value d-flex align-items-center gap-1"><span id="profileId">—</span><button class="copy-btn" onclick="copyText('profileId')">📋</button></span></div>
+            <div class="info-row"><span class="info-label">Email</span><span class="info-value d-flex align-items-center gap-1"><span id="profileEmail">—</span><button class="copy-btn" onclick="copyText('profileEmail')">📋</button></span></div>
+            <div class="info-row"><span class="info-label">Password</span><span class="info-value d-flex align-items-center gap-1"><span id="profilePassDisplay">••••••••</span><button class="copy-btn" onclick="togglePass()">👁️</button></span></div>
+            <div class="info-row"><span class="info-label">Role</span><span class="info-value">🏪 Owner</span></div>
+            <div class="info-row"><span class="info-label">Member Since</span><span class="info-value" id="profileJoined">—</span></div>
+          </div>
+        </div>
+        <div class="col-lg-7 d-flex flex-column gap-4">
+          <div class="card-etg p-4">
+            <h5 class="mb-3">🏬 My Restaurant Branches</h5>
+            <div id="branchesList"><p class="text-muted">No approved restaurants yet.</p></div>
+          </div>
+          <div class="card-etg p-4 edit-section">
+            <h5 class="mb-3">✏️ Edit Profile</h5>
+            <div class="mb-3"><label class="info-label mb-1 d-block">Display Name</label><input type="text" id="editName"></div>
+            <div class="mb-3"><label class="info-label mb-1 d-block">New Password <span class="text-muted fw-normal">(leave blank to keep current)</span></label><input type="password" id="editPassword" placeholder="Enter new password"></div>
+            <div class="d-flex align-items-center gap-3"><button class="btn btn-etg" onclick="saveProfile()">💾 Save Changes</button><span id="saveMsg" class="text-success fw-bold">✅ Saved!</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="minimal-footer">
+  <div class="container d-flex justify-content-between flex-wrap gap-5">
+    <div class="footer-brand"><h2>Eat<span>To</span>Go</h2><p>Final Year Project – Restaurant and Food Reservation System.</p></div>
+    <div class="footer-members"><h4>Project Team</h4><ul class="list-unstyled"><li>Navin Ramu</li><li>Muhamamd Nazim</li><li>Hadif</li><li>Ng Yue Yang</li></ul></div>
+  </div>
+  <div class="footer-bottom">© 2026 EatToGo • Universiti Teknologi Malaysia (UTM)</div>
+</footer>
+
+<script src="assets/js/api.js"></script>
+<script>
+  let rawPassword = '';
+  async function loadProfile() {
+    const session = await checkSession();
+    if (!session.loggedIn || session.user.role !== 'owner') { alert('Unauthorized'); window.location.href='login.html'; return; }
+    try {
+      const data = await apiCall('/profile.php');
+      document.getElementById('avatarLetter').textContent = (data.name || '?')[0].toUpperCase();
+      document.getElementById('profileName').textContent = data.name || '—';
+      document.getElementById('profileId').textContent = '#' + data.id;
+      document.getElementById('profileEmail').textContent = data.email || '—';
+      document.getElementById('profileJoined').textContent = data.created_at ? data.created_at.slice(0,10) : '—';
+      document.getElementById('editName').value = data.name || '';
+      const container = document.getElementById('branchesList');
+      if (data.restaurants && data.restaurants.length) {
+        container.innerHTML = data.restaurants.map(r => `
+          <div class="branch-badge w-100">
+            <div style="flex:1">
+              <div class="d-flex align-items-center gap-2 mb-1"><span style="font-size:18px;">🍽️</span><strong>${escapeHtml(r.name)}</strong><span class="branch-status ${r.status}">${r.status}</span></div>
+              <div style="font-size:13px; color:#9a7a5a;">📍 ${escapeHtml(r.location)} &nbsp;·&nbsp; 🍜 ${escapeHtml(r.category)} &nbsp;·&nbsp; ID: <strong>#${r.id}</strong></div>
+            </div>
+          </div>
+        `).join('');
+      } else { container.innerHTML = '<p class="text-muted mb-0">No restaurants yet. Submit a listing request to get started.</p>'; }
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('profileBody').style.display = 'block';
+    } catch(e) { document.getElementById('loadingState').textContent = 'Failed to load profile.'; console.error(e); }
+  }
+  function togglePass() { const el = document.getElementById('profilePassDisplay'); el.textContent = el.textContent === '••••••••' ? '(stored securely)' : '••••••••'; }
+  function copyText(id) { const text = document.getElementById(id).textContent.replace('#',''); navigator.clipboard.writeText(text); const btn = event.target; btn.textContent = '✅'; setTimeout(() => btn.textContent = '📋', 1500); }
+  async function saveProfile() {
+    const name = document.getElementById('editName').value.trim();
+    const password = document.getElementById('editPassword').value;
+    if (!name) { alert('Name cannot be empty'); return; }
+    try {
+      await apiCall('/profile.php', { method: 'PUT', body: JSON.stringify({ name, password }) });
+      document.getElementById('profileName').textContent = name;
+      document.getElementById('avatarLetter').textContent = name[0].toUpperCase();
+      document.getElementById('editPassword').value = '';
+      const msg = document.getElementById('saveMsg'); msg.style.display = 'inline'; setTimeout(() => msg.style.display = 'none', 2500);
+    } catch(e) { alert('Save failed: ' + e.message); }
+  }
+  function escapeHtml(s) { if(!s) return ''; return s.replace(/[&<>]/g, m=>m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
+  const menuToggle = document.getElementById('menuToggle');
+  const sidebar = document.querySelector('.sidebar');
+  if (menuToggle && sidebar) { menuToggle.addEventListener('click', () => sidebar.classList.toggle('show')); document.addEventListener('click', (e) => { if (window.innerWidth <= 768 && !sidebar.contains(e.target) && e.target !== menuToggle) sidebar.classList.remove('show'); }); }
+  window.addEventListener('DOMContentLoaded', async () => { await nav(); await loadProfile(); });
+</script>
+</body>
+</html>
