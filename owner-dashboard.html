@@ -86,9 +86,11 @@
         <div class="col-md-2"><select id="cuisine" class="form-select"><option>Japanese</option><option>Indian</option><option>Western</option><option>Malay</option><option>Chinese</option></select></div>
         <div class="col-md-12"><textarea id="description" class="form-control" rows="2" placeholder="Restaurant description"></textarea></div>
         <div class="col-md-4"><input id="price_range" class="form-control" placeholder="Price range (e.g., RM10-30)"></div>
-        <div class="col-md-4"><input id="hours" class="form-control" placeholder="Operating hours (e.g., 10:00 AM - 10:00 PM)"></div>
+        <div class="col-md-4"><input id="hours" class="form-control" placeholder="Operating hours (e.g., 10:00 AM - 10:00 PM)" required
+               pattern="\d{1,2}:\d{2}\s?(?:AM|PM)\s*-\s*\d{1,2}:\d{2}\s?(?:AM|PM)" title="Format: 10:00 AM - 10:00 PM"></div>
         <div class="col-md-4"><input id="deal" class="form-control" placeholder="Promotion / Deal (e.g., 10% off)"></div>
         <div class="col-md-4"><input type="number" id="total_seats" class="form-control" placeholder="Total seats (e.g., 50)" min="0"></div>
+        <div class="col-md-4"><input type="number" id="slot_duration" class="form-control" placeholder="Slot duration (minutes)" value="60" min="15" step="15"></div>
         <div class="col-md-12"><input type="file" id="restImage" class="form-control" accept="image/*"></div>
         <div class="col-md-12"><button type="submit" class="btn btn-etg w-100">Submit Listing Request</button></div>
       </form>
@@ -165,9 +167,11 @@
           <div class="mb-3"><label class="form-label">Cuisine</label><input id="editCategory" class="form-control" required></div>
           <div class="mb-3"><label class="form-label">Description</label><textarea id="editDescription" class="form-control" rows="2"></textarea></div>
           <div class="mb-3"><label class="form-label">Price Range</label><input id="editPriceRange" class="form-control" placeholder="RM10-30"></div>
-          <div class="mb-3"><label class="form-label">Operating Hours</label><input id="editHours" class="form-control" placeholder="10:00 AM - 10:00 PM"></div>
-          <div class="mb-3"><label class="form-label">Promotion / Deal</label><input id="editDeal" class="form-control" placeholder="Special offer"></div>
-          <div class="mb-3"><label class="form-label">Total Seats</label><input type="number" id="editSeats" class="form-control" min="0" placeholder="e.g., 50"></div>
+          <div class="mb-3"><input id="editHours" class="form-control" placeholder="Operating hours (e.g., 10:00 AM - 10:00 PM)" required
+                 pattern="\d{1,2}:\d{2}\s?(?:AM|PM)\s*-\s*\d{1,2}:\d{2}\s?(?:AM|PM)" title="Format: 10:00 AM - 10:00 PM"></div>
+          <div class="mb-3"><input id="editDeal" class="form-control" placeholder="Promotion / Deal"></div>
+          <div class="mb-3"><input type="number" id="editSeats" class="form-control" min="0" placeholder="Total seats"></div>
+          <div class="mb-3"><input type="number" id="editSlotDuration" class="form-control" min="15" step="15" value="60" placeholder="Slot duration (minutes)"></div>
         </form>
       </div>
       <div class="modal-footer">
@@ -234,7 +238,7 @@
     try {
       const staff = await apiCall(`/owner-staff.php?restaurant_id=${restaurantId}`);
       const tbody = document.getElementById('staffList');
-      if (!staff.length) { tbody.innerHTML = '<td><td colspan="3">No staff yet. Add staff above.</div>'; return; }
+      if (!staff.length) { tbody.innerHTML = '<tr><td colspan="3">No staff yet. Add staff above.</div>'; return; }
       tbody.innerHTML = staff.map(s => `
         <tr>
           <td>${escapeHtml(s.name)}</div>
@@ -315,6 +319,7 @@
     document.getElementById('editHours').value = restaurant.hours || '';
     document.getElementById('editDeal').value = restaurant.deal || '';
     document.getElementById('editSeats').value = restaurant.total_seats || 0;
+    document.getElementById('editSlotDuration').value = restaurant.slot_duration || 60;
     const modal = new bootstrap.Modal(document.getElementById('editRestaurantModal'));
     modal.show();
   }
@@ -329,14 +334,20 @@
     const hours = document.getElementById('editHours').value.trim();
     const deal = document.getElementById('editDeal').value.trim();
     const total_seats = parseInt(document.getElementById('editSeats').value) || 0;
+    const slot_duration = parseInt(document.getElementById('editSlotDuration').value) || 60;
     if (!name || !location || !category) {
       alert('Name, location and cuisine are required');
+      return;
+    }
+    const hoursPattern = /^\d{1,2}:\d{2}\s?(?:AM|PM)\s*-\s*\d{1,2}:\d{2}\s?(?:AM|PM)$/i;
+    if (hours && !hoursPattern.test(hours)) {
+      alert('Operating hours format invalid. Use "10:00 AM - 10:00 PM".');
       return;
     }
     try {
       await apiCall('/update-restaurant.php', {
         method: 'PUT',
-        body: JSON.stringify({ id, name, location, category, description, price_range, hours, deal, total_seats })
+        body: JSON.stringify({ id, name, location, category, description, price_range, hours, deal, total_seats, slot_duration })
       });
       alert('Restaurant details updated');
       bootstrap.Modal.getInstance(document.getElementById('editRestaurantModal')).hide();
@@ -375,12 +386,12 @@
       const req = await apiCall('/owner-requests.php');
       const tbody = document.getElementById('ownerRequests');
       if (!req.length) {
-        tbody.innerHTML = '<tr><td colspan="3" class="text-muted">No requests yet. </div>';
+        tbody.innerHTML = '<tr><td colspan="3" class="text-muted">No requests yet.</div>';
         return;
       }
       tbody.innerHTML = req.map(r => `
         <tr>
-        <tr>${escapeHtml(r.name)}</div>
+        <td>${escapeHtml(r.name)}</div>
         <td><span class="status ${r.status}">${r.status}</span></div>
         <td>${r.status === 'approved' ? '✅ Approved' : (r.status === 'rejected' ? '❌ Rejected' : '⏳ Pending admin review')}</div>
       </tr>`).join('');
@@ -397,8 +408,14 @@
     const hours = document.getElementById('hours').value.trim();
     const deal = document.getElementById('deal').value.trim();
     const total_seats = document.getElementById('total_seats').value;
+    const slot_duration = document.getElementById('slot_duration').value;
     const imageFile = document.getElementById('restImage').files[0];
     if (!restName || !location) { alert('Restaurant name and location required'); return; }
+    const hoursPattern = /^\d{1,2}:\d{2}\s?(?:AM|PM)\s*-\s*\d{1,2}:\d{2}\s?(?:AM|PM)$/i;
+    if (hours && !hoursPattern.test(hours)) {
+      alert('Operating hours must be in format: 10:00 AM - 10:00 PM');
+      return;
+    }
     const formData = new FormData();
     formData.append('restaurant_name', restName);
     formData.append('location', location);
@@ -408,6 +425,7 @@
     if (hours) formData.append('hours', hours);
     if (deal) formData.append('deal', deal);
     if (total_seats) formData.append('total_seats', total_seats);
+    if (slot_duration) formData.append('slot_duration', slot_duration);
     if (imageFile) formData.append('image', imageFile);
     try {
       const res = await fetch(`${API_BASE}/owner-request.php`, { method: 'POST', body: formData, credentials: 'same-origin' });

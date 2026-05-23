@@ -148,9 +148,11 @@
             <div class="col-md-6"><label class="form-label">Location</label><input id="editLocation" class="form-control" required></div>
             <div class="col-md-6"><label class="form-label">Price Range</label><input id="editPriceRange" class="form-control" placeholder="RM10-30"></div>
             <div class="col-12"><label class="form-label">Description</label><textarea id="editDescription" class="form-control" rows="2"></textarea></div>
-            <div class="col-md-6"><label class="form-label">Operating Hours</label><input id="editHours" class="form-control" placeholder="10:00 AM - 10:00 PM"></div>
+            <div class="col-md-6"><label class="form-label">Operating Hours</label><input id="editHours" class="form-control" placeholder="10:00 AM - 10:00 PM" required
+                   pattern="\d{1,2}:\d{2}\s?(?:AM|PM)\s*-\s*\d{1,2}:\d{2}\s?(?:AM|PM)" title="Format: 10:00 AM - 10:00 PM"></div>
             <div class="col-md-6"><label class="form-label">Promotion / Deal</label><input id="editDeal" class="form-control" placeholder="Special offer"></div>
             <div class="col-md-6"><label class="form-label">Total Seats</label><input type="number" id="editSeats" class="form-control" min="0" placeholder="e.g., 50"></div>
+            <div class="col-md-6"><label class="form-label">Slot Duration (minutes)</label><input type="number" id="editSlotDuration" class="form-control" min="15" step="15" value="60"></div>
             <div class="col-12">
               <label class="form-label">Restaurant Image</label>
               <input type="file" id="editImageFile" class="form-control" accept="image/*">
@@ -191,8 +193,17 @@
   async function renderBookings() {
     try {
       let b = await apiCall('/admin-bookings.php');
-      document.getElementById('bookingRows').innerHTML = b.map(b=>`<tr><td><b>${b.id}</b></td><td>${escapeHtml(b.customer_name)}</td><td>${escapeHtml(b.restaurant_name)}</td><td>${b.reservation_date} ${b.reservation_time}</td><td>${b.num_people}</td><td><span class="status ${b.status}">${b.status}</span></td><td>${b.arrival_confirmed?'Arrived':'No'}</td><td><button class="btn btn-sm btn-danger" onclick="cancelBooking(${b.id})">Cancel Booking</button></td></tr>`).join('');
-    } catch(e) { document.getElementById('bookingRows').innerHTML='<tr><td colspan="8">Error loading bookings</td></tr>'; }
+      document.getElementById('bookingRows').innerHTML = b.map(b=>`<tr>
+        <td><b>${b.id}</b></div>
+        <td>${escapeHtml(b.customer_name)}</div>
+        <td>${escapeHtml(b.restaurant_name)}</div>
+        <td>${b.reservation_date} ${b.reservation_time}</div>
+        <td>${b.num_people}</div>
+        <td><span class="status ${b.status}">${b.status}</span></div>
+        <td>${b.arrival_confirmed?'Arrived':'No'}</div>
+        <td><button class="btn btn-sm btn-danger" onclick="cancelBooking(${b.id})">Cancel Booking</button></div>
+      </tr>`).join('');
+    } catch(e) { document.getElementById('bookingRows').innerHTML='<tr><td colspan="8">Error loading bookings</div>'; }
   }
 
   async function cancelBooking(id) {
@@ -206,7 +217,13 @@
 
   async function renderRestaurantTable() {
     let r = await apiCall('/admin-restaurants.php');
-    document.getElementById('restaurantRows').innerHTML = r.map(r=>`<tr><td>${escapeHtml(r.name)}</td><td>${escapeHtml(r.category)}</td><td>${escapeHtml(r.location)}</td><td>${escapeHtml(r.price_range)}</td><td><button class="btn btn-sm btn-warning" onclick="openEditRestaurantModal(${r.id})">Edit</button> <button class="btn btn-sm btn-danger" onclick="deleteRestaurant(${r.id})">Delete</button></td></tr>`).join('');
+    document.getElementById('restaurantRows').innerHTML = r.map(r=>`<tr>
+        <td>${escapeHtml(r.name)}</div>
+        <td>${escapeHtml(r.category)}</div>
+        <td>${escapeHtml(r.location)}</div>
+        <td>${escapeHtml(r.price_range)}</div>
+        <td><button class="btn btn-sm btn-warning" onclick="openEditRestaurantModal(${r.id})">Edit</button> <button class="btn btn-sm btn-danger" onclick="deleteRestaurant(${r.id})">Delete</button></div>
+      </tr>`).join('');
   }
 
   function openEditRestaurantModal(id) {
@@ -228,6 +245,7 @@
     document.getElementById('editHours').value = r.hours || '';
     document.getElementById('editDeal').value = r.deal || '';
     document.getElementById('editSeats').value = r.total_seats || 0;
+    document.getElementById('editSlotDuration').value = r.slot_duration || 60;
     document.getElementById('editImageCurrent').value = r.image || '';
     document.getElementById('editImageFile').value = '';
   }
@@ -242,9 +260,15 @@
     const hours = document.getElementById('editHours').value.trim();
     const deal = document.getElementById('editDeal').value.trim();
     const total_seats = parseInt(document.getElementById('editSeats').value) || 0;
+    const slot_duration = parseInt(document.getElementById('editSlotDuration').value) || 60;
     const currentImage = document.getElementById('editImageCurrent').value;
     const imageFile = document.getElementById('editImageFile').files[0];
     if (!name || !category || !location) { alert('Name, cuisine and location are required'); return; }
+    const hoursPattern = /^\d{1,2}:\d{2}\s?(?:AM|PM)\s*-\s*\d{1,2}:\d{2}\s?(?:AM|PM)$/i;
+    if (hours && !hoursPattern.test(hours)) {
+      alert('Operating hours format invalid. Use "10:00 AM - 10:00 PM".');
+      return;
+    }
     let imagePath = currentImage;
     if (imageFile) {
       const formData = new FormData();
@@ -270,7 +294,7 @@
     try {
       await apiCall('/admin-restaurants.php', {
         method: 'PUT',
-        body: JSON.stringify({ id, name, category, location, price_range, description, hours, deal, image: imagePath, total_seats })
+        body: JSON.stringify({ id, name, category, location, price_range, description, hours, deal, image: imagePath, total_seats, slot_duration })
       });
       alert('Restaurant updated');
       bootstrap.Modal.getInstance(document.getElementById('editRestaurantModal')).hide();
@@ -294,7 +318,12 @@
 
   async function renderAccounts() {
     let u = await apiCall('/admin-users.php');
-    document.getElementById('accountRows').innerHTML = u.map(u=>`<tr><td>${escapeHtml(u.name)}</td><td>${escapeHtml(u.email)}</td><td>${u.role}</td><td><button class="btn btn-sm btn-danger" onclick="deleteUser(${u.id})">Delete</button></td></tr>`).join('');
+    document.getElementById('accountRows').innerHTML = u.map(u=>`<tr>
+        <td>${escapeHtml(u.name)}</div>
+        <td>${escapeHtml(u.email)}</div>
+        <td>${u.role}</div>
+        <td><button class="btn btn-sm btn-danger" onclick="deleteUser(${u.id})">Delete</button></div>
+      </tr>`).join('');
   }
 
   async function deleteUser(id) {
@@ -303,7 +332,13 @@
 
   async function renderRequests() {
     let req = await apiCall('/admin-requests.php');
-    document.getElementById('requestRows').innerHTML = req.map(r=>`<tr><td>${r.id}</td><td>Owner ID: ${r.owner_id||'?'}</td><td>${escapeHtml(r.name)}</td><td><span class="status pending">${r.status}</span></td><td><button class="btn btn-sm btn-success" onclick="approveRequest(${r.id})">Approve</button> <button class="btn btn-sm btn-danger" onclick="rejectRequest(${r.id})">Reject</button></td></tr>`).join('');
+    document.getElementById('requestRows').innerHTML = req.map(r=>`<tr>
+        <td>${r.id}</div>
+        <td>Owner ID: ${r.owner_id||'?'}</div>
+        <td>${escapeHtml(r.name)}</div>
+        <td><span class="status pending">${r.status}</span></div>
+        <td><button class="btn btn-sm btn-success" onclick="approveRequest(${r.id})">Approve</button> <button class="btn btn-sm btn-danger" onclick="rejectRequest(${r.id})">Reject</button></div>
+      </td>`).join('');
   }
 
   async function approveRequest(id) {

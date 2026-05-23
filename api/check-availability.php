@@ -13,22 +13,33 @@ if (!$restaurant_id || !$date || !$time) {
     exit;
 }
 
-// Get total seats
-$stmt = $pdo->prepare("SELECT total_seats FROM restaurants WHERE id = ?");
+$stmt = $pdo->prepare("SELECT total_seats, slot_duration FROM restaurants WHERE id = ?");
 $stmt->execute([$restaurant_id]);
-$totalSeats = $stmt->fetchColumn();
-if (!$totalSeats) {
+$rest = $stmt->fetch(PDO::FETCH_ASSOC);
+if (!$rest) {
     echo json_encode(['available' => 0, 'total' => 0]);
     exit;
 }
+$totalSeats = $rest['total_seats'];
+$slotDuration = $rest['slot_duration'] ?? 60;
 
-// Sum confirmed reservations
+$slotStart = DateTime::createFromFormat('g:i A', $time);
+if (!$slotStart) {
+    echo json_encode(['available' => 0, 'total' => $totalSeats]);
+    exit;
+}
+$slotEnd = clone $slotStart;
+$slotEnd->modify("+{$slotDuration} minutes");
+$startStr = $slotStart->format('H:i:s');
+$endStr = $slotEnd->format('H:i:s');
+
 $stmt = $pdo->prepare("
     SELECT COALESCE(SUM(num_people), 0) as booked
     FROM reservations
-    WHERE restaurant_id = ? AND reservation_date = ? AND reservation_time = ? AND status = 'confirmed'
+    WHERE restaurant_id = ? AND reservation_date = ? AND status = 'confirmed'
+      AND reservation_time >= ? AND reservation_time < ?
 ");
-$stmt->execute([$restaurant_id, $date, $time]);
+$stmt->execute([$restaurant_id, $date, $startStr, $endStr]);
 $booked = $stmt->fetchColumn();
 
 $available = max(0, $totalSeats - $booked);

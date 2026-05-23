@@ -9,6 +9,7 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
     exit;
 }
 $method = $_SERVER['REQUEST_METHOD'];
+$hoursPattern = '/^\d{1,2}:\d{2}\s?(?:AM|PM)\s*-\s*\d{1,2}:\d{2}\s?(?:AM|PM)$/i';
 
 if ($method === 'GET') {
     $stmt = $pdo->query("SELECT * FROM restaurants");
@@ -16,7 +17,13 @@ if ($method === 'GET') {
 }
 elseif ($method === 'POST') {
     $data = json_decode(file_get_contents('php://input'), true);
-    $stmt = $pdo->prepare("INSERT INTO restaurants (name, category, description, image, location, price_range, hours, deal, total_seats, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved')");
+    $hours = $data['hours'] ?? '';
+    if (!empty($hours) && !preg_match($hoursPattern, $hours)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Operating hours format invalid. Use "10:00 AM - 10:00 PM".']);
+        exit;
+    }
+    $stmt = $pdo->prepare("INSERT INTO restaurants (name, category, description, image, location, price_range, hours, deal, total_seats, slot_duration, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved')");
     $stmt->execute([
         $data['name'],
         $data['category'] ?? '',
@@ -24,26 +31,34 @@ elseif ($method === 'POST') {
         $data['image'] ?? '',
         $data['location'],
         $data['price_range'] ?? '',
-        $data['hours'] ?? '',
+        $hours,
         $data['deal'] ?? '',
-        (int)($data['total_seats'] ?? 0)
+        (int)($data['total_seats'] ?? 0),
+        (int)($data['slot_duration'] ?? 60)
     ]);
     echo json_encode(['success' => true]);
 }
 elseif ($method === 'PUT') {
     $data = json_decode(file_get_contents('php://input'), true);
+    $hours = $data['hours'] ?? '';
+    if (!empty($hours) && !preg_match($hoursPattern, $hours)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Operating hours format invalid. Use "10:00 AM - 10:00 PM".']);
+        exit;
+    }
     $id = $data['id'] ?? 0;
-    $stmt = $pdo->prepare("UPDATE restaurants SET name=?, category=?, location=?, price_range=?, description=?, hours=?, deal=?, image=?, total_seats=? WHERE id=?");
+    $stmt = $pdo->prepare("UPDATE restaurants SET name=?, category=?, location=?, price_range=?, description=?, hours=?, deal=?, image=?, total_seats=?, slot_duration=? WHERE id=?");
     $stmt->execute([
         $data['name'],
         $data['category'],
         $data['location'],
         $data['price_range'],
         $data['description'],
-        $data['hours'],
+        $hours,
         $data['deal'],
         $data['image'] ?? '',
         (int)($data['total_seats'] ?? 0),
+        (int)($data['slot_duration'] ?? 60),
         $id
     ]);
     echo json_encode(['success' => true]);

@@ -19,10 +19,19 @@ $price_range = $_POST['price_range'] ?? '';
 $hours = $_POST['hours'] ?? '';
 $deal = $_POST['deal'] ?? '';
 $total_seats = (int)($_POST['total_seats'] ?? 0);
+$slot_duration = (int)($_POST['slot_duration'] ?? 60);
 
 if (!$restaurant_name || !$location) {
     http_response_code(400);
     echo json_encode(['error' => 'Restaurant name and location required']);
+    exit;
+}
+
+// Validate hours format
+$hoursPattern = '/^\d{1,2}:\d{2}\s?(?:AM|PM)\s*-\s*\d{1,2}:\d{2}\s?(?:AM|PM)$/i';
+if (!empty($hours) && !preg_match($hoursPattern, $hours)) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Operating hours format invalid. Use "10:00 AM - 10:00 PM".']);
     exit;
 }
 
@@ -41,8 +50,8 @@ if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
     }
 }
 
-$stmt = $pdo->prepare("INSERT INTO restaurants (name, location, category, description, price_range, hours, deal, total_seats, status, owner_id, image) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)");
-$stmt->execute([$restaurant_name, $location, $cuisine, $description, $price_range, $hours, $deal, $total_seats, $owner_id, $imagePath]);
+$stmt = $pdo->prepare("INSERT INTO restaurants (name, location, category, description, price_range, hours, deal, total_seats, slot_duration, status, owner_id, image) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)");
+$stmt->execute([$restaurant_name, $location, $cuisine, $description, $price_range, $hours, $deal, $total_seats, $slot_duration, $owner_id, $imagePath]);
 
 echo json_encode(['success' => true, 'message' => 'Request submitted for admin approval']);
 ?>
