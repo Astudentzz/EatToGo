@@ -8,29 +8,44 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/style.css">
   <style>
-    .mobile-nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; }
-    @media (max-width: 768px) { .mobile-nav { flex-direction: column; align-items: center; margin-top: 10px; } }
+    /* same navbar & sidebar styles as before */
+    .navbar-etg .container { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+    .desktop-nav { display: flex; gap: 1rem; }
+    .hamburger { display: none; background: none; border: none; font-size: 28px; color: var(--orange); cursor: pointer; padding: 0; }
+    @media (max-width: 768px) {
+      .navbar-etg .container { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; }
+      .logo { grid-column: 1; grid-row: 1; justify-self: start; }
+      .right-group { grid-column: 2; grid-row: 1; justify-self: end; display: flex; align-items: center; gap: 10px; }
+      .hamburger { display: block; grid-column: 1; grid-row: 2; justify-self: start; margin-top: 4px; }
+      .desktop-nav { display: none; }
+    }
+    @media (min-width: 769px) { .hamburger, .mobile-sidebar, .sidebar-overlay, .close-sidebar { display: none; } }
+    .mobile-sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100%; background: #1C1208; z-index: 1100; transform: translateX(-100%); transition: transform 0.3s ease; padding: 60px 20px 20px; }
+    .mobile-sidebar.open { transform: translateX(0); }
+    .mobile-sidebar a { display: block; color: rgba(255,255,255,.8); text-decoration: none; padding: 12px 16px; font-weight: 700; border-radius: 12px; margin: 8px 0; }
+    .mobile-sidebar a:hover, .mobile-sidebar a.active { background: rgba(255,107,53,.2); color: var(--orange); }
+    .close-sidebar { position: absolute; top: 15px; right: 20px; font-size: 28px; color: white; background: none; border: none; cursor: pointer; }
+    .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1050; display: none; }
+    .sidebar-overlay.active { display: block; }
   </style>
 </head>
 <body>
 <nav class="navbar-etg">
   <div class="container">
     <a class="logo" href="index.html">Eat<span>To</span>Go</a>
-    <!-- Desktop navigation -->
     <div class="desktop-nav" id="mainNav"></div>
-    <div style="display: flex; align-items: center; gap: 10px;">
-      <button class="hamburger" id="hamburgerBtn">☰</button>
+    <div class="right-group">
       <div id="authArea"></div>
     </div>
+    <button class="hamburger" id="hamburgerBtn">☰</button>
   </div>
 </nav>
-
-<!-- Mobile sidebar -->
 <div class="mobile-sidebar" id="mobileSidebar">
   <button class="close-sidebar" id="closeSidebarBtn">×</button>
   <div id="mobileNavLinks"></div>
 </div>
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
 <section class="page-head">
   <div class="container">
     <div class="timeline"><span>Reserve Table</span><span>Pre-Order Food</span><span>Customer Details</span><span>Receipt</span><span class="active">Pay at Counter</span></div>
@@ -38,6 +53,7 @@
     <p class="text-muted">No online payment is collected in this frontend prototype.</p>
   </div>
 </section>
+
 <section class="section">
   <div class="container">
     <div class="row g-4 justify-content-center">
@@ -51,14 +67,12 @@
         </div>
       </div>
       <div class="col-lg-5">
-        <div id="receiptBox" class="card-etg p-4">
-          <h4>Order Summary</h4>
-          <div id="summaryContent">Loading...</div>
-        </div>
+        <div id="receiptBox" class="card-etg p-4"></div>
       </div>
     </div>
   </div>
 </section>
+
 <footer class="minimal-footer">
   <div class="container d-flex justify-content-between flex-wrap gap-5">
     <div class="footer-brand"><h2>Eat<span>To</span>Go</h2><p>Final Year Project – Restaurant and Food Reservation System.</p></div>
@@ -66,55 +80,36 @@
   </div>
   <div class="footer-bottom">© 2026 EatToGo • Universiti Teknologi Malaysia (UTM)</div>
 </footer>
+
 <script src="assets/js/api.js"></script>
-<script src="assets/js/mobile-nav.js"></script>
 <script>
+  // Sidebar toggle
+  const hamburger = document.getElementById('hamburgerBtn');
+  const sidebar = document.getElementById('mobileSidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  const closeBtn = document.getElementById('closeSidebarBtn');
+  function openSidebar() { sidebar.classList.add('open'); overlay.classList.add('active'); }
+  function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('active'); }
+  if (hamburger) hamburger.addEventListener('click', openSidebar);
+  if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+  if (overlay) overlay.addEventListener('click', closeSidebar);
+
   const urlParams = new URLSearchParams(window.location.search);
   const reservationId = urlParams.get('reservation_id');
 
   async function loadSummary() {
-    const summaryDiv = document.getElementById('summaryContent');
-    if (!reservationId) {
-      summaryDiv.innerHTML = '<p class="text-muted">No reservation ID provided.</p>';
-      return;
-    }
+    if (!reservationId) return;
     try {
-      const session = await checkSession();
-      if (!session.loggedIn) {
-        summaryDiv.innerHTML = '<p class="text-muted">Please login to view order summary.</p>';
-        return;
-      }
       const reservations = await apiCall('/user-reservations.php');
-      const reservation = reservations.find(r => r.id == reservationId);
-      if (!reservation) {
-        summaryDiv.innerHTML = '<p class="text-danger">Reservation not found.</p>';
-        return;
-      }
-      const order = reservation.order || null;
-      let total = 0;
-      if (order && order.total_amount) {
-        total = parseFloat(order.total_amount);
-      }
-      let itemsHtml = '';
-      if (order && order.items_summary) {
-        itemsHtml = `<p><b>Items:</b> ${escapeHtml(order.items_summary)}</p>`;
-      } else {
-        itemsHtml = '<p class="text-muted">No pre‑order items.</p>';
-      }
-      summaryDiv.innerHTML = `
-        <p><b>Restaurant:</b> ${escapeHtml(reservation.restaurant_name)}</p>
-        ${itemsHtml}
-        <hr>
-        <h5 class="text-end">Total: RM ${total.toFixed(2)}</h5>
-        <p class="small text-muted mt-2">You will pay this amount at the counter.</p>
-      `;
-    } catch (err) {
-      console.error(err);
-      summaryDiv.innerHTML = '<p class="text-danger">Error loading order summary.</p>';
-    }
+      const r = reservations.find(rs => rs.id == reservationId);
+      if (r && r.order) {
+        document.getElementById('receiptBox').innerHTML = `
+          <h5>Order Summary</h5>
+          <p><b>Restaurant:</b> ${escapeHtml(r.restaurant_name)}</p>
+          <p><b>Total:</b> RM ${(r.order.total_amount || 0).toFixed(2)}</p>`;
+      } else if (r) { document.getElementById('receiptBox').innerHTML = '<p>No pre‑order items.</p>'; }
+    } catch(e) { console.error(e); }
   }
-
-  function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
 
   document.getElementById('confirmBtn').addEventListener('click', () => {
     window.location.href = `booking-success.html?reservation_id=${reservationId}`;
@@ -122,19 +117,25 @@
 
   async function setupNav() {
     const s = await checkSession();
-    const navDiv = document.getElementById('mainNav');
-    if (!navDiv) return;
+    const desktopNav = document.getElementById('mainNav');
+    const mobileNav = document.getElementById('mobileNavLinks');
+    if (!desktopNav) return;
     const u = s.loggedIn ? s.user : null;
+    let navHtml = '';
     if (!u || u.role === 'customer') {
-      navDiv.innerHTML = `<a class="nav-link" href="index.html">Restaurants</a><a class="nav-link" href="booking-history.html">My Bookings</a><a class="nav-link" href="order-status.html">Order Status</a>`;
+      navHtml = `<a class="nav-link" href="index.html">Restaurants</a><a class="nav-link" href="booking-history.html">My Bookings</a><a class="nav-link" href="order-status.html">Order Status</a>`;
     } else if (u.role === 'staff') {
-      navDiv.innerHTML = `<a class="nav-link fw-bold" href="staff-dashboard.html">↗ Staff Dashboard</a>`;
+      navHtml = `<a class="nav-link fw-bold" href="staff-dashboard.html">↗ Staff Dashboard</a>`;
     } else if (u.role === 'owner') {
-      navDiv.innerHTML = `<a class="nav-link fw-bold" href="owner-dashboard.html">↗ Owner Dashboard</a>`;
+      navHtml = `<a class="nav-link fw-bold" href="owner-dashboard.html">↗ Owner Dashboard</a>`;
     } else if (u.role === 'admin') {
-      navDiv.innerHTML = `<a class="nav-link fw-bold" href="admin.html">↗ Admin Dashboard</a>`;
+      navHtml = `<a class="nav-link fw-bold" href="admin.html">↗ Admin Dashboard</a>`;
     }
+    desktopNav.innerHTML = navHtml;
+    if (mobileNav) mobileNav.innerHTML = navHtml;
   }
+
+  function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
 
   window.addEventListener('DOMContentLoaded', async () => {
     await nav();
