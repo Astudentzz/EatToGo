@@ -29,7 +29,6 @@ if (!$restaurant_id || !$name || !$location) {
     exit;
 }
 
-// Validate hours format
 $hoursPattern = '/^\d{1,2}:\d{2}\s?(?:AM|PM)\s*-\s*\d{1,2}:\d{2}\s?(?:AM|PM)$/i';
 if (!empty($hours) && !preg_match($hoursPattern, $hours)) {
     http_response_code(400);
@@ -45,8 +44,12 @@ if (!$stmt->fetch()) {
     exit;
 }
 
-$stmt = $pdo->prepare("UPDATE restaurants SET name = ?, location = ?, category = ?, description = ?, price_range = ?, hours = ?, deal = ?, total_seats = ?, slot_duration = ? WHERE id = ?");
-$stmt->execute([$name, $location, $category, $description, $price_range, $hours, $deal, $total_seats, $slot_duration, $restaurant_id]);
+// If a new QR code file is uploaded, handle it (passed as base64 or multipart? For PUT we use JSON; we'll expect a URL. For simplicity, we'll not handle file upload in PUT; owners can use the listing form for that. If you need image upload via API, we'd need a separate endpoint.
+// For now, we keep the existing qr_code if not provided.
+$qr_code = $data['qr_code'] ?? null;
+
+$stmt = $pdo->prepare("UPDATE restaurants SET name = ?, location = ?, category = ?, description = ?, price_range = ?, hours = ?, deal = ?, total_seats = ?, slot_duration = ?, qr_code = COALESCE(?, qr_code) WHERE id = ?");
+$stmt->execute([$name, $location, $category, $description, $price_range, $hours, $deal, $total_seats, $slot_duration, $qr_code, $restaurant_id]);
 
 echo json_encode(['success' => true]);
 ?>

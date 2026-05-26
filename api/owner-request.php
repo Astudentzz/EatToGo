@@ -35,6 +35,13 @@ if (!empty($hours) && !preg_match($hoursPattern, $hours)) {
     exit;
 }
 
+// QR code is required for new submission
+if (!isset($_FILES['qr_code']) || $_FILES['qr_code']['error'] !== UPLOAD_ERR_OK) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Payment QR code is required']);
+    exit;
+}
+
 $imagePath = null;
 if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
     $uploadDir = '../uploads/restaurants/';
@@ -50,8 +57,27 @@ if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
     }
 }
 
-$stmt = $pdo->prepare("INSERT INTO restaurants (name, location, category, description, price_range, hours, deal, total_seats, slot_duration, status, owner_id, image) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)");
-$stmt->execute([$restaurant_name, $location, $cuisine, $description, $price_range, $hours, $deal, $total_seats, $slot_duration, $owner_id, $imagePath]);
+// Handle QR code upload (required)
+$uploadQrDir = '../uploads/qrcodes/';
+if (!is_dir($uploadQrDir)) mkdir($uploadQrDir, 0777, true);
+$ext = strtolower(pathinfo($_FILES['qr_code']['name'], PATHINFO_EXTENSION));
+$allowed = ['jpg', 'jpeg', 'png', 'gif'];
+if (!in_array($ext, $allowed)) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Invalid QR code image format']);
+    exit;
+}
+$filename = uniqid() . '.' . $ext;
+$destination = $uploadQrDir . $filename;
+if (!move_uploaded_file($_FILES['qr_code']['tmp_name'], $destination)) {
+    http_response_code(500);
+    echo json_encode(['error' => 'Failed to save QR code']);
+    exit;
+}
+$qrCodePath = 'uploads/qrcodes/' . $filename;
+
+$stmt = $pdo->prepare("INSERT INTO restaurants (name, location, category, description, price_range, hours, deal, total_seats, slot_duration, status, owner_id, image, qr_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?)");
+$stmt->execute([$restaurant_name, $location, $cuisine, $description, $price_range, $hours, $deal, $total_seats, $slot_duration, $owner_id, $imagePath, $qrCodePath]);
 
 echo json_encode(['success' => true, 'message' => 'Request submitted for admin approval']);
 ?>

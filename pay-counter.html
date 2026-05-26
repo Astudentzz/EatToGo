@@ -8,7 +8,10 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/style.css">
   <style>
-    /* same navbar & sidebar styles as before */
+    .qr-container { text-align: center; margin: 20px 0; }
+    .qr-container img { max-width: 200px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,.1); }
+    .payment-instruction { background: #fff8f0; border-left: 4px solid var(--orange); padding: 16px; border-radius: 12px; }
+    /* Navbar layout (same as index) */
     .navbar-etg .container { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; }
     .desktop-nav { display: flex; gap: 1rem; }
     .hamburger { display: none; background: none; border: none; font-size: 28px; color: var(--orange); cursor: pointer; padding: 0; }
@@ -19,7 +22,9 @@
       .hamburger { display: block; grid-column: 1; grid-row: 2; justify-self: start; margin-top: 4px; }
       .desktop-nav { display: none; }
     }
-    @media (min-width: 769px) { .hamburger, .mobile-sidebar, .sidebar-overlay, .close-sidebar { display: none; } }
+    @media (min-width: 769px) {
+      .hamburger, .mobile-sidebar, .sidebar-overlay, .close-sidebar { display: none; }
+    }
     .mobile-sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100%; background: #1C1208; z-index: 1100; transform: translateX(-100%); transition: transform 0.3s ease; padding: 60px 20px 20px; }
     .mobile-sidebar.open { transform: translateX(0); }
     .mobile-sidebar a { display: block; color: rgba(255,255,255,.8); text-decoration: none; padding: 12px 16px; font-weight: 700; border-radius: 12px; margin: 8px 0; }
@@ -30,6 +35,7 @@
   </style>
 </head>
 <body>
+
 <nav class="navbar-etg">
   <div class="container">
     <a class="logo" href="index.html">Eat<span>To</span>Go</a>
@@ -40,6 +46,8 @@
     <button class="hamburger" id="hamburgerBtn">☰</button>
   </div>
 </nav>
+
+<!-- Mobile sidebar -->
 <div class="mobile-sidebar" id="mobileSidebar">
   <button class="close-sidebar" id="closeSidebarBtn">×</button>
   <div id="mobileNavLinks"></div>
@@ -48,26 +56,37 @@
 
 <section class="page-head">
   <div class="container">
-    <div class="timeline"><span>Reserve Table</span><span>Pre-Order Food</span><span>Customer Details</span><span>Receipt</span><span class="active">Pay at Counter</span></div>
-    <h1 class="mt-3">Payment Instruction</h1>
-    <p class="text-muted">No online payment is collected in this frontend prototype.</p>
+    <div class="timeline">
+      <span>Reserve Table</span>
+      <span>Pre-Order Food</span>
+      <span>Customer Details</span>
+      <span>Receipt</span>
+      <span class="active">Pay at Counter</span>
+    </div>
+    <h1 class="mt-3">Payment</h1>
+    <p class="text-muted">Scan the QR code to complete your payment.</p>
   </div>
 </section>
 
 <section class="section">
   <div class="container">
-    <div class="row g-4 justify-content-center">
-      <div class="col-lg-7">
-        <div class="card-etg p-5 text-center">
-          <div style="font-size: 80px">💵</div>
-          <h1>Cash-Only / Pay at Counter</h1>
-          <p class="lead text-muted">Your booking receipt has been generated. Please pay at the restaurant counter on your reservation date and time.</p>
-          <div class="alert alert-warning text-start"><b>Important:</b> Restaurant owner controls payment/pricing matters. Staff can only update preparation and arrival status.</div>
-          <button id="confirmBtn" class="btn btn-etg">I Understand, Confirm Booking</button>
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="card-etg p-5 text-center" id="paymentContent">
+          <div style="font-size: 60px;">💵</div>
+          <h2>Pay with QR Code</h2>
+          <div id="qrDisplay" class="qr-container">
+            <p class="text-muted">Loading payment details...</p>
+          </div>
+          <div class="payment-instruction mt-3">
+            <p>1. Open your payment app (Touch 'n Go, DuitNow, etc.)</p>
+            <p>2. Scan the QR code above</p>
+            <p>3. Enter the total amount shown in your receipt</p>
+            <p>4. Click "I Have Paid" after successful payment</p>
+          </div>
+          <button id="confirmPaymentBtn" class="btn btn-etg btn-lg mt-4" disabled>I Have Paid</button>
+          <div id="paymentMsg" class="mt-3 small text-muted"></div>
         </div>
-      </div>
-      <div class="col-lg-5">
-        <div id="receiptBox" class="card-etg p-4"></div>
       </div>
     </div>
   </div>
@@ -83,7 +102,51 @@
 
 <script src="assets/js/api.js"></script>
 <script>
-  // Sidebar toggle
+  const urlParams = new URLSearchParams(window.location.search);
+  const reservationId = urlParams.get('reservation_id');
+  let restaurantData = null;
+
+  async function loadPaymentDetails() {
+    const qrDiv = document.getElementById('qrDisplay');
+    const confirmBtn = document.getElementById('confirmPaymentBtn');
+    if (!reservationId) {
+      qrDiv.innerHTML = '<p class="text-danger">Missing reservation ID. Please go back.</p>';
+      return;
+    }
+    try {
+      // Fetch reservation details
+      const reservations = await apiCall('/user-reservations.php');
+      const reservation = reservations.find(r => r.id == reservationId);
+      if (!reservation) throw new Error('Reservation not found');
+      // Fetch restaurant details to get QR code
+      const restaurant = await apiCall(`/restaurant-detail.php?id=${reservation.restaurant_id}`);
+      restaurantData = restaurant.restaurant;
+      if (restaurantData.qr_code) {
+        qrDiv.innerHTML = `<img src="${restaurantData.qr_code}" alt="Payment QR Code" style="max-width: 200px;">`;
+        confirmBtn.disabled = false;
+      } else {
+        qrDiv.innerHTML = '<p class="text-warning">No QR code provided by the restaurant. Please pay at the counter.</p>';
+        confirmBtn.disabled = false; // still allow to proceed manually
+      }
+    } catch (err) {
+      console.error(err);
+      qrDiv.innerHTML = '<p class="text-danger">Failed to load payment details.</p>';
+    }
+  }
+
+  async function confirmPayment() {
+    // Simulate payment confirmation – you can later add an API call to mark order as paid
+    const btn = document.getElementById('confirmPaymentBtn');
+    btn.disabled = true;
+    btn.textContent = 'Processing...';
+    // Optional: call an API to update payment status (e.g., orders table set paid=1)
+    // For now, just redirect after a short delay
+    setTimeout(() => {
+      window.location.href = `booking-success.html?reservation_id=${reservationId}`;
+    }, 1000);
+  }
+
+  // Sidebar and navigation setup
   const hamburger = document.getElementById('hamburgerBtn');
   const sidebar = document.getElementById('mobileSidebar');
   const overlay = document.getElementById('sidebarOverlay');
@@ -94,27 +157,6 @@
   if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
   if (overlay) overlay.addEventListener('click', closeSidebar);
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const reservationId = urlParams.get('reservation_id');
-
-  async function loadSummary() {
-    if (!reservationId) return;
-    try {
-      const reservations = await apiCall('/user-reservations.php');
-      const r = reservations.find(rs => rs.id == reservationId);
-      if (r && r.order) {
-        document.getElementById('receiptBox').innerHTML = `
-          <h5>Order Summary</h5>
-          <p><b>Restaurant:</b> ${escapeHtml(r.restaurant_name)}</p>
-          <p><b>Total:</b> RM ${(r.order.total_amount || 0).toFixed(2)}</p>`;
-      } else if (r) { document.getElementById('receiptBox').innerHTML = '<p>No pre‑order items.</p>'; }
-    } catch(e) { console.error(e); }
-  }
-
-  document.getElementById('confirmBtn').addEventListener('click', () => {
-    window.location.href = `booking-success.html?reservation_id=${reservationId}`;
-  });
-
   async function setupNav() {
     const s = await checkSession();
     const desktopNav = document.getElementById('mainNav');
@@ -123,7 +165,9 @@
     const u = s.loggedIn ? s.user : null;
     let navHtml = '';
     if (!u || u.role === 'customer') {
-      navHtml = `<a class="nav-link" href="index.html">Restaurants</a><a class="nav-link" href="booking-history.html">My Bookings</a><a class="nav-link" href="order-status.html">Order Status</a>`;
+      navHtml = `<a class="nav-link" href="index.html">Restaurants</a>
+                 <a class="nav-link" href="booking-history.html">My Bookings</a>
+                 <a class="nav-link" href="order-status.html">Order Status</a>`;
     } else if (u.role === 'staff') {
       navHtml = `<a class="nav-link fw-bold" href="staff-dashboard.html">↗ Staff Dashboard</a>`;
     } else if (u.role === 'owner') {
@@ -135,12 +179,12 @@
     if (mobileNav) mobileNav.innerHTML = navHtml;
   }
 
-  function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
+  document.getElementById('confirmPaymentBtn').addEventListener('click', confirmPayment);
 
   window.addEventListener('DOMContentLoaded', async () => {
     await nav();
     await setupNav();
-    await loadSummary();
+    await loadPaymentDetails();
   });
 </script>
 </body>
