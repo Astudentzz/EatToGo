@@ -10,30 +10,51 @@
   <style>
     .etg-toast { position: fixed; top: 24px; left: 50%; transform: translateX(-50%) translateY(-20px); background: #1C1208; color: white; border-radius: 16px; padding: 14px 24px; font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 12px; box-shadow: 0 12px 40px rgba(0,0,0,.25); opacity: 0; transition: all .35s; z-index: 9999; min-width: 300px; pointer-events: none; }
     .etg-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-    .mobile-nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; }
-    @media (max-width: 768px) { .mobile-nav { flex-direction: column; align-items: center; margin-top: 10px; } }
+    .etg-toast.error { border-left: 5px solid #ef4444; }
+    .etg-toast.success { border-left: 5px solid var(--green); }
+    .etg-toast.warning { border-left: 5px solid var(--orange); }
+
+    /* Navbar & sidebar (same as index) */
+    .navbar-etg .container { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+    .desktop-nav { display: flex; gap: 1rem; }
+    .hamburger { display: none; background: none; border: none; font-size: 28px; color: var(--orange); cursor: pointer; padding: 0; }
+    @media (max-width: 768px) {
+      .navbar-etg .container { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; }
+      .logo { grid-column: 1; grid-row: 1; justify-self: start; }
+      .right-group { grid-column: 2; grid-row: 1; justify-self: end; display: flex; align-items: center; gap: 10px; }
+      .hamburger { display: block; grid-column: 1; grid-row: 2; justify-self: start; margin-top: 4px; }
+      .desktop-nav { display: none; }
+    }
+    @media (min-width: 769px) { .hamburger, .mobile-sidebar, .sidebar-overlay, .close-sidebar { display: none; } }
+    .mobile-sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100%; background: #1C1208; z-index: 1100; transform: translateX(-100%); transition: transform 0.3s ease; padding: 60px 20px 20px; }
+    .mobile-sidebar.open { transform: translateX(0); }
+    .mobile-sidebar a { display: block; color: rgba(255,255,255,.8); text-decoration: none; padding: 12px 16px; font-weight: 700; border-radius: 12px; margin: 8px 0; }
+    .mobile-sidebar a:hover, .mobile-sidebar a.active { background: rgba(255,107,53,.2); color: var(--orange); }
+    .close-sidebar { position: absolute; top: 15px; right: 20px; font-size: 28px; color: white; background: none; border: none; cursor: pointer; }
+    .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1050; display: none; }
+    .sidebar-overlay.active { display: block; }
   </style>
 </head>
 <body>
 <div class="etg-toast" id="etgToast"><span class="toast-icon" id="toastIcon">⚠️</span><span id="toastMsg">Message here</span></div>
+
 <nav class="navbar-etg">
   <div class="container">
     <a class="logo" href="index.html">Eat<span>To</span>Go</a>
-    <!-- Desktop navigation -->
     <div class="desktop-nav" id="mainNav"></div>
-    <div style="display: flex; align-items: center; gap: 10px;">
-      <button class="hamburger" id="hamburgerBtn">☰</button>
+    <div class="right-group">
       <div id="authArea"></div>
     </div>
+    <button class="hamburger" id="hamburgerBtn">☰</button>
   </div>
 </nav>
 
-<!-- Mobile sidebar -->
 <div class="mobile-sidebar" id="mobileSidebar">
   <button class="close-sidebar" id="closeSidebarBtn">×</button>
   <div id="mobileNavLinks"></div>
 </div>
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
 <section class="page-head">
   <div class="container">
     <div class="timeline"><span>Reserve Table</span><span>Pre-Order Food</span><span class="active">Customer Details</span><span>Receipt</span><span>Pay at Counter</span></div>
@@ -41,6 +62,7 @@
     <p class="text-muted">Complete your details before the booking receipt is generated.</p>
   </div>
 </section>
+
 <section class="section">
   <div class="container">
     <div class="row g-4">
@@ -50,16 +72,17 @@
           <label class="fw-bold mb-1">Full Name</label><input id="fullName" class="form-control mb-3" required>
           <label class="fw-bold mb-1">Phone Number</label><input id="phone" class="form-control mb-3" placeholder="e.g. 012-3456789" required>
           <label class="fw-bold mb-1">Email</label><input id="email" type="email" class="form-control mb-3" required>
-          <label class="fw-bold mb-1">Extra Comments</label><textarea id="comments" class="form-control mb-4" rows="4" placeholder="Allergies, seat preference..."></textarea>
+          <label class="fw-bold mb-1">Extra Comments / Requests</label><textarea id="comments" class="form-control mb-4" rows="4" placeholder="Allergies, birthday setup, baby chair, window seat..."></textarea>
           <button type="submit" class="btn btn-etg w-100">Generate Booking Receipt</button>
         </form>
       </div>
       <div class="col-lg-5">
-        <div id="checkoutSummary" class="card-etg p-4"><h3>Order Summary</h3><p class="text-muted">Loading...</p></div>
+        <div id="checkoutSummary" class="summary-card card-etg p-4"><h3>Order Summary</h3><p class="text-muted">Loading...</p></div>
       </div>
     </div>
   </div>
 </section>
+
 <footer class="minimal-footer">
   <div class="container d-flex justify-content-between flex-wrap gap-5">
     <div class="footer-brand"><h2>Eat<span>To</span>Go</h2><p>Final Year Project – Restaurant and Food Reservation System.</p></div>
@@ -67,9 +90,20 @@
   </div>
   <div class="footer-bottom">© 2026 EatToGo • Universiti Teknologi Malaysia (UTM)</div>
 </footer>
+
 <script src="assets/js/api.js"></script>
-<script src="assets/js/mobile-nav.js"></script>
 <script>
+  // Sidebar toggle
+  const hamburger = document.getElementById('hamburgerBtn');
+  const sidebar = document.getElementById('mobileSidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  const closeBtn = document.getElementById('closeSidebarBtn');
+  function openSidebar() { sidebar.classList.add('open'); overlay.classList.add('active'); }
+  function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('active'); }
+  if (hamburger) hamburger.addEventListener('click', openSidebar);
+  if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+  if (overlay) overlay.addEventListener('click', closeSidebar);
+
   const urlParams = new URLSearchParams(window.location.search);
   const reservationId = urlParams.get('reservation_id');
   let toastTimer;
@@ -83,8 +117,12 @@
     t.classList.add('show');
     toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
   }
+
   async function loadOrderSummary() {
-    if (!reservationId) { document.getElementById('checkoutSummary').innerHTML = '<p class="text-danger">Missing reservation ID.</p>'; return; }
+    if (!reservationId) {
+      document.getElementById('checkoutSummary').innerHTML = '<p class="text-danger">Missing reservation ID.</p>';
+      return;
+    }
     try {
       const reservations = await apiCall('/user-reservations.php');
       const reservation = reservations.find(r => r.id == reservationId);
@@ -96,11 +134,18 @@
         total = order.total_amount || 0;
       } else { itemsHtml = '<p class="text-muted">No pre‑order items.</p>'; }
       document.getElementById('checkoutSummary').innerHTML = `
-        <h3>Booking Summary</h3><p><b>Restaurant:</b> ${escapeHtml(reservation.restaurant_name)}</p>
+        <h3>Booking Summary</h3>
+        <p><b>Restaurant:</b> ${escapeHtml(reservation.restaurant_name)}</p>
         <p><b>Date/Time:</b> ${reservation.reservation_date} ${reservation.reservation_time}</p>
-        <p><b>Guests:</b> ${reservation.num_people}</p>${itemsHtml}<hr><h4 class="text-end">Total: RM ${parseFloat(total).toFixed(2)}</h4>`;
-    } catch (err) { document.getElementById('checkoutSummary').innerHTML = '<p class="text-danger">Failed to load order.</p>'; }
+        <p><b>Guests:</b> ${reservation.num_people}</p>
+        ${itemsHtml}
+        <hr><h4 class="text-end">Total: RM ${parseFloat(total).toFixed(2)}</h4>`;
+    } catch (err) {
+      document.getElementById('checkoutSummary').innerHTML = '<p class="text-danger">Failed to load order.</p>';
+      console.error(err);
+    }
   }
+
   async function prefillUserDetails() {
     const session = await checkSession();
     if (session.loggedIn) {
@@ -110,34 +155,61 @@
       if (user.email) document.getElementById('email').value = user.email;
     }
   }
+
   async function submitCheckout(e) {
     e.preventDefault();
     const fullName = document.getElementById('fullName').value.trim();
     const phone = document.getElementById('phone').value.trim();
     const email = document.getElementById('email').value.trim();
     const comments = document.getElementById('comments').value.trim();
-    if (!fullName || !phone || !email) { showToast('Please fill all required fields.', 'warning', '⚠️'); return; }
+    if (!fullName || !phone || !email) {
+      showToast('Please fill all required fields.', 'warning', '⚠️');
+      return;
+    }
     try {
-      await apiCall('/update-reservation-details.php', { method: 'POST', body: JSON.stringify({ reservation_id: reservationId, customer_name: fullName, customer_phone: phone, customer_email: email, special_requests: comments }) });
+      await apiCall('/update-reservation-details.php', {
+        method: 'POST',
+        body: JSON.stringify({ reservation_id: reservationId, customer_name: fullName, customer_phone: phone, customer_email: email, special_requests: comments })
+      });
       showToast('Details saved! Generating receipt...', 'success', '✅');
       setTimeout(() => { window.location.href = `receipt.html?reservation_id=${reservationId}`; }, 1200);
-    } catch(err) { showToast(err.message, 'error', '❌'); }
+    } catch (err) {
+      showToast(err.message, 'error', '❌');
+    }
   }
-  function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
+
   async function setupNav() {
     const s = await checkSession();
-    const navDiv = document.getElementById('mainNav');
-    if (!navDiv) return;
+    const desktopNav = document.getElementById('mainNav');
+    const mobileNav = document.getElementById('mobileNavLinks');
+    if (!desktopNav) return;
     const u = s.loggedIn ? s.user : null;
-    if (!u || u.role === 'customer') navDiv.innerHTML = `<a class="nav-link" href="index.html">Restaurants</a><a class="nav-link" href="booking-history.html">My Bookings</a><a class="nav-link" href="order-status.html">Order Status</a>`;
-    else if (u.role === 'staff') navDiv.innerHTML = `<a class="nav-link fw-bold" href="staff-dashboard.html">↗ Staff Dashboard</a>`;
-    else if (u.role === 'owner') navDiv.innerHTML = `<a class="nav-link fw-bold" href="owner-dashboard.html">↗ Owner Dashboard</a>`;
-    else if (u.role === 'admin') navDiv.innerHTML = `<a class="nav-link fw-bold" href="admin.html">↗ Admin Dashboard</a>`;
+    let navHtml = '';
+    if (!u || u.role === 'customer') {
+      navHtml = `<a class="nav-link" href="index.html">Restaurants</a><a class="nav-link" href="booking-history.html">My Bookings</a><a class="nav-link" href="order-status.html">Order Status</a>`;
+    } else if (u.role === 'staff') {
+      navHtml = `<a class="nav-link fw-bold" href="staff-dashboard.html">↗ Staff Dashboard</a>`;
+    } else if (u.role === 'owner') {
+      navHtml = `<a class="nav-link fw-bold" href="owner-dashboard.html">↗ Owner Dashboard</a>`;
+    } else if (u.role === 'admin') {
+      navHtml = `<a class="nav-link fw-bold" href="admin.html">↗ Admin Dashboard</a>`;
+    }
+    desktopNav.innerHTML = navHtml;
+    if (mobileNav) mobileNav.innerHTML = navHtml;
   }
+
+  function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
+
   window.addEventListener('DOMContentLoaded', async () => {
-    await nav(); await setupNav();
-    if (!reservationId) { showToast('No reservation ID.', 'error'); setTimeout(() => window.location.href = 'search-results.html', 2000); return; }
-    await loadOrderSummary(); await prefillUserDetails();
+    await nav(); // from api.js (updates authArea)
+    await setupNav();
+    if (!reservationId) {
+      showToast('No reservation ID. Please make a reservation first.', 'error');
+      setTimeout(() => window.location.href = 'search-results.html', 2000);
+      return;
+    }
+    await loadOrderSummary();
+    await prefillUserDetails();
     document.getElementById('checkoutForm').addEventListener('submit', submitCheckout);
   });
 </script>

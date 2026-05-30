@@ -8,29 +8,44 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/style.css">
   <style>
-    .mobile-nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; }
-    @media (max-width: 768px) { .mobile-nav { flex-direction: column; align-items: center; margin-top: 10px; } }
+    /* same navbar & sidebar styles as before */
+    .navbar-etg .container { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+    .desktop-nav { display: flex; gap: 1rem; }
+    .hamburger { display: none; background: none; border: none; font-size: 28px; color: var(--orange); cursor: pointer; padding: 0; }
+    @media (max-width: 768px) {
+      .navbar-etg .container { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; }
+      .logo { grid-column: 1; grid-row: 1; justify-self: start; }
+      .right-group { grid-column: 2; grid-row: 1; justify-self: end; display: flex; align-items: center; gap: 10px; }
+      .hamburger { display: block; grid-column: 1; grid-row: 2; justify-self: start; margin-top: 4px; }
+      .desktop-nav { display: none; }
+    }
+    @media (min-width: 769px) { .hamburger, .mobile-sidebar, .sidebar-overlay, .close-sidebar { display: none; } }
+    .mobile-sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100%; background: #1C1208; z-index: 1100; transform: translateX(-100%); transition: transform 0.3s ease; padding: 60px 20px 20px; }
+    .mobile-sidebar.open { transform: translateX(0); }
+    .mobile-sidebar a { display: block; color: rgba(255,255,255,.8); text-decoration: none; padding: 12px 16px; font-weight: 700; border-radius: 12px; margin: 8px 0; }
+    .mobile-sidebar a:hover, .mobile-sidebar a.active { background: rgba(255,107,53,.2); color: var(--orange); }
+    .close-sidebar { position: absolute; top: 15px; right: 20px; font-size: 28px; color: white; background: none; border: none; cursor: pointer; }
+    .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1050; display: none; }
+    .sidebar-overlay.active { display: block; }
   </style>
 </head>
 <body>
 <nav class="navbar-etg">
   <div class="container">
     <a class="logo" href="index.html">Eat<span>To</span>Go</a>
-    <!-- Desktop navigation -->
     <div class="desktop-nav" id="mainNav"></div>
-    <div style="display: flex; align-items: center; gap: 10px;">
-      <button class="hamburger" id="hamburgerBtn">☰</button>
+    <div class="right-group">
       <div id="authArea"></div>
     </div>
+    <button class="hamburger" id="hamburgerBtn">☰</button>
   </div>
 </nav>
-
-<!-- Mobile sidebar -->
 <div class="mobile-sidebar" id="mobileSidebar">
   <button class="close-sidebar" id="closeSidebarBtn">×</button>
   <div id="mobileNavLinks"></div>
 </div>
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
 <section class="section">
   <div class="container">
     <div class="card-etg p-5 text-center mx-auto" style="max-width:760px">
@@ -44,6 +59,7 @@
     </div>
   </div>
 </section>
+
 <footer class="minimal-footer">
   <div class="container d-flex justify-content-between flex-wrap gap-5">
     <div class="footer-brand"><h2>Eat<span>To</span>Go</h2><p>Final Year Project – Restaurant and Food Reservation System.</p></div>
@@ -51,24 +67,40 @@
   </div>
   <div class="footer-bottom">© 2026 EatToGo • Universiti Teknologi Malaysia (UTM)</div>
 </footer>
+
 <script src="assets/js/api.js"></script>
-<script src="assets/js/mobile-nav.js"></script>
 <script>
+  // Sidebar toggle
+  const hamburger = document.getElementById('hamburgerBtn');
+  const sidebar = document.getElementById('mobileSidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  const closeBtn = document.getElementById('closeSidebarBtn');
+  function openSidebar() { sidebar.classList.add('open'); overlay.classList.add('active'); }
+  function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('active'); }
+  if (hamburger) hamburger.addEventListener('click', openSidebar);
+  if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+  if (overlay) overlay.addEventListener('click', closeSidebar);
+
   async function setupNav() {
     const s = await checkSession();
-    const navDiv = document.getElementById('mainNav');
-    if (!navDiv) return;
+    const desktopNav = document.getElementById('mainNav');
+    const mobileNav = document.getElementById('mobileNavLinks');
+    if (!desktopNav) return;
     const u = s.loggedIn ? s.user : null;
+    let navHtml = '';
     if (!u || u.role === 'customer') {
-      navDiv.innerHTML = `<a class="nav-link" href="index.html">Restaurants</a><a class="nav-link" href="booking-history.html">My Bookings</a><a class="nav-link" href="order-status.html">Order Status</a>`;
+      navHtml = `<a class="nav-link" href="index.html">Restaurants</a><a class="nav-link" href="booking-history.html">My Bookings</a><a class="nav-link" href="order-status.html">Order Status</a>`;
     } else if (u.role === 'staff') {
-      navDiv.innerHTML = `<a class="nav-link fw-bold" href="staff-dashboard.html">↗ Staff Dashboard</a>`;
+      navHtml = `<a class="nav-link fw-bold" href="staff-dashboard.html">↗ Staff Dashboard</a>`;
     } else if (u.role === 'owner') {
-      navDiv.innerHTML = `<a class="nav-link fw-bold" href="owner-dashboard.html">↗ Owner Dashboard</a>`;
+      navHtml = `<a class="nav-link fw-bold" href="owner-dashboard.html">↗ Owner Dashboard</a>`;
     } else if (u.role === 'admin') {
-      navDiv.innerHTML = `<a class="nav-link fw-bold" href="admin.html">↗ Admin Dashboard</a>`;
+      navHtml = `<a class="nav-link fw-bold" href="admin.html">↗ Admin Dashboard</a>`;
     }
+    desktopNav.innerHTML = navHtml;
+    if (mobileNav) mobileNav.innerHTML = navHtml;
   }
+
   window.addEventListener('DOMContentLoaded', async () => {
     await nav();
     await setupNav();

@@ -81,18 +81,28 @@
         <div class="col-md-3"><input id="restName" class="form-control" placeholder="Restaurant name" required></div>
         <div class="col-md-3"><input id="location" class="form-control" placeholder="Location" required></div>
         <div class="col-md-2"><select id="cuisine" class="form-select"><option>Japanese</option><option>Indian</option><option>Western</option><option>Malay</option><option>Chinese</option></select></div>
-        <div class="col-md-2"><textarea id="description" class="form-control" placeholder="Description (optional)" rows="1"></textarea></div>
-        <div class="col-md-2"><input type="file" id="restImage" class="form-control" accept="image/*"></div>
+        <div class="col-md-12"><textarea id="description" class="form-control" rows="2" placeholder="Restaurant description"></textarea></div>
+        <div class="col-md-4"><input id="price_range" class="form-control" placeholder="Price range (e.g., RM10-30)"></div>
+        <div class="col-md-4"><input id="hours" class="form-control" placeholder="Operating hours (e.g., 10:00 AM - 10:00 PM)" required
+               pattern="\d{1,2}:\d{2}\s?(?:AM|PM)\s*-\s*\d{1,2}:\d{2}\s?(?:AM|PM)" title="Format: 10:00 AM - 10:00 PM"></div>
+        <div class="col-md-4"><input id="deal" class="form-control" placeholder="Promotion / Deal (e.g., 10% off)"></div>
+        <div class="col-md-4"><input type="number" id="total_seats" class="form-control" placeholder="Total seats (e.g., 50)" min="0"></div>
+        <div class="col-md-4"><input type="number" id="slot_duration" class="form-control" placeholder="Slot duration (minutes)" value="60" min="15" step="15"></div>
+        <div class="col-md-12"><input type="file" id="restImage" class="form-control" accept="image/*"></div>
         <div class="col-md-12"><button type="submit" class="btn btn-etg w-100">Submit Listing Request</button></div>
       </form>
-    </div>
-    <div class="col-lg-7">
-      <h5 class="mb-3">Request History</h5>
-      <div class="table-responsive">
-        <table class="table">
-          <thead><tr><th>Restaurant</th><th>Status</th><th>Admin Response</th></tr></thead>
-          <tbody id="ownerRequests"></tbody>
-        </table>
+      <div class="mt-4"><h5>Request History</h5><div class="table-responsive"><table class="table"><thead><tr><th>Restaurant</th><th>Status</th><th>Admin Response</th></tr></thead><tbody id="ownerRequests"></tbody></table></div></div>
+    </section>
+  </div>
+</main>
+
+<!-- Staff Modal -->
+<div class="modal fade" id="staffModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Manage Staff for <span id="modalRestaurantName"></span></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
         <form id="addStaffForm" class="row g-3 mb-4">
@@ -114,8 +124,40 @@
     <div class="footer-brand"><h2>Eat<span>To</span>Go</h2><p>Final Year Project – Restaurant and Food Reservation System.</p></div>
     <div class="footer-members"><h4>Project Team</h4><ul class="list-unstyled"><li>Navin Ramu</li><li>Muhamamd Nazim</li><li>Hadif</li><li>Ng Yue Yang</li></ul></div>
   </div>
-  <div class="footer-bottom">© 2026 EatToGo • Universiti Teknologi Malaysia (UTM)</div>
-</footer>
+</div>
+
+<!-- Edit Restaurant Modal -->
+<div class="modal fade" id="editRestaurantModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Edit Restaurant Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editRestaurantForm">
+          <input type="hidden" id="editRestaurantId">
+          <div class="mb-3"><label class="form-label">Restaurant Name</label><input id="editName" class="form-control" required></div>
+          <div class="mb-3"><label class="form-label">Location</label><input id="editLocation" class="form-control" required></div>
+          <div class="mb-3"><label class="form-label">Cuisine</label><input id="editCategory" class="form-control" required></div>
+          <div class="mb-3"><label class="form-label">Description</label><textarea id="editDescription" class="form-control" rows="2"></textarea></div>
+          <div class="mb-3"><label class="form-label">Price Range</label><input id="editPriceRange" class="form-control" placeholder="RM10-30"></div>
+          <div class="mb-3"><input id="editHours" class="form-control" placeholder="Operating hours (e.g., 10:00 AM - 10:00 PM)" required
+                 pattern="\d{1,2}:\d{2}\s?(?:AM|PM)\s*-\s*\d{1,2}:\d{2}\s?(?:AM|PM)" title="Format: 10:00 AM - 10:00 PM"></div>
+          <div class="mb-3"><input id="editDeal" class="form-control" placeholder="Promotion / Deal"></div>
+          <div class="mb-3"><input type="number" id="editSeats" class="form-control" min="0" placeholder="Total seats"></div>
+          <div class="mb-3"><input type="number" id="editSlotDuration" class="form-control" min="15" step="15" value="60" placeholder="Slot duration (minutes)"></div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-etg" id="saveRestaurantChanges">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="minimal-footer">...</footer>
 
   <script src="assets/js/api.js"></script>
   <script>
@@ -170,7 +212,7 @@
     try {
       const staff = await apiCall(`/owner-staff.php?restaurant_id=${restaurantId}`);
       const tbody = document.getElementById('staffList');
-      if (!staff.length) { tbody.innerHTML = '<tr><td colspan="3">No staff yet. Add staff above.</div>'; return; }
+      if (!staff.length) { tbody.innerHTML = '<td><td colspan="3">No staff yet. Add staff above.</div>'; return; }
       tbody.innerHTML = staff.map(s => `
         <tr>
           <td>${escapeHtml(s.name)}</div>
@@ -178,7 +220,7 @@
           <td><button class="btn btn-sm btn-danger" onclick="deleteStaff(${s.id}, ${restaurantId})">Remove</button></div>
         </tr>
       `).join('');
-    } catch(e) { console.error(e); tbody.innerHTML = '<tr><td colspan="3">Error loading staff.</div>'; }
+    } catch(e) { console.error(e); tbody.innerHTML = '<td><td colspan="3">Error loading staff.</div>'; }
   }
 
     async function addStaff(e) {
@@ -205,6 +247,54 @@
       loadStaffList(restaurantId);
     } catch(e) { alert(e.message); }
   }
+
+  function openEditModal(restaurantId) {
+    const restaurant = allRestaurants.find(r => r.id == restaurantId);
+    if (!restaurant) return;
+    document.getElementById('editRestaurantId').value = restaurant.id;
+    document.getElementById('editName').value = restaurant.name;
+    document.getElementById('editLocation').value = restaurant.location;
+    document.getElementById('editCategory').value = restaurant.category;
+    document.getElementById('editDescription').value = restaurant.description || '';
+    document.getElementById('editPriceRange').value = restaurant.price_range || '';
+    document.getElementById('editHours').value = restaurant.hours || '';
+    document.getElementById('editDeal').value = restaurant.deal || '';
+    document.getElementById('editSeats').value = restaurant.total_seats || 0;
+    document.getElementById('editSlotDuration').value = restaurant.slot_duration || 60;
+    const modal = new bootstrap.Modal(document.getElementById('editRestaurantModal'));
+    modal.show();
+  }
+
+  document.getElementById('saveRestaurantChanges').addEventListener('click', async () => {
+    const id = document.getElementById('editRestaurantId').value;
+    const name = document.getElementById('editName').value.trim();
+    const location = document.getElementById('editLocation').value.trim();
+    const category = document.getElementById('editCategory').value.trim();
+    const description = document.getElementById('editDescription').value.trim();
+    const price_range = document.getElementById('editPriceRange').value.trim();
+    const hours = document.getElementById('editHours').value.trim();
+    const deal = document.getElementById('editDeal').value.trim();
+    const total_seats = parseInt(document.getElementById('editSeats').value) || 0;
+    const slot_duration = parseInt(document.getElementById('editSlotDuration').value) || 60;
+    if (!name || !location || !category) {
+      alert('Name, location and cuisine are required');
+      return;
+    }
+    const hoursPattern = /^\d{1,2}:\d{2}\s?(?:AM|PM)\s*-\s*\d{1,2}:\d{2}\s?(?:AM|PM)$/i;
+    if (hours && !hoursPattern.test(hours)) {
+      alert('Operating hours format invalid. Use "10:00 AM - 10:00 PM".');
+      return;
+    }
+    try {
+      await apiCall('/update-restaurant.php', {
+        method: 'PUT',
+        body: JSON.stringify({ id, name, location, category, description, price_range, hours, deal, total_seats, slot_duration })
+      });
+      alert('Restaurant details updated');
+      bootstrap.Modal.getInstance(document.getElementById('editRestaurantModal')).hide();
+      await loadRestaurants();
+    } catch(e) { alert('Error: ' + e.message); }
+  });
 
   async function renderStats() {
     try {
@@ -250,6 +340,7 @@
     const cuisine = document.getElementById('cuisine').value;
     const description = document.getElementById('description').value.trim();
     const imageFile = document.getElementById('restImage').files[0];
+    const qrFile = document.getElementById('qrCode').files[0];
     if (!restName || !location) { alert('Restaurant name and location required'); return; }
     const formData = new FormData();
     formData.append('restaurant_name', restName);
@@ -257,6 +348,7 @@
     formData.append('cuisine', cuisine);
     formData.append('description', description);
     if (imageFile) formData.append('image', imageFile);
+    if (qrFile) formData.append('qr_code', qrFile);
     try {
       const res = await fetch(`${API_BASE}/owner-request.php`, { method: 'POST', body: formData, credentials: 'same-origin' });
       const data = await res.json();
