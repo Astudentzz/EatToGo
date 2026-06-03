@@ -1,15 +1,30 @@
 :root {
-    --orange: #FF6B35;
-    --orange-dark: #E5531F;
-    --green: #2D9B5A;
-    --cream: #FFF8F0;
-    --cream-dark: #F5EDE0;
-    --brown: #4A2C17;
-    --gray: #6B7280;
-    --white: #fff;
-    --shadow: 0 10px 30px rgba(0,0,0,.09);
-    --radius: 22px;
+  --primary: #FF6B35;
+  --primary-dark: #E5531F;
+  --success: #2D9B5A;
+  --danger: #E53E3E;
+  --warning: #F59E0B;
 
+  --dark: #1C1208;
+  --bg: #FFF8F0;
+  --bg-soft: #F5EDE0;
+  --text: #4A2C17;
+  --muted: #6B7280;
+  --border: #F0E8DE;
+  --card: #FFFFFF;
+
+  --radius: 22px;
+  --shadow: 0 8px 24px rgba(0,0,0,.08);
+
+  /* Backward compatibility */
+  --orange: #FF6B35;
+  --orange-dark: #E5531F;
+  --green: #2D9B5A;
+  --cream: #FFF8F0;
+  --cream-dark: #F5EDE0;
+  --brown: #4A2C17;
+  --gray: #6B7280;
+  --white: #fff;
 }
 
 /* ===== Mobile Sidebar (customer pages & dashboards) ===== */
@@ -122,10 +137,35 @@
 }
 
 body {
-    margin: 0;
-    font-family: 'Plus Jakarta Sans', Arial, sans-serif;
-    background: var(--cream);
-    color: var(--brown);
+  margin: 0;
+  font-family: 'Plus Jakarta Sans', Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+h1 {
+  font-size: clamp(32px, 5vw, 56px);
+  line-height: 1.1;
+}
+
+h2 {
+  font-size: 32px;
+}
+
+h3 {
+  font-size: 22px;
+}
+
+p,
+.form-control,
+.form-select,
+.table {
+  font-size: 16px;
+}
+
+small,
+.text-muted {
+  font-size: 14px;
 }
 
 h1, h2, h3, .logo {
@@ -158,23 +198,47 @@ h1, h2, h3, .logo {
     color: var(--brown) !important;
 }
 
-.btn-etg {
-    background: linear-gradient(135deg, var(--orange), var(--orange-dark));
-    color: white !important;
-    border: 0;
-    border-radius: 999px;
-    padding: 10px 22px;
-    font-weight: 800;
-    box-shadow: 0 8px 22px rgba(255,107,53,.25);
+.btn,
+.btn-etg,
+.btn-outline-etg {
+  border-radius: 999px;
+  padding: 10px 22px;
+  font-weight: 800;
+  transition: 0.2s ease;
+}
+
+.btn-etg,
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white !important;
+  border: none;
+  box-shadow: 0 8px 22px rgba(255,107,53,.25);
 }
 
 .btn-outline-etg {
-    border: 2px solid var(--orange);
-    color: var(--orange) !important;
-    background: white;
-    border-radius: 999px;
-    padding: 9px 20px;
-    font-weight: 800;
+  border: 2px solid var(--primary);
+  color: var(--primary) !important;
+  background: white;
+}
+
+.btn-success {
+  background: var(--success);
+  border: none;
+}
+
+.btn-danger {
+  background: var(--danger);
+  border: none;
+}
+
+.btn-warning {
+  background: var(--warning);
+  border: none;
+  color: white;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
 }
 
 .hero {
@@ -198,11 +262,27 @@ h1, h2, h3, .logo {
     color: var(--green);
 }
 
-.glass-card, .card-etg {
-    background: white;
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    border: 1px solid rgba(255,107,53,.08);
+.glass-card,
+.card-etg,
+.restaurant-card,
+.food-card,
+.dash-card,
+.section-card,
+.stat-card,
+.rest-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.glass-card:hover,
+.restaurant-card:hover,
+.food-card:hover,
+.dash-card:hover,
+.rest-card:hover {
+  transform: translateY(-5px);
 }
 
 .search-card {
@@ -231,17 +311,47 @@ h1, h2, h3, .logo {
     margin-bottom: 28px;
 }
 
-.food-card, .restaurant-card, .dash-card {
-    border-radius: 22px;
-    background: #fff;
-    box-shadow: var(--shadow);
-    overflow: hidden;
-    transition: .25s;
-    border: 1px solid rgba(255,107,53,.07);
+.stat-card {
+  padding: 22px;
+  text-align: left;
 }
 
-.food-card:hover, .restaurant-card:hover, .dash-card:hover {
-    transform: translateY(-5px);
+.stat-card b {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.stat-card h2 {
+  font-size: 34px;
+  font-weight: 900;
+  color: var(--primary);
+  margin-top: 8px;
+}
+
+.rest-card img {
+  width: 100%;
+  height: 190px;
+  object-fit: cover;
+}
+
+.rest-card .card-body {
+  padding: 18px;
+}
+
+.rest-card h3 {
+  font-size: 22px;
+  font-weight: 900;
+  margin-bottom: 6px;
+}
+
+.success-card {
+  max-width: 760px;
+  padding: 48px;
+}
+
+.success-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
 }
 
 .food-img {
