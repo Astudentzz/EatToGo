@@ -3,6 +3,23 @@ header('Content-Type: application/json');
 require_once 'config/database.php';
 $pdo = getDB();
 
+// Include SMTP configuration
+$smtpConfigPath = __DIR__ . '/../contact/config.php';
+if (!file_exists($smtpConfigPath)) {
+    http_response_code(500);
+    echo json_encode(['error' => 'SMTP configuration missing']);
+    exit;
+}
+require_once $smtpConfigPath;
+
+// Include PHPMailer
+require_once __DIR__ . '/../lib/PHPMailer/src/PHPMailer.php';
+require_once __DIR__ . '/../lib/PHPMailer/src/SMTP.php';
+require_once __DIR__ . '/../lib/PHPMailer/src/Exception.php';
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
 $data = json_decode(file_get_contents('php://input'), true);
 $name = trim($data['name'] ?? '');
 $email = trim($data['email'] ?? '');
@@ -33,46 +50,36 @@ $hashed = md5($password);
 $stmt = $pdo->prepare("INSERT INTO users (name, email, phone, password, role, verification_token, token_expiry, email_verified) VALUES (?, ?, ?, ?, ?, ?, ?, 0)");
 $stmt->execute([$name, $email, $phone, $hashed, $role, $token, $expiry]);
 
-// Prepare verification link
-$verificationLink = "http://localhost/EatToGo/api/verify-email.php?token=$token";
+// Build verification link – NO /EatToGo folder
+$protocol = isset($_SERVER['HTTPS']) ? 'https://' : 'http://';
+$domain = $_SERVER['HTTP_HOST']; // e.g., eattogo.infinityfreeapp.com
+$verificationLink = $protocol . $domain . "/api/verify-email.php?token=$token";
 
-// PHPMailer paths (same as forgot-password.php)
-$mailerPath = __DIR__ . '/../lib/PHPMailer/PHPMailer.php';
-$smtpPath   = __DIR__ . '/../lib/PHPMailer/SMTP.php';
-$exceptionPath = __DIR__ . '/../lib/PHPMailer/Exception.php';
+$mail = new PHPMailer(true);
+$emailSent = false;
 
-if (file_exists($mailerPath) && file_exists($smtpPath) && file_exists($exceptionPath)) {
-    require_once $mailerPath;
-    require_once $smtpPath;
-    require_once $exceptionPath;
+try {
+    $mail->isSMTP();
+    $mail->Host       = SMTP_HOST;
+    $mail->SMTPAuth   = true;
+    $mail->Username   = SMTP_USERNAME;
+    $mail->Password   = SMTP_PASSWORD;
+    $mail->SMTPSecure = SMTP_ENCRYPTION;
+    $mail->Port       = SMTP_PORT;
 
-    $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
-    try {
-        $mail->isSMTP();
-        $mail->Host       = 'smtp.gmail.com';
-        $mail->SMTPAuth   = true;
-        $mail->Username   = 'ngyueyang@graduate.utm.my';   // Use your actual email
-        $mail->Password   = 'peow fsei esyu icpu';         // Use your app password
-        $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port       = 587;
-        $mail->setFrom('noreply@eattogo.com', 'EatToGo Support');
-        $mail->addAddress($email, $name);
-        $mail->isHTML(true);
-        $mail->Subject = 'Verify your email – EatToGo';
-        $mail->Body    = "Hello $name,<br><br>Please verify your email by clicking the link below:<br><br>
-                          <a href='$verificationLink'>$verificationLink</a><br><br>
-                          This link expires in 24 hours.<br><br>
-                          If you did not create an account, please ignore this email.";
-        $mail->AltBody = "Hello $name,\n\nPlease verify your email by visiting this link:\n$verificationLink\n\nThis link expires in 24 hours.";
-        $mail->send();
-        $emailSent = true;
-    } catch (\PHPMailer\PHPMailer\Exception $e) {
-        error_log('Verification email failed: ' . $mail->ErrorInfo);
-        $emailSent = false;
-    }
-} else {
-    // Fallback: log the verification link
-    file_put_contents(__DIR__ . '/../verification_links.txt', date('Y-m-d H:i:s') . " - $email : $verificationLink\n", FILE_APPEND);
+    $mail->setFrom(MAIL_FROM_ADDRESS, MAIL_FROM_NAME);
+    $mail->addAddress($email, $name);
+    $mail->isHTML(true);
+    $mail->Subject = 'Verify your email – EatToGo';
+    $mail->Body    = "Hello $name,<br><br>Please verify your email by clicking the link below:<br><br>
+                      <a href='$verificationLink'>$verificationLink</a><br><br>
+                      This link expires in 24 hours.<br><br>
+                      If you did not create an account, please ignore this email.";
+    $mail->AltBody = "Hello $name,\n\nPlease verify your email by visiting this link:\n$verificationLink\n\nThis link expires in 24 hours.";
+    $mail->send();
+    $emailSent = true;
+} catch (Exception $e) {
+    error_log('Verification email failed: ' . $mail->ErrorInfo);
     $emailSent = false;
 }
 
@@ -80,6 +87,6 @@ echo json_encode([
     'success' => true,
     'message' => $emailSent 
         ? 'Account created! Please check your email to verify your account.' 
-        : 'Account created but verification email could not be sent. Please check your spam folder or contact support.'
+        : 'Account created but verification email could not be sent. Please contact support.'
 ]);
 ?>

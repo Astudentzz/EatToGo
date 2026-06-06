@@ -31,7 +31,7 @@ if (!in_array($extension, $allowed)) {
 $filename = uniqid() . '.' . $extension;
 $destination = $uploadDir . $filename;
 if (move_uploaded_file($_FILES['image']['tmp_name'], $destination)) {
-    $imagePath = '/EatToGo/uploads/restaurants/' . $filename; // adjust path if needed
+    $imagePath = '/uploads/restaurants/' . $filename;
     echo json_encode(['success' => true, 'imagePath' => $imagePath]);
 } else {
     http_response_code(500);

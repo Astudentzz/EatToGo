@@ -12,7 +12,14 @@ $method = $_SERVER['REQUEST_METHOD'];
 $hoursPattern = '/^\d{1,2}:\d{2}\s?(?:AM|PM)\s*-\s*\d{1,2}:\d{2}\s?(?:AM|PM)$/i';
 
 if ($method === 'GET') {
-    $stmt = $pdo->query("SELECT * FROM restaurants");
+    // Return only approved restaurants, join with users to get owner name
+    $stmt = $pdo->query("
+        SELECT r.*, u.name as owner_name
+        FROM restaurants r
+        LEFT JOIN users u ON r.owner_id = u.id
+        WHERE r.status = 'approved'
+        ORDER BY r.created_at DESC
+    ");
     echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
 }
 elseif ($method === 'POST') {
@@ -23,7 +30,7 @@ elseif ($method === 'POST') {
         echo json_encode(['error' => 'Operating hours format invalid. Use "10:00 AM - 10:00 PM".']);
         exit;
     }
-    $stmt = $pdo->prepare("INSERT INTO restaurants (name, category, description, image, location, price_range, hours, deal, total_seats, slot_duration, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved')");
+    $stmt = $pdo->prepare("INSERT INTO restaurants (name, category, description, image, location, price_range, hours, deal, total_seats, slot_duration, qr_code, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved')");
     $stmt->execute([
         $data['name'],
         $data['category'] ?? '',
@@ -34,7 +41,8 @@ elseif ($method === 'POST') {
         $hours,
         $data['deal'] ?? '',
         (int)($data['total_seats'] ?? 0),
-        (int)($data['slot_duration'] ?? 60)
+        (int)($data['slot_duration'] ?? 60),
+        $data['qr_code'] ?? ''
     ]);
     echo json_encode(['success' => true]);
 }
@@ -47,20 +55,24 @@ elseif ($method === 'PUT') {
         exit;
     }
     $id = $data['id'] ?? 0;
-    $stmt = $pdo->prepare("UPDATE restaurants SET name=?, category=?, location=?, price_range=?, description=?, hours=?, deal=?, image=?, total_seats=?, slot_duration=? WHERE id=?");
-    $stmt->execute([
-        $data['name'],
-        $data['category'],
-        $data['location'],
-        $data['price_range'],
-        $data['description'],
-        $hours,
-        $data['deal'],
-        $data['image'] ?? '',
-        (int)($data['total_seats'] ?? 0),
-        (int)($data['slot_duration'] ?? 60),
-        $id
-    ]);
+    $fields = [];
+    $params = [];
+    $allowed = ['name', 'category', 'location', 'price_range', 'description', 'hours', 'deal', 'image', 'total_seats', 'slot_duration', 'qr_code'];
+    foreach ($allowed as $field) {
+        if (array_key_exists($field, $data)) {
+            $fields[] = "$field = ?";
+            $params[] = $data[$field];
+        }
+    }
+    if (empty($fields)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'No fields to update']);
+        exit;
+    }
+    $params[] = $id;
+    $sql = "UPDATE restaurants SET " . implode(', ', $fields) . " WHERE id = ?";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
     echo json_encode(['success' => true]);
 }
 elseif ($method === 'DELETE') {

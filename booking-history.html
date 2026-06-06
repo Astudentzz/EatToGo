@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
   <link rel="stylesheet" href="assets/css/style.css">
   <style>
-    /* Navbar styles (same as before) - reuse the block from index.html */
+    /* Navbar styles (same as before) */
     .navbar-etg .container {
       display: flex;
       flex-wrap: wrap;
@@ -75,7 +75,10 @@
           <tbody id="myBookingRows"></tbody>
         </table>
       </div>
-      <div><a href="search-results.html" class="btn btn-etg">+ New Reservation</a><a href="order-status.html" class="btn btn-outline-etg ms-2">Track Order</a></div>
+      <div>
+        <a href="index.html" class="btn btn-etg">+ New Reservation</a>
+        <a href="order-status.html" class="btn btn-outline-etg ms-2">Track Order</a>
+      </div>
     </div>
   </div>
 </section>
@@ -105,35 +108,33 @@
     const tbody = document.getElementById('myBookingRows');
     try {
       const session = await checkSession();
-      if (!session.loggedIn) { tbody.innerHTML = '<tr><td colspan="7">Please login.</tr>'; return; }
+      if (!session.loggedIn) { tbody.innerHTML = '<tr><td colspan="7">Please login. </div>'; return; }
       let bookings = await apiCall('/user-reservations.php');
-      if (!bookings.length) { tbody.innerHTML = '<tr><td colspan="7">No bookings yet.</tr>'; return; }
-      bookings.sort((a, b) => new Date(a.reservation_date) - new Date(b.reservation_date));
+      if (!bookings.length) { tbody.innerHTML = '<tr><td colspan="7">No bookings yet. </div>'; return; }
+      
+      // Sort by created_at descending (newest first) – fallback to id if created_at missing
+      bookings.sort((a, b) => {
+        const dateA = a.created_at ? new Date(a.created_at) : 0;
+        const dateB = b.created_at ? new Date(b.created_at) : 0;
+        return dateB - dateA;
+      });
       bookings.forEach((b, idx) => b.displayNumber = idx + 1);
+      
       tbody.innerHTML = bookings.map(b => `
         <tr>
           <td><b>#${b.displayNumber}</b></td>
-          <td>${escapeHtml(b.restaurant_name)}</td>
-          <td>${b.reservation_date} ${b.reservation_time}</td>
-          <td>${b.num_people}</td>
-          <td><span class="status ${b.status}">${b.status}</span></td>
-          <td>${b.arrival_confirmed ? '<span class="status confirmed">Arrived</span>' : 'Not arrived'}</td>
+          <td>${escapeHtml(b.restaurant_name)}</div>
+          <td>${b.reservation_date} ${b.reservation_time}</div>
+          <td>${b.num_people}</div>
+          <td><span class="status ${b.status}">${b.status}</span></div>
+          <td>${b.arrival_confirmed ? '<span class="status confirmed">Arrived</span>' : 'Not arrived'}</div>
           <td class="d-flex gap-1 flex-wrap">
-            ${!b.arrival_confirmed && b.status !== 'rejected' ? `<button class="btn btn-sm btn-etg" onclick="confirmArrival(${b.id})">Confirm Arrival</button>` : ''}
             ${b.arrival_confirmed ? `<a href="feedback.html?reservation_id=${b.id}" class="btn btn-sm btn-outline-etg">Feedback</a>` : ''}
             <a href="order-status.html?reservation_id=${b.id}" class="btn btn-sm btn-outline-secondary">Track</a>
-          </td>
+           </div>
         </tr>
       `).join('');
-    } catch(err) { tbody.innerHTML = '<tr><td colspan="7">Error loading bookings.</tr>'; }
-  }
-
-  async function confirmArrival(bookingId) {
-    try {
-      await apiCall('/arrival.php', { method: 'POST', body: JSON.stringify({ reservation_id: bookingId }) });
-      alert('Arrival confirmed.');
-      renderMyBookings();
-    } catch(err) { alert('Error: ' + err.message); }
+    } catch(err) { tbody.innerHTML = '<tr><td colspan="7">Error loading bookings. </div>'; }
   }
 
   function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m=>m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }

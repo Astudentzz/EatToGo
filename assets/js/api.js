@@ -1,4 +1,4 @@
-const API_BASE = '/EatToGo/api';
+const API_BASE = 'http://localhost/EatToGo/api';
 
 async function apiCall(endpoint, options = {}) {
     const response = await fetch(`${API_BASE}${endpoint}`, {

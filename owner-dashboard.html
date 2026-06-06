@@ -8,60 +8,152 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/style.css">
   <style>
-    @media (max-width: 768px) {
-      .sidebar { position: fixed; transform: translateX(-100%); transition: transform 0.3s ease; width: 260px; z-index: 1050; height: 100%; overflow-y: auto; background: #1C1208; }
-      .sidebar.show { transform: translateX(0); }
-      .owner-main { margin-left: 0 !important; }
+    /* Sidebar (collapsible) – hidden by default */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 260px;
+      height: 100%;
+      background: #1C1208;
+      color: white;
+      z-index: 1000;
+      transition: transform 0.3s ease;
+      transform: translateX(-100%);
+      padding: 22px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
     }
-    @media (min-width: 769px) {
-      .sidebar { position: fixed; width: 260px; min-height: 100vh; }
-      .owner-main { margin-left: 260px; }
+    .sidebar a {
+      display: block;
+      width: 100%;
+      margin: 4px 0;
     }
-    .topbar { background: white; padding: 12px 20px; box-shadow: 0 2px 10px rgba(0,0,0,.06); }
-    @media (max-width: 768px) {
-      .topbar { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; }
-      .topbar h2 { grid-column: 1; grid-row: 1; margin: 0; font-size: 1.2rem; }
-      .topbar .right-group { grid-column: 2; grid-row: 1; display: flex; gap: 10px; align-items: center; }
-      .topbar .hamburger { grid-column: 1; grid-row: 2; justify-self: start; background: none; border: none; font-size: 24px; padding: 0; color: var(--orange); cursor: pointer; }
+    .sidebar.open {
+      transform: translateX(0);
     }
-    @media (min-width: 769px) {
-      .topbar { display: flex; justify-content: space-between; align-items: center; }
-      .topbar .hamburger { display: none; }
-      .topbar .right-group { display: flex; align-items: center; gap: 15px; }
+    .owner-main {
+      margin-left: 0;
+      transition: margin-left 0.3s ease;
+      min-height: 100vh;
+      background: #f4eee6;
     }
-    #authArea { white-space: nowrap; }
-    .restaurant-card { border: 1px solid var(--cream-dark); border-radius: 16px; padding: 16px; margin-bottom: 16px; background: white; display: flex; justify-content: space-between; align-items: center; }
-    .restaurant-card img { width: 60px; height: 60px; object-fit: cover; border-radius: 12px; }
-    .modal-content { border-radius: 20px; }
+    .owner-main.shifted {
+      margin-left: 260px;
+    }
+    .topbar {
+      background: white;
+      padding: 12px 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.06);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .toggle-sidebar-btn {
+      background: none;
+      border: none;
+      font-size: 24px;
+      color: var(--orange);
+      cursor: pointer;
+      padding: 0;
+      margin-right: 5px;
+    }
+    .left-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: nowrap;
+    }
+    .left-group span {
+      font-size: 1.2rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .right-group {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    #authArea {
+      white-space: nowrap;
+    }
+    @media (max-width: 480px) {
+      .left-group span {
+        font-size: 1rem;
+      }
+    }
+    .restaurant-card {
+      border: 1px solid var(--cream-dark);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 16px;
+      background: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .restaurant-card img {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 12px;
+    }
+    .modal-content {
+      border-radius: 20px;
+    }
+    .dash-card {
+      background: white;
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,.05);
+    }
+    .card-etg {
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(255,107,53,.08);
+    }
+    .image-preview {
+      max-width: 150px;
+      max-height: 150px;
+      margin-top: 8px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+    }
   </style>
 </head>
 <body>
-<aside class="sidebar">
+<aside class="sidebar" id="sidebar">
   <a class="logo" href="index.html">Eat<span>To</span>Go</a>
   <hr>
   <a class="active" href="#overview">📊 Overview</a>
   <a href="#reservations">📅 Reservations</a>
-  <a href="#listing">📝 Listing Request</a>
-  <a href="#staff">👥 Manage Staff</a>
+  <a href="#my-restaurants">🏪 My Restaurant</a>   
+  <a href="#listing">📝 Listing Request</a>       
   <a href="owner-profile.html">👤 My Profile</a>
-  <a href="#" onclick="logout(); return false;">🚪 Sign Out</a>
 </aside>
 
-<main class="owner-main">
+<main class="owner-main" id="ownerMain">
   <div class="topbar">
-    <h2>Owner Dashboard</h2>
-    <button class="hamburger" id="menuToggle">☰</button>
+    <div class="left-group">
+      <button class="toggle-sidebar-btn" id="toggleSidebarBtn">☰</button>
+      <span>Owner Dashboard</span>
+    </div>
     <div class="right-group">
       <span id="authArea"></span>
     </div>
   </div>
+
   <div class="p-4">
     <!-- Stats -->
     <div class="row g-3 mb-4">
-      <div class="col-md-3"><div class="dash-card p-4"><b>📅 Today</b><h2 id="statToday">—</h2></div></div>
-      <div class="col-md-3"><div class="dash-card p-4"><b>📋 Total Reservations</b><h2 id="statTotal">—</h2></div></div>
-      <div class="col-md-3"><div class="dash-card p-4"><b>✅ Confirmed</b><h2 id="statConfirmed">—</h2></div></div>
-      <div class="col-md-3"><div class="dash-card p-4"><b>⏳ Pending</b><h2 id="statPending">—</h2></div></div>
+      <div class="col-md-3"><div class="dash-card"><b>📅 Today</b><h2 id="statToday">—</h2></div></div>
+      <div class="col-md-3"><div class="dash-card"><b>📋 Total Reservations</b><h2 id="statTotal">—</h2></div></div>
+      <div class="col-md-3"><div class="dash-card"><b>✅ Confirmed</b><h2 id="statConfirmed">—</h2></div></div>
+      <div class="col-md-3"><div class="dash-card"><b>⏳ Pending</b><h2 id="statPending">—</h2></div></div>
     </div>
 
     <!-- Reservations -->
@@ -80,22 +172,21 @@
     <section id="listing" class="card-etg p-4 mb-4">
       <h3>📝 Apply for Restaurant Listing</h3>
       <form id="listingForm" enctype="multipart/form-data" class="row g-3">
-        <div class="col-md-3"><input id="ownerName" class="form-control" placeholder="Owner name" required></div>
-        <div class="col-md-3"><input id="restName" class="form-control" placeholder="Restaurant name" required></div>
-        <div class="col-md-3"><input id="location" class="form-control" placeholder="Location" required></div>
-        <div class="col-md-2"><select id="cuisine" class="form-select"><option>Japanese</option><option>Indian</option><option>Western</option><option>Malay</option><option>Chinese</option></select></div>
-        <div class="col-md-12"><textarea id="description" class="form-control" rows="2" placeholder="Restaurant description"></textarea></div>
-        <div class="col-md-4"><input id="price_range" class="form-control" placeholder="Price range (e.g., RM10-30)"></div>
-        <div class="col-md-4"><input id="hours" class="form-control" placeholder="Operating hours (e.g., 10:00 AM - 10:00 PM)" required
-               pattern="\d{1,2}:\d{2}\s?(?:AM|PM)\s*-\s*\d{1,2}:\d{2}\s?(?:AM|PM)" title="Format: 10:00 AM - 10:00 PM"></div>
-        <div class="col-md-4"><input id="deal" class="form-control" placeholder="Promotion / Deal (e.g., 10% off)"></div>
-        <div class="col-md-4"><input type="number" id="total_seats" class="form-control" placeholder="Total seats (e.g., 50)" min="0"></div>
-        <div class="col-md-4"><input type="number" id="slot_duration" class="form-control" placeholder="Slot duration (minutes)" value="60" min="15" step="15"></div>
-        <div class="col-md-12"><label class="form-label fw-bold">Restaurant Image</label><input type="file" id="restImage" class="form-control" accept="image/*"></div>
-        <div class="col-md-12"><label class="form-label fw-bold">Payment QR Code (optional)</label><input type="file" id="qrCode" class="form-control" accept="image/*"><small class="text-muted">Upload a QR code for customers to scan (e.g., Touch 'n Go, DuitNow).</small></div>
+        <div class="col-md-3"><label class="form-label fw-semibold">Owner Name</label><input id="ownerName" class="form-control" placeholder="Owner name" required></div>
+        <div class="col-md-3"><label class="form-label fw-semibold">Restaurant Name</label><input id="restName" class="form-control" placeholder="Restaurant name" required></div>
+        <div class="col-md-3"><label class="form-label fw-semibold">Location</label><input id="location" class="form-control" placeholder="Location" required></div>
+        <div class="col-md-2"><label class="form-label fw-semibold">Cuisine</label><input type="text" id="cuisine" class="form-control" placeholder="e.g., Japanese, Italian" required></div>
+        <div class="col-md-12"><label class="form-label fw-semibold">Restaurant Description</label><textarea id="description" class="form-control" rows="2" placeholder="Tell guests about your atmosphere..."></textarea></div>
+        <div class="col-md-4"><label class="form-label fw-semibold">Price Range</label><input id="price_range" class="form-control" placeholder="e.g., RM10-30"></div>
+        <div class="col-md-4"><label class="form-label fw-semibold">Operating Hours</label><input id="hours" class="form-control" placeholder="10:00 AM - 10:00 PM" required pattern="\d{1,2}:\d{2}\s?(?:AM|PM)\s*-\s*\d{1,2}:\d{2}\s?(?:AM|PM)" title="Format: 10:00 AM - 10:00 PM"></div>
+        <div class="col-md-4"><label class="form-label fw-semibold">Promotion / Deal</label><input id="deal" class="form-control" placeholder="e.g., 10% off"></div>
+        <div class="col-md-4"><label class="form-label fw-semibold">Total Seats</label><input type="number" id="total_seats" class="form-control" placeholder="e.g., 50" min="0"></div>
+        <div class="col-md-4"><label class="form-label fw-semibold">Reserve Duration (minutes)</label><input type="number" id="slot_duration" class="form-control" value="60" min="15" step="15"></div>
+        <div class="col-md-12"><label class="form-label fw-semibold">Restaurant Image</label><input type="file" id="restImage" class="form-control" accept="image/*"></div>
+        <div class="col-md-12"><label class="form-label fw-semibold">Payment QR Code</label><input type="file" id="qrCode" class="form-control" accept="image/*"><small class="text-muted">Upload a QR code for customers to scan (e.g., Touch 'n Go).</small></div>
         <div class="col-md-12"><button type="submit" class="btn btn-etg w-100">Submit Listing Request</button></div>
       </form>
-      <div class="mt-4"><h5>Request History</h5><div class="table-responsive"><table class="table"><thead><tr><th>Restaurant</th><th>Status</th><th>Admin Response</th></tr></thead><tbody id="ownerRequests"></tbody><table></div></div>
+      <div class="mt-4"><h5>Request History</h5><div class="table-responsive"><table class="table"><thead><th>Restaurant</th><th>Status</th><th>Admin Response</th></thead><tbody id="ownerRequests"></tbody></table></div></div>
     </section>
   </div>
 </main>
@@ -104,25 +195,16 @@
 <div class="modal fade" id="staffModal" tabindex="-1">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Manage Staff for <span id="modalRestaurantName"></span></h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
+      <div class="modal-header"><h5 class="modal-title">Manage Staff for <span id="modalRestaurantName"></span></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
       <div class="modal-body">
         <form id="addStaffForm" class="row g-3 mb-4">
           <div class="col-md-4"><input id="staffName" class="form-control" placeholder="Staff name" required></div>
           <div class="col-md-4"><input id="staffEmail" class="form-control" placeholder="Email" required></div>
           <div class="col-md-3"><input id="staffPassword" type="password" class="form-control" placeholder="Password" required></div>
-          <div class="col-md-1"><button type="submit" class="btn btn-etg w-100">Add</button></div>
+          <div class="col-md-2"><button type="submit" class="btn btn-etg w-100">Add</button></div>
         </form>
-        <div class="table-responsive">
-          <table class="table">
-            <thead>
-              <tr><th>Name</th><th>Email</th><th>Actions</th></tr>
-            </thead>
-            <tbody id="staffList"></tbody>
-          </table>
-        </div>
+        <small class="text-muted d-block mb-3">📧 An email will be sent to the staff to verify their account before they can log in.</small>
+        <div class="table-responsive"><table class="table"><thead><tr><th>Name</th><th>Email</th><th>Actions</th></td></thead><tbody id="staffList"></tbody></table></div>
       </div>
     </div>
   </div>
@@ -130,73 +212,43 @@
 
 <!-- Edit Staff Modal -->
 <div class="modal fade" id="editStaffModal" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Edit Staff Member</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <form id="editStaffForm">
-          <input type="hidden" id="editStaffId">
-          <input type="hidden" id="editStaffRestaurantId">
-          <div class="mb-3"><label class="form-label">Name</label><input id="editStaffName" class="form-control" required></div>
-          <div class="mb-3"><label class="form-label">New Password <span class="text-muted">(leave blank to keep current)</span></label><input type="password" id="editStaffPassword" class="form-control"></div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-etg" id="saveStaffChanges">Save</button>
-      </div>
-    </div>
-  </div>
+  <div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Edit Staff Member</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body"><form id="editStaffForm"><input type="hidden" id="editStaffId"><input type="hidden" id="editStaffRestaurantId"><div class="mb-3"><label class="form-label">Name</label><input id="editStaffName" class="form-control" required></div><div class="mb-3"><label class="form-label">New Password <span class="text-muted">(leave blank to keep current)</span></label><input type="password" id="editStaffPassword" class="form-control"></div></form></div>
+  <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-etg" id="saveStaffChanges">Save</button></div></div></div>
 </div>
 
-<!-- Edit Restaurant Modal -->
+<!-- Edit Restaurant Modal (matches admin style) -->
 <div class="modal fade" id="editRestaurantModal" tabindex="-1">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Edit Restaurant Details</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
+      <div class="modal-header"><h5 class="modal-title">Edit Restaurant Details</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
       <div class="modal-body">
         <form id="editRestaurantForm">
           <input type="hidden" id="editRestaurantId">
-          <div class="mb-3"><label class="form-label">Restaurant Name</label><input id="editName" class="form-control" required></div>
-          <div class="mb-3"><label class="form-label">Location</label><input id="editLocation" class="form-control" required></div>
-          <div class="mb-3"><label class="form-label">Cuisine</label><input id="editCategory" class="form-control" required></div>
-          <div class="mb-3"><label class="form-label">Description</label><textarea id="editDescription" class="form-control" rows="2"></textarea></div>
-          <div class="mb-3"><label class="form-label">Price Range</label><input id="editPriceRange" class="form-control" placeholder="RM10-30"></div>
-          <div class="mb-3"><input id="editHours" class="form-control" placeholder="Operating hours (e.g., 10:00 AM - 10:00 PM)" required
-                 pattern="\d{1,2}:\d{2}\s?(?:AM|PM)\s*-\s*\d{1,2}:\d{2}\s?(?:AM|PM)" title="Format: 10:00 AM - 10:00 PM"></div>
-          <div class="mb-3"><input id="editDeal" class="form-control" placeholder="Promotion / Deal"></div>
-          <div class="mb-3"><input type="number" id="editSeats" class="form-control" min="0" placeholder="Total seats"></div>
-          <div class="mb-3"><input type="number" id="editSlotDuration" class="form-control" min="15" step="15" value="60" placeholder="Slot duration (minutes)"></div>
-          <div class="mb-3"><label class="form-label">Restaurant Image</label><input type="file" id="editRestImage" class="form-control" accept="image/*"><small class="text-muted">Leave empty to keep current.</small></div>
-          <div class="mb-3"><label class="form-label">Payment QR Code</label><input type="file" id="editQrCode" class="form-control" accept="image/*"><small class="text-muted">Leave empty to keep current. Upload new to replace.</small><div id="currentQrPreview" class="mt-2" style="max-width: 150px;"></div></div>
+          <div class="row g-3">
+            <div class="col-md-6"><label class="form-label">Restaurant Name</label><input id="editName" class="form-control" required></div>
+            <div class="col-md-6"><label class="form-label">Cuisine</label><input id="editCuisine" class="form-control" required></div>
+            <div class="col-md-6"><label class="form-label">Location</label><input id="editLocation" class="form-control" required></div>
+            <div class="col-md-6"><label class="form-label">Price Range</label><input id="editPriceRange" class="form-control" placeholder="RM10-30"></div>
+            <div class="col-12"><label class="form-label">Description</label><textarea id="editDescription" class="form-control" rows="2"></textarea></div>
+            <div class="col-md-6"><label class="form-label">Operating Hours</label><input id="editHours" class="form-control" placeholder="10:00 AM - 10:00 PM" required pattern="\d{1,2}:\d{2}\s?(?:AM|PM)\s*-\s*\d{1,2}:\d{2}\s?(?:AM|PM)" title="Format: 10:00 AM - 10:00 PM"></div>
+            <div class="col-md-6"><label class="form-label">Promotion / Deal</label><input id="editDeal" class="form-control" placeholder="Special offer"></div>
+            <div class="col-md-6"><label class="form-label">Total Seats</label><input type="number" id="editSeats" class="form-control" min="0" placeholder="e.g., 50"></div>
+            <div class="col-md-6"><label class="form-label">Reserve Duration (minutes)</label><input type="number" id="editSlotDuration" class="form-control" min="15" step="15" value="60"></div>
+            <div class="col-12"><label class="form-label">Restaurant Image</label><input type="file" id="editImageFile" class="form-control" accept="image/*"><div id="editImagePreview" class="mt-2"></div></div>
+            <div class="col-12"><label class="form-label">Payment QR Code Image</label><input type="file" id="editQrImage" class="form-control" accept="image/*"><small class="text-muted">Upload new QR code to replace existing</small><div id="editQrPreview" class="mt-2"></div></div>
+          </div>
         </form>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-etg" id="saveRestaurantChanges">Save Changes</button>
-      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-etg" id="saveRestaurantChanges">Save Changes</button></div>
     </div>
   </div>
 </div>
 
 <footer class="minimal-footer">
   <div class="container d-flex justify-content-between flex-wrap gap-5">
-    <div class="footer-brand">
-      <h2>Eat<span>To</span>Go</h2>
-      <p>Final Year Project – Restaurant and Food Reservation System.</p>
-    </div>
-    <div class="footer-members">
-      <h4>Project Team</h4>
-      <ul class="list-unstyled">
-        <li>Navin Ramu</li><li>Muhamamd Nazim</li><li>Hadif</li><li>Ng Yue Yang</li>
-      </ul>
-    </div>
+    <div class="footer-brand"><h2>Eat<span>To</span>Go</h2><p>Final Year Project – Restaurant and Food Reservation System.</p></div>
+    <div class="footer-members"><h4>Project Team</h4><ul class="list-unstyled"><li>Navin Ramu</li><li>Muhamamd Nazim</li><li>Hadif</li><li>Ng Yue Yang</li></ul></div>
   </div>
   <div class="footer-bottom">© 2026 EatToGo • Universiti Teknologi Malaysia (UTM)</div>
 </footer>
@@ -204,6 +256,23 @@
 <script src="assets/js/api.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+  // Sidebar Toggle
+  const sidebar = document.getElementById('sidebar');
+  const ownerMain = document.getElementById('ownerMain');
+  const toggleBtn = document.getElementById('toggleSidebarBtn');
+  let sidebarOpen = false;
+  function toggleSidebar() {
+    if (sidebarOpen) {
+      sidebar.classList.remove('open');
+      ownerMain.classList.remove('shifted');
+    } else {
+      sidebar.classList.add('open');
+      ownerMain.classList.add('shifted');
+    }
+    sidebarOpen = !sidebarOpen;
+  }
+  if (toggleBtn) toggleBtn.addEventListener('click', toggleSidebar);
+
   let currentRestaurantId = null;
   let allRestaurants = [];
 
@@ -234,15 +303,18 @@
         <div>
           <h4>${escapeHtml(r.name)}</h4>
           <p>${escapeHtml(r.location)} • ${escapeHtml(r.category)}</p>
-          <span class="status ${r.status}">${r.status}</span>
-          ${r.status === 'approved' ? `<button class="btn btn-sm btn-outline-etg ms-2" onclick="openStaffModal(${r.id}, '${escapeHtml(r.name)}')">👥 Manage Staff</button>` : ''}
-          ${r.status === 'approved' ? `<button class="btn btn-sm btn-outline-etg ms-2" onclick="openEditModal(${r.id})">✏️ Edit Details</button>` : ''}
+          <span class="status ${r.status}">${r.status}</span><br>
+          ${r.status === 'approved' ? `
+            <button class="btn btn-sm btn-outline-etg ms-2 mt-1" onclick="openStaffModal(${r.id}, '${escapeHtml(r.name)}')">👥 Manage Staff</button>
+            <button class="btn btn-sm btn-outline-etg ms-2 mt-1" onclick="openEditModal(${r.id})">✏️ Edit Details</button>
+          ` : ''}
         </div>
         <img src="${r.image || 'assets/img/default-restaurant.jpg'}" alt="${escapeHtml(r.name)}">
       </div>
     `).join('');
   }
 
+  // Staff management functions
   function openStaffModal(restaurantId, restaurantName) {
     currentRestaurantId = restaurantId;
     document.getElementById('modalRestaurantName').innerText = restaurantName;
@@ -255,7 +327,7 @@
     try {
       const staff = await apiCall(`/owner-staff.php?restaurant_id=${restaurantId}`);
       const tbody = document.getElementById('staffList');
-      if (!staff.length) { tbody.innerHTML = '<td><td colspan="3">No staff yet. Add staff above.</div>'; return; }
+      if (!staff.length) { tbody.innerHTML = '<tr><td colspan="3">No staff yet. Add staff above. </div>'; return; }
       tbody.innerHTML = staff.map(s => `
         <tr>
           <td>${escapeHtml(s.name)}</div>
@@ -263,10 +335,10 @@
           <td class="d-flex gap-1">
             <button class="btn btn-sm btn-warning" onclick="openEditStaffModal(${s.id}, '${escapeHtml(s.name)}', ${restaurantId})">✏️ Edit</button>
             <button class="btn btn-sm btn-danger" onclick="deleteStaff(${s.id}, ${restaurantId})">🗑️ Remove</button>
-          </td>
+           </div>
         </tr>
       `).join('');
-    } catch(e) { console.error(e); tbody.innerHTML = '<td><td colspan="3">Error loading staff.</div>'; }
+    } catch(e) { console.error(e); tbody.innerHTML = '<tr><td colspan="3">Error loading staff.</div>'; }
   }
 
   let currentEditStaffId = null, currentEditRestaurantId = null;
@@ -288,10 +360,7 @@
     const password = document.getElementById('editStaffPassword').value;
     if (!name) { alert('Name is required'); return; }
     try {
-      await apiCall('/update-staff.php', {
-        method: 'PUT',
-        body: JSON.stringify({ id: staffId, restaurant_id: restaurantId, name, password })
-      });
+      await apiCall('/update-staff.php', { method: 'PUT', body: JSON.stringify({ id: staffId, restaurant_id: restaurantId, name, password }) });
       alert('Staff updated');
       bootstrap.Modal.getInstance(document.getElementById('editStaffModal')).hide();
       loadStaffList(restaurantId);
@@ -305,10 +374,7 @@
     const password = document.getElementById('staffPassword').value;
     if (!name || !email || !password) { alert('All fields required'); return; }
     try {
-      await apiCall('/owner-staff.php', {
-        method: 'POST',
-        body: JSON.stringify({ name, email, password, restaurant_id: currentRestaurantId })
-      });
+      await apiCall('/owner-staff.php', { method: 'POST', body: JSON.stringify({ name, email, password, restaurant_id: currentRestaurantId }) });
       alert('Staff added');
       document.getElementById('addStaffForm').reset();
       loadStaffList(currentRestaurantId);
@@ -324,19 +390,20 @@
     } catch(e) { alert(e.message); }
   }
 
+  document.getElementById('addStaffForm').addEventListener('submit', addStaff);
+
+  // Generic file upload
   async function uploadFile(file, type) {
     const formData = new FormData();
     formData.append(type, file);
-    try {
-      const res = await fetch(`${API_BASE}/upload-qrcode.php`, {
-        method: 'POST',
-        body: formData,
-        credentials: 'same-origin'
-      });
-      const data = await res.json();
-      if (data.success) return data.filePath;
-      else throw new Error(data.error || 'Upload failed');
-    } catch(e) { throw e; }
+    const res = await fetch(`${API_BASE}/upload-qrcode.php`, {
+      method: 'POST',
+      body: formData,
+      credentials: 'same-origin'
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'Upload failed');
+    return data.filePath;
   }
 
   function openEditModal(restaurantId) {
@@ -344,23 +411,20 @@
     if (!restaurant) return;
     document.getElementById('editRestaurantId').value = restaurant.id;
     document.getElementById('editName').value = restaurant.name;
+    document.getElementById('editCuisine').value = restaurant.category || '';
     document.getElementById('editLocation').value = restaurant.location;
-    document.getElementById('editCategory').value = restaurant.category;
-    document.getElementById('editDescription').value = restaurant.description || '';
     document.getElementById('editPriceRange').value = restaurant.price_range || '';
+    document.getElementById('editDescription').value = restaurant.description || '';
     document.getElementById('editHours').value = restaurant.hours || '';
     document.getElementById('editDeal').value = restaurant.deal || '';
     document.getElementById('editSeats').value = restaurant.total_seats || 0;
     document.getElementById('editSlotDuration').value = restaurant.slot_duration || 60;
-    const currentQr = restaurant.qr_code || '';
-    const previewDiv = document.getElementById('currentQrPreview');
-    if (currentQr) {
-      previewDiv.innerHTML = `<img src="${currentQr}" style="max-width: 100%; border-radius: 8px;">`;
-    } else {
-      previewDiv.innerHTML = '';
-    }
-    document.getElementById('editRestImage').value = '';
-    document.getElementById('editQrCode').value = '';
+    const imagePreviewDiv = document.getElementById('editImagePreview');
+    imagePreviewDiv.innerHTML = restaurant.image ? `<img src="${restaurant.image}" class="image-preview">` : '';
+    const qrPreviewDiv = document.getElementById('editQrPreview');
+    qrPreviewDiv.innerHTML = restaurant.qr_code ? `<img src="${restaurant.qr_code}" class="image-preview">` : '';
+    document.getElementById('editImageFile').value = '';
+    document.getElementById('editQrImage').value = '';
     const modal = new bootstrap.Modal(document.getElementById('editRestaurantModal'));
     modal.show();
   }
@@ -368,44 +432,25 @@
   document.getElementById('saveRestaurantChanges').addEventListener('click', async () => {
     const id = document.getElementById('editRestaurantId').value;
     const name = document.getElementById('editName').value.trim();
+    const category = document.getElementById('editCuisine').value.trim();
     const location = document.getElementById('editLocation').value.trim();
-    const category = document.getElementById('editCategory').value.trim();
-    const description = document.getElementById('editDescription').value.trim();
     const price_range = document.getElementById('editPriceRange').value.trim();
+    const description = document.getElementById('editDescription').value.trim();
     const hours = document.getElementById('editHours').value.trim();
     const deal = document.getElementById('editDeal').value.trim();
     const total_seats = parseInt(document.getElementById('editSeats').value) || 0;
     const slot_duration = parseInt(document.getElementById('editSlotDuration').value) || 60;
+    if (!name || !location || !category) { alert('Name, location and cuisine are required'); return; }
     const hoursPattern = /^\d{1,2}:\d{2}\s?(?:AM|PM)\s*-\s*\d{1,2}:\d{2}\s?(?:AM|PM)$/i;
-    if (hours && !hoursPattern.test(hours)) {
-      alert('Operating hours format invalid. Use "10:00 AM - 10:00 PM".');
-      return;
-    }
-    if (!name || !location || !category) {
-      alert('Name, location and cuisine are required');
-      return;
-    }
-
-    let imagePath = null;
-    const imageFile = document.getElementById('editRestImage').files[0];
-    if (imageFile) {
-      try {
-        imagePath = await uploadFile(imageFile, 'image');
-      } catch(e) { alert('Image upload failed: ' + e.message); return; }
-    }
-
-    let qrPath = null;
-    const qrFile = document.getElementById('editQrCode').files[0];
-    if (qrFile) {
-      try {
-        qrPath = await uploadFile(qrFile, 'qr_code');
-      } catch(e) { alert('QR code upload failed: ' + e.message); return; }
-    }
-
+    if (hours && !hoursPattern.test(hours)) { alert('Operating hours format invalid. Use "10:00 AM - 10:00 PM".'); return; }
+    let imagePath = null, qrPath = null;
+    const imageFile = document.getElementById('editImageFile').files[0];
+    if (imageFile) { try { imagePath = await uploadFile(imageFile, 'image'); } catch(e) { alert('Image upload failed: ' + e.message); return; } }
+    const qrFile = document.getElementById('editQrImage').files[0];
+    if (qrFile) { try { qrPath = await uploadFile(qrFile, 'qr_code'); } catch(e) { alert('QR code upload failed: ' + e.message); return; } }
     const updateData = { id, name, location, category, description, price_range, hours, deal, total_seats, slot_duration };
     if (imagePath) updateData.image = imagePath;
     if (qrPath) updateData.qr_code = qrPath;
-
     try {
       await apiCall('/update-restaurant.php', { method: 'PUT', body: JSON.stringify(updateData) });
       alert('Restaurant details updated');
@@ -427,7 +472,9 @@
 
   async function renderOwnerReservations() {
     try {
-      const r = await apiCall('/owner-reservations.php');
+      let r = await apiCall('/owner-reservations.php');
+      // Sort by ID descending (newest first)
+      r.sort((a, b) => b.id - a.id);
       document.getElementById('reservationCards').innerHTML = r.map(r=>`<tr>
         <td>${r.id}</div>
         <td>${escapeHtml(r.customer_name)}</div>
@@ -444,10 +491,7 @@
     try {
       const req = await apiCall('/owner-requests.php');
       const tbody = document.getElementById('ownerRequests');
-      if (!req.length) {
-        tbody.innerHTML = '<tr><td colspan="3" class="text-muted">No requests yet.</div>';
-        return;
-      }
+      if (!req.length) { tbody.innerHTML = '<tr><td colspan="3" class="text-muted">No requests yet.</div>'; return; }
       tbody.innerHTML = req.map(r => `
         <tr>
         <td>${escapeHtml(r.name)}</div>
@@ -461,7 +505,7 @@
     e.preventDefault();
     const restName = document.getElementById('restName').value.trim();
     const location = document.getElementById('location').value.trim();
-    const cuisine = document.getElementById('cuisine').value;
+    const cuisine = document.getElementById('cuisine').value.trim();
     const description = document.getElementById('description').value.trim();
     const price_range = document.getElementById('price_range').value.trim();
     const hours = document.getElementById('hours').value.trim();
@@ -472,10 +516,7 @@
     const qrFile = document.getElementById('qrCode').files[0];
     if (!restName || !location) { alert('Restaurant name and location required'); return; }
     const hoursPattern = /^\d{1,2}:\d{2}\s?(?:AM|PM)\s*-\s*\d{1,2}:\d{2}\s?(?:AM|PM)$/i;
-    if (hours && !hoursPattern.test(hours)) {
-      alert('Operating hours must be in format: 10:00 AM - 10:00 PM');
-      return;
-    }
+    if (hours && !hoursPattern.test(hours)) { alert('Operating hours format invalid. Use "10:00 AM - 10:00 PM".'); return; }
     const formData = new FormData();
     formData.append('restaurant_name', restName);
     formData.append('location', location);
@@ -501,15 +542,6 @@
   });
 
   function escapeHtml(s) { if(!s) return ''; return s.replace(/[&<>]/g, m=>m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
-
-  const menuToggle = document.getElementById('menuToggle');
-  const sidebar = document.querySelector('.sidebar');
-  if (menuToggle && sidebar) {
-    menuToggle.addEventListener('click', () => sidebar.classList.toggle('show'));
-    document.addEventListener('click', (e) => { if (window.innerWidth <= 768 && !sidebar.contains(e.target) && e.target !== menuToggle) sidebar.classList.remove('show'); });
-  }
-
-  document.getElementById('addStaffForm').addEventListener('submit', addStaff);
 
   window.addEventListener('DOMContentLoaded', async () => { await nav(); await loadOwnerData(); });
 </script>

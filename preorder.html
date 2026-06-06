@@ -9,115 +9,25 @@
   <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
   <link rel="stylesheet" href="assets/css/style.css">
   <style>
-    /* Navbar styles (same as index.html) */
-    .navbar-etg .container {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .desktop-nav {
-      display: flex;
-      gap: 1rem;
-    }
-    .hamburger {
-      display: none;
-      background: none;
-      border: none;
-      font-size: 28px;
-      color: var(--orange);
-      cursor: pointer;
-      padding: 0;
-    }
+    /* (all existing styles remain unchanged) */
+    .navbar-etg .container { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+    .desktop-nav { display: flex; gap: 1rem; }
+    .hamburger { display: none; background: none; border: none; font-size: 28px; color: var(--orange); cursor: pointer; padding: 0; }
     @media (max-width: 768px) {
-      .navbar-etg .container {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        align-items: center;
-        gap: 8px;
-      }
-      .logo {
-        grid-column: 1;
-        grid-row: 1;
-        justify-self: start;
-      }
-      .right-group {
-        grid-column: 2;
-        grid-row: 1;
-        justify-self: end;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-      .hamburger {
-        display: block;
-        grid-column: 1;
-        grid-row: 2;
-        justify-self: start;
-        margin-top: 4px;
-      }
-      .desktop-nav {
-        display: none;
-      }
+      .navbar-etg .container { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; }
+      .logo { grid-column: 1; grid-row: 1; justify-self: start; }
+      .right-group { grid-column: 2; grid-row: 1; justify-self: end; display: flex; align-items: center; gap: 10px; }
+      .hamburger { display: block; grid-column: 1; grid-row: 2; justify-self: start; margin-top: 4px; }
+      .desktop-nav { display: none; }
     }
-    @media (min-width: 769px) {
-      .hamburger, .mobile-sidebar, .sidebar-overlay, .close-sidebar {
-        display: none;
-      }
-    }
-    .mobile-sidebar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 260px;
-      height: 100%;
-      background: #1C1208;
-      z-index: 1100;
-      transform: translateX(-100%);
-      transition: transform 0.3s ease;
-      padding: 60px 20px 20px;
-    }
-    .mobile-sidebar.open {
-      transform: translateX(0);
-    }
-    .mobile-sidebar a {
-      display: block;
-      color: rgba(255,255,255,.8);
-      text-decoration: none;
-      padding: 12px 16px;
-      font-weight: 700;
-      border-radius: 12px;
-      margin: 8px 0;
-    }
-    .mobile-sidebar a:hover, .mobile-sidebar a.active {
-      background: rgba(255,107,53,.2);
-      color: var(--orange);
-    }
-    .close-sidebar {
-      position: absolute;
-      top: 15px;
-      right: 20px;
-      font-size: 28px;
-      color: white;
-      background: none;
-      border: none;
-      cursor: pointer;
-    }
-    .sidebar-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.5);
-      z-index: 1050;
-      display: none;
-    }
-    .sidebar-overlay.active {
-      display: block;
-    }
-
-    /* Preorder specific styles */
+    @media (min-width: 769px) { .hamburger, .mobile-sidebar, .sidebar-overlay, .close-sidebar { display: none; } }
+    .mobile-sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100%; background: #1C1208; z-index: 1100; transform: translateX(-100%); transition: transform 0.3s ease; padding: 60px 20px 20px; }
+    .mobile-sidebar.open { transform: translateX(0); }
+    .mobile-sidebar a { display: block; color: rgba(255,255,255,.8); text-decoration: none; padding: 12px 16px; font-weight: 700; border-radius: 12px; margin: 8px 0; }
+    .mobile-sidebar a:hover, .mobile-sidebar a.active { background: rgba(255,107,53,.2); color: var(--orange); }
+    .close-sidebar { position: absolute; top: 15px; right: 20px; font-size: 28px; color: white; background: none; border: none; cursor: pointer; }
+    .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1050; display: none; }
+    .sidebar-overlay.active { display: block; }
     .menu-item-card { border-radius: 18px; background: #fff; box-shadow: var(--shadow); border: 2.5px solid transparent; transition: all .2s ease; cursor: default; overflow: hidden; }
     .menu-item-card.in-cart { border-color: var(--orange); background: #fff8f2; box-shadow: 0 6px 24px rgba(255,107,53,.22); }
     .menu-image { width: 100%; height: 110px; object-fit: cover; border-radius: 18px 18px 0 0; }
@@ -132,11 +42,13 @@
     .timeline { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 20px; }
     .timeline span { background: white; border: 2px solid var(--cream-dark); padding: 6px 12px; border-radius: 999px; font-weight: 800; color: var(--gray); font-size: 12px; }
     .timeline span.active { background: var(--orange); color: white; border-color: var(--orange); }
+    .filter-bar { background: white; border-radius: 20px; padding: 12px 16px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border: 1px solid var(--cream-dark); }
     @media (max-width: 768px) {
       .summary-card { position: static !important; margin-top: 1.5rem; }
       .cart-item-row { flex-wrap: wrap; gap: 8px; }
       .menu-image { height: 80px; }
       .timeline span { font-size: 10px; padding: 4px 8px; }
+      .filter-bar .row > div { margin-bottom: 10px; }
     }
   </style>
 </head>
@@ -182,6 +94,24 @@
           <h4 class="mb-0">Choose Your Items</h4>
           <span class="badge-etg" id="selectedCount">0 items selected</span>
         </div>
+        <!-- FILTER BAR -->
+        <div class="filter-bar">
+          <div class="row g-2 align-items-end">
+            <div class="col-md-5">
+              <label class="form-label fw-bold">🔍 Search</label>
+              <input type="text" id="searchInput" class="form-control" placeholder="Search by name or emoji...">
+            </div>
+            <div class="col-md-5">
+              <label class="form-label fw-bold">📂 Category</label>
+              <select id="categoryFilter" class="form-select">
+                <option value="">All Categories</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <button class="btn btn-outline-etg w-100" onclick="clearFilters()">Clear Filters</button>
+            </div>
+          </div>
+        </div>
         <div class="row g-3" id="menuList"></div>
       </div>
       <div class="col-lg-4">
@@ -226,6 +156,9 @@
   const restaurantId = urlParams.get('restaurant_id');
   let cart = {};
   let menuItems = [];
+  let filteredMenuItems = [];
+  let currentSearch = '';
+  let currentCategory = '';
   const defaultMenuSvg = "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23ddd%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2255%22%20font-size%3D%2212%22%20text-anchor%3D%22middle%22%20fill%3D%22%23666%22%3ENo%20Img%3C%2Ftext%3E%3C%2Fsvg%3E";
 
   async function loadMenu() {
@@ -233,13 +166,38 @@
     try {
       menuItems = await apiCall(`/restaurant-menu.php?restaurant_id=${restaurantId}`);
       if (!menuItems.length) document.getElementById('menuList').innerHTML = '<div class="col-12 text-center">No menu items available.</div>';
-      renderMenu();
+      // Populate category dropdown
+      const categories = [...new Set(menuItems.map(item => item.category).filter(c => c))];
+      const catSelect = document.getElementById('categoryFilter');
+      catSelect.innerHTML = '<option value="">All Categories</option>' + categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+      applyFilters();
     } catch(err) { console.error(err); document.getElementById('menuList').innerHTML = '<div class="col-12 text-danger">Failed to load menu.</div>'; }
+  }
+
+  function applyFilters() {
+    let filtered = [...menuItems];
+    if (currentSearch) {
+      const searchLower = currentSearch.toLowerCase();
+      filtered = filtered.filter(item => 
+        item.name.toLowerCase().includes(searchLower) || 
+        (item.emoji && item.emoji.toLowerCase().includes(searchLower))
+      );
+    }
+    if (currentCategory) {
+      filtered = filtered.filter(item => item.category === currentCategory);
+    }
+    filteredMenuItems = filtered;
+    renderMenu();
   }
 
   function renderMenu() {
     const container = document.getElementById('menuList');
-    container.innerHTML = menuItems.map(item => {
+    if (!filteredMenuItems.length) {
+      container.innerHTML = '<div class="col-12 text-center text-muted py-4">No items match your filters.</div>';
+      updateSelectedCount();
+      return;
+    }
+    container.innerHTML = filteredMenuItems.map(item => {
       const inCart = cart[item.id] > 0;
       const qty = cart[item.id] || 0;
       const imageHtml = item.image ? `<img src="${item.image}" class="menu-image" onerror="this.src='${defaultMenuSvg}'">` : `<div class="item-emoji-wrap">${item.emoji || '🍽️'}</div>`;
@@ -251,6 +209,7 @@
             <div class="p-3">
               <div class="fw-bold mb-1" style="font-size:15px">${escapeHtml(item.name)}</div>
               <small class="text-muted">${escapeHtml(item.category)}</small>
+              ${item.description ? `<div class="small text-muted mt-1">${escapeHtml(item.description)}</div>` : ''}
               <div class="d-flex justify-content-between align-items-center mt-2">
                 <span class="fw-bold" style="color:var(--orange)">RM ${parseFloat(item.price).toFixed(2)}</span>
                 <div class="qty-controls">
@@ -270,7 +229,7 @@
     const newQty = (cart[itemId] || 0) + delta;
     if (newQty <= 0) delete cart[itemId];
     else cart[itemId] = newQty;
-    renderMenu();
+    applyFilters(); // re-render filtered menu
   }
 
   function renderCart() {
@@ -301,6 +260,23 @@
     const totalQty = Object.values(cart).reduce((a,b) => a+b, 0);
     const el = document.getElementById('selectedCount');
     if (el) el.textContent = totalQty > 0 ? `${totalQty} item${totalQty > 1 ? 's' : ''} selected` : '0 items selected';
+  }
+
+  // Filter event listeners
+  document.getElementById('searchInput').addEventListener('input', (e) => {
+    currentSearch = e.target.value;
+    applyFilters();
+  });
+  document.getElementById('categoryFilter').addEventListener('change', (e) => {
+    currentCategory = e.target.value;
+    applyFilters();
+  });
+  function clearFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('categoryFilter').value = '';
+    currentSearch = '';
+    currentCategory = '';
+    applyFilters();
   }
 
   async function checkout() {
