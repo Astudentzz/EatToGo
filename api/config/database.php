@@ -1,7 +1,7 @@
 <?php
 function getDB() {
     $host = 'localhost';
-    $dbname = 'eattogo';   // use your local database name
+    $dbname = 'eattogo_db';   // use your local database name
     $user = 'root';                         // default XAMPP username
     $pass = '';                             // default XAMPP password is empty
     try {
