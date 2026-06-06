@@ -4,6 +4,23 @@ session_start();
 require_once 'config/database.php';
 $pdo = getDB();
 
+// Include SMTP configuration (assuming same as register.php)
+$smtpConfigPath = __DIR__ . '/../contact/config.php';
+if (!file_exists($smtpConfigPath)) {
+    http_response_code(500);
+    echo json_encode(['error' => 'SMTP configuration missing']);
+    exit;
+}
+require_once $smtpConfigPath;
+
+// Include PHPMailer
+require_once __DIR__ . '/../lib/PHPMailer/src/PHPMailer.php';
+require_once __DIR__ . '/../lib/PHPMailer/src/SMTP.php';
+require_once __DIR__ . '/../lib/PHPMailer/src/Exception.php';
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
 // Only owner can access
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'owner') {
     http_response_code(403);
@@ -49,7 +66,12 @@ elseif ($method === 'POST') {
         echo json_encode(['error' => 'Name, email and password required']);
         exit;
     }
-    // Check if email already exists
+    if (!verifyOwnership($pdo, $owner_id, $restaurant_id)) {
+        http_response_code(403);
+        echo json_encode(['error' => 'You do not own this restaurant']);
+        exit;
+    }
+    // Check if email exists
     $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
     $stmt->execute([$email]);
     if ($stmt->fetch()) {
@@ -57,10 +79,14 @@ elseif ($method === 'POST') {
         echo json_encode(['error' => 'Email already registered']);
         exit;
     }
+
+    // Generate verification token (expires in 24 hours)
+    $token = bin2hex(random_bytes(32));
+    $expiry = date('Y-m-d H:i:s', strtotime('+24 hours'));
     $hashed = md5($password);
     $stmt = $pdo->prepare("INSERT INTO users (name, email, password, role, restaurant_id) VALUES (?, ?, ?, 'staff', ?)");
     $stmt->execute([$name, $email, $hashed, $restaurant_id]);
-    echo json_encode(['success' => true, 'message' => 'Staff account created']);
+    echo json_encode(['success' => true]);
 }
 elseif ($method === 'DELETE') {
     // Remove staff account

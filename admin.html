@@ -8,53 +8,135 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/style.css">
   <style>
-    @media (max-width: 768px) {
-      .sidebar { position: fixed; transform: translateX(-100%); transition: transform 0.3s ease; width: 260px; z-index: 1050; height: 100%; overflow-y: auto; background: #1C1208; }
-      .sidebar.show { transform: translateX(0); }
-      .admin-main { margin-left: 0 !important; }
+    /* Sidebar (collapsible) – hidden by default */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 260px;
+      height: 100%;
+      background: #1C1208;
+      color: white;
+      z-index: 1000;
+      transition: transform 0.3s ease;
+      transform: translateX(-100%);
+      padding: 22px;
+      overflow-y: auto;
     }
-    @media (min-width: 769px) {
-      .sidebar { position: fixed; width: 260px; min-height: 100vh; }
-      .admin-main { margin-left: 260px; }
+    .sidebar.open {
+      transform: translateX(0);
     }
-    .topbar { background: white; padding: 12px 20px; box-shadow: 0 2px 10px rgba(0,0,0,.06); }
-    @media (max-width: 768px) {
-      .topbar { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; }
-      .topbar h2 { grid-column: 1; grid-row: 1; margin: 0; font-size: 1.2rem; }
-      .topbar .right-group { grid-column: 2; grid-row: 1; display: flex; gap: 10px; align-items: center; }
-      .topbar .hamburger { grid-column: 1; grid-row: 2; justify-self: start; background: none; border: none; font-size: 24px; padding: 0; color: var(--orange); cursor: pointer; }
+    .admin-main {
+      margin-left: 0;
+      transition: margin-left 0.3s ease;
+      min-height: 100vh;
+      background: #f4eee6;
     }
-    @media (min-width: 769px) {
-      .topbar { display: flex; justify-content: space-between; align-items: center; }
-      .topbar .hamburger { display: none; }
-      .topbar .right-group { display: flex; align-items: center; gap: 15px; }
+    .admin-main.shifted {
+      margin-left: 260px;
     }
-    #authArea { white-space: nowrap; }
-    .section-card { margin-bottom: 2rem; border-radius: 1rem; background: white; border: 1px solid #f0e8de; }
-    .section-header { background: #fff8f0; padding: 1rem 1.5rem; border-bottom: 1px solid #f0e8de; border-radius: 1rem 1rem 0 0; }
-    .section-body { padding: 1.5rem; }
-    .stat-card { background: white; border-radius: 1rem; padding: 1.2rem; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border: 1px solid #f0e8de; }
-    .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    .btn-sm { margin: 2px; }
-    .modal-lg { max-width: 800px; }
+    .topbar {
+      background: white;
+      padding: 12px 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.06);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .toggle-sidebar-btn {
+      background: none;
+      border: none;
+      font-size: 24px;
+      color: var(--orange);
+      cursor: pointer;
+      padding: 0;
+      margin-right: 5px;
+    }
+    .left-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: nowrap;
+    }
+    .left-group span {
+      font-size: 1.2rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .right-group {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    #authArea {
+      white-space: nowrap;
+    }
+    /* On very small screens, reduce title font size to prevent wrapping */
+    @media (max-width: 480px) {
+      .left-group span {
+        font-size: 1rem;
+      }
+    }
+    .section-card {
+      margin-bottom: 2rem;
+      border-radius: 1rem;
+      background: white;
+      border: 1px solid #f0e8de;
+    }
+    .section-header {
+      background: #fff8f0;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid #f0e8de;
+      border-radius: 1rem 1rem 0 0;
+    }
+    .section-body {
+      padding: 1.5rem;
+    }
+    .stat-card {
+      background: white;
+      border-radius: 1rem;
+      padding: 1.2rem;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+      border: 1px solid #f0e8de;
+    }
+    .table-responsive {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .btn-sm {
+      margin: 2px;
+    }
+    .modal-lg {
+      max-width: 800px;
+    }
+    .image-preview {
+      max-width: 150px;
+      max-height: 150px;
+      margin-top: 8px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+    }
   </style>
 </head>
 <body>
 <aside class="sidebar">
-  <a class="logo"> Eat<span>To</span>Go</a>
+  <a class="logo" href="index.html">Eat<span>To</span>Go</a>
   <hr>
   <a class="active" href="admin.html">📊 Dashboard</a>
-  <a href="#bookings">🗓️ Bookings</a>
   <a href="#restaurants">🏪 Restaurants</a>
   <a href="#accounts">👥 Accounts</a>
   <a href="#requests">📝 Restaurant Requests</a>
-  <a href="#" onclick="logout(); return false;">🚪 Sign Out</a>
 </aside>
 
-<main class="admin-main">
+<main class="admin-main" id="adminMain">
   <div class="topbar">
-    <h2>Admin Dashboard</h2>
-    <button class="hamburger" id="menuToggle">☰</button>
+    <div class="left-group">
+      <button class="toggle-sidebar-btn" id="toggleSidebarBtn">☰</button>
+      <span>Admin Dashboard</span>
+    </div>
     <div class="right-group">
       <span id="authArea"></span>
     </div>
@@ -92,33 +174,25 @@
       </div>
     </div>
 
-    <!-- Bookings -->
-    <div id="bookings" class="section-card">
-      <div class="section-header"><h3 class="mb-0">📅 Booking Management</h3></div>
-      <div class="section-body">
-        <div class="table-responsive">
-          <table class="table table-hover align-middle">
-            <thead><tr><th>ID</th><th>Customer</th><th>Restaurant</th><th>Date & Time</th><th>Guests</th><th>Status</th><th>Arrival</th><th>Action</th></tr></thead>
-            <tbody id="bookingRows"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
     <!-- Restaurants -->
     <div id="restaurants" class="section-card">
-      <div class="section-header"><h3 class="mb-0">🏪 Restaurant Management</h3></div>
+      <div class="section-header d-flex justify-content-between align-items-center">
+        <h3 class="mb-0">🏪 Restaurant Management</h3>
+        <button class="btn btn-etg btn-sm" onclick="openAddRestaurantModal()">➕ Add New Restaurant</button>
+      </div>
       <div class="section-body">
-        <div class="row g-2 mb-4 align-items-end">
-          <div class="col-md-3"><label class="form-label fw-bold">Name</label><input id="restNameInput" class="form-control" placeholder="Restaurant name"></div>
-          <div class="col-md-2"><label class="form-label fw-bold">Cuisine</label><input id="restCuisine" class="form-control" placeholder="Cuisine"></div>
-          <div class="col-md-2"><label class="form-label fw-bold">Location</label><input id="restLoc" class="form-control" placeholder="Location"></div>
-          <div class="col-md-2"><label class="form-label fw-bold">Price Range</label><input id="restPrice" class="form-control" placeholder="RM10-30"></div>
-          <div class="col-md-3"><button class="btn btn-etg w-100" onclick="addRestaurant()">+ Add Restaurant</button></div>
-        </div>
         <div class="table-responsive">
           <table class="table table-hover align-middle">
-            <thead><tr><th>Name</th><th>Cuisine</th><th>Location</th><th>Price Range</th><th>Actions</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Cuisine</th>
+                <th>Location</th>
+                <th>Price Range</th>
+                <th>Owner</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
             <tbody id="restaurantRows"></tbody>
           </table>
         </div>
@@ -131,7 +205,14 @@
       <div class="section-body">
         <div class="table-responsive">
           <table class="table table-hover align-middle">
-            <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Action</th></tr></thead>
+            <thead>
+              <tr>
+                <th class="text-start">Name</th>
+                <th class="text-start">Email</th>
+                <th class="text-start">Role</th>
+                <th class="text-start">Action</th>
+              </tr>
+            </thead>
             <tbody id="accountRows"></tbody>
           </table>
         </div>
@@ -144,7 +225,15 @@
       <div class="section-body">
         <div class="table-responsive">
           <table class="table table-hover align-middle">
-            <thead><tr><th>ID</th><th>Owner ID</th><th>Restaurant Name</th><th>Status</th><th>Actions</th></tr></thead>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Owner Name</th>
+                <th>Restaurant Name</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
             <tbody id="requestRows"></tbody>
           </table>
         </div>
@@ -152,6 +241,49 @@
     </div>
   </div>
 </main>
+
+<!-- Add Restaurant Modal -->
+<div class="modal fade" id="addRestaurantModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add New Restaurant</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="addRestaurantForm">
+          <div class="row g-3">
+            <div class="col-md-6"><label class="form-label">Restaurant Name</label><input id="addName" class="form-control" required></div>
+            <div class="col-md-6"><label class="form-label">Cuisine</label><input id="addCuisine" class="form-control" required></div>
+            <div class="col-md-6"><label class="form-label">Location</label><input id="addLocation" class="form-control" required></div>
+            <div class="col-md-6"><label class="form-label">Price Range</label><input id="addPriceRange" class="form-control" placeholder="RM10-30"></div>
+            <div class="col-12"><label class="form-label">Description</label><textarea id="addDescription" class="form-control" rows="2"></textarea></div>
+            <div class="col-md-6"><label class="form-label">Operating Hours</label><input id="addHours" class="form-control" placeholder="10:00 AM - 10:00 PM" required
+                   pattern="\d{1,2}:\d{2}\s?(?:AM|PM)\s*-\s*\d{1,2}:\d{2}\s?(?:AM|PM)" title="Format: 10:00 AM - 10:00 PM"></div>
+            <div class="col-md-6"><label class="form-label">Promotion / Deal</label><input id="addDeal" class="form-control" placeholder="Special offer"></div>
+            <div class="col-md-6"><label class="form-label">Total Seats</label><input type="number" id="addSeats" class="form-control" min="0" placeholder="e.g., 50"></div>
+            <div class="col-md-6"><label class="form-label">Slot Duration (minutes)</label><input type="number" id="addSlotDuration" class="form-control" min="15" step="15" value="60"></div>
+            <div class="col-12">
+              <label class="form-label">Restaurant Image</label>
+              <input type="file" id="addImage" class="form-control" accept="image/*">
+              <div id="addImagePreview" class="mt-2"></div>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Payment QR Code Image</label>
+              <input type="file" id="addQrImage" class="form-control" accept="image/*">
+              <small class="text-muted">Upload QR code for cashless payment (optional)</small>
+              <div id="addQrPreview" class="mt-2"></div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-etg" id="saveAddRestaurant">Add Restaurant</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- Edit Restaurant Modal -->
 <div class="modal fade" id="editRestaurantModal" tabindex="-1">
@@ -164,7 +296,6 @@
       <div class="modal-body">
         <form id="editRestaurantForm">
           <input type="hidden" id="editRestaurantId">
-          <input type="hidden" id="editImageCurrent">
           <div class="row g-3">
             <div class="col-md-6"><label class="form-label">Restaurant Name</label><input id="editName" class="form-control" required></div>
             <div class="col-md-6"><label class="form-label">Cuisine</label><input id="editCuisine" class="form-control" required></div>
@@ -179,7 +310,13 @@
             <div class="col-12">
               <label class="form-label">Restaurant Image</label>
               <input type="file" id="editImageFile" class="form-control" accept="image/*">
-              <small class="text-muted">Leave empty to keep current image. Upload a new image to replace.</small>
+              <div id="editImagePreview" class="mt-2"></div>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Payment QR Code Image</label>
+              <input type="file" id="editQrImage" class="form-control" accept="image/*">
+              <small class="text-muted">Upload new QR code to replace existing</small>
+              <div id="editQrPreview" class="mt-2"></div>
             </div>
           </div>
         </form>
@@ -192,15 +329,53 @@
   </div>
 </div>
 
-<footer class="minimal-footer">...</footer>
+<footer class="minimal-footer">
+  <div class="container d-flex justify-content-between flex-wrap gap-5">
+    <div class="footer-brand"><h2>Eat<span>To</span>Go</h2><p>Final Year Project – Restaurant and Food Reservation System.</p></div>
+    <div class="footer-members"><h4>Project Team</h4><ul class="list-unstyled"><li>Navin Ramu</li><li>Muhamamd Nazim</li><li>Hadif</li><li>Ng Yue Yang</li></ul></div>
+  </div>
+  <div class="footer-bottom">© 2026 EatToGo • Universiti Teknologi Malaysia (UTM)</div>
+</footer>
 
 <script src="assets/js/api.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+  // Sidebar toggle – hidden by default
+  const sidebar = document.getElementById('sidebar');
+  const adminMain = document.getElementById('adminMain');
+  const toggleBtn = document.getElementById('toggleSidebarBtn');
+  let sidebarOpen = false;
+  function toggleSidebar() {
+    if (sidebarOpen) {
+      sidebar.classList.remove('open');
+      adminMain.classList.remove('shifted');
+    } else {
+      sidebar.classList.add('open');
+      adminMain.classList.add('shifted');
+    }
+    sidebarOpen = !sidebarOpen;
+  }
+  if (toggleBtn) toggleBtn.addEventListener('click', toggleSidebar);
+
+  // ----- Helper: upload image (generic) -----
+  async function uploadImage(file) {
+    const formData = new FormData();
+    formData.append('image', file);
+    const res = await fetch(`${API_BASE}/admin-upload-image.php`, {
+      method: 'POST',
+      body: formData,
+      credentials: 'same-origin'
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'Upload failed');
+    return data.imagePath;
+  }
+
+  // ----- Load admin data -----
   async function loadAdminData() {
     const session = await checkSession();
     if (!session.loggedIn || session.user.role !== 'admin') { alert('Unauthorized'); window.location.href='login.html'; return; }
-    await renderStats(); await renderBookings(); await renderRestaurantTable(); await renderAccounts(); await renderRequests();
+    await renderStats(); await renderRestaurantTable(); await renderAccounts(); await renderRequests();
   }
 
   async function renderStats() {
@@ -213,42 +388,74 @@
     document.getElementById('statRestaurants').innerText = restaurants.length;
   }
 
-  async function renderBookings() {
-    try {
-      let b = await apiCall('/admin-bookings.php');
-      document.getElementById('bookingRows').innerHTML = b.map(b=>`<tr>
-        <td><b>${b.id}</b></div>
-        <td>${escapeHtml(b.customer_name)}</div>
-        <td>${escapeHtml(b.restaurant_name)}</div>
-        <td>${b.reservation_date} ${b.reservation_time}</div>
-        <td>${b.num_people}</div>
-        <td><span class="status ${b.status}">${b.status}</span></div>
-        <td>${b.arrival_confirmed?'Arrived':'No'}</div>
-        <td><button class="btn btn-sm btn-danger" onclick="cancelBooking(${b.id})">Cancel Booking</button></div>
-      </tr>`).join('');
-    } catch(e) { document.getElementById('bookingRows').innerHTML='<tr><td colspan="8">Error loading bookings</div>'; }
-  }
-
-  async function cancelBooking(id) {
-    if (!confirm('Cancel this booking? This will also delete any associated order and feedback.')) return;
-    try {
-      await apiCall(`/admin-cancel-booking.php?id=${id}`, { method: 'DELETE' });
-      alert('Booking cancelled');
-      renderBookings(); renderStats();
-    } catch(e) { alert('Error: ' + e.message); }
-  }
-
   async function renderRestaurantTable() {
     let r = await apiCall('/admin-restaurants.php');
-    document.getElementById('restaurantRows').innerHTML = r.map(r=>`<tr>
+    document.getElementById('restaurantRows').innerHTML = r.map(r=>`
+      <tr>
         <td>${escapeHtml(r.name)}</div>
         <td>${escapeHtml(r.category)}</div>
         <td>${escapeHtml(r.location)}</div>
         <td>${escapeHtml(r.price_range)}</div>
+        <td>${escapeHtml(r.owner_name || 'N/A')}</div>
         <td><button class="btn btn-sm btn-warning" onclick="openEditRestaurantModal(${r.id})">Edit</button> <button class="btn btn-sm btn-danger" onclick="deleteRestaurant(${r.id})">Delete</button></div>
       </tr>`).join('');
   }
 
+  // Add Restaurant Modal
+  function openAddRestaurantModal() {
+    document.getElementById('addName').value = '';
+    document.getElementById('addCuisine').value = '';
+    document.getElementById('addLocation').value = '';
+    document.getElementById('addPriceRange').value = '';
+    document.getElementById('addDescription').value = '';
+    document.getElementById('addHours').value = '';
+    document.getElementById('addDeal').value = '';
+    document.getElementById('addSeats').value = '';
+    document.getElementById('addSlotDuration').value = '60';
+    document.getElementById('addImage').value = '';
+    document.getElementById('addImagePreview').innerHTML = '';
+    document.getElementById('addQrImage').value = '';
+    document.getElementById('addQrPreview').innerHTML = '';
+    const modal = new bootstrap.Modal(document.getElementById('addRestaurantModal'));
+    modal.show();
+  }
+
+  document.getElementById('saveAddRestaurant').addEventListener('click', async () => {
+    const name = document.getElementById('addName').value.trim();
+    const category = document.getElementById('addCuisine').value.trim();
+    const location = document.getElementById('addLocation').value.trim();
+    const price_range = document.getElementById('addPriceRange').value.trim();
+    const description = document.getElementById('addDescription').value.trim();
+    const hours = document.getElementById('addHours').value.trim();
+    const deal = document.getElementById('addDeal').value.trim();
+    const total_seats = parseInt(document.getElementById('addSeats').value) || 0;
+    const slot_duration = parseInt(document.getElementById('addSlotDuration').value) || 60;
+    const imageFile = document.getElementById('addImage').files[0];
+    const qrFile = document.getElementById('addQrImage').files[0];
+    if (!name || !category || !location) { alert('Name, cuisine and location are required'); return; }
+    const hoursPattern = /^\d{1,2}:\d{2}\s?(?:AM|PM)\s*-\s*\d{1,2}:\d{2}\s?(?:AM|PM)$/i;
+    if (hours && !hoursPattern.test(hours)) { alert('Operating hours format invalid. Use "10:00 AM - 10:00 PM".'); return; }
+    let imagePath = null, qrPath = null;
+    if (imageFile) {
+      try { imagePath = await uploadImage(imageFile); }
+      catch(e) { alert('Image upload failed: ' + e.message); return; }
+    }
+    if (qrFile) {
+      try { qrPath = await uploadImage(qrFile); }
+      catch(e) { alert('QR code upload failed: ' + e.message); return; }
+    }
+    try {
+      await apiCall('/admin-restaurants.php', {
+        method: 'POST',
+        body: JSON.stringify({ name, category, description, image: imagePath, location, price_range, hours, deal, total_seats, slot_duration, qr_code: qrPath })
+      });
+      alert('Restaurant added');
+      bootstrap.Modal.getInstance(document.getElementById('addRestaurantModal')).hide();
+      renderRestaurantTable(); renderStats();
+    } catch(e) { alert('Error: ' + e.message); }
+  });
+
+  // Edit Restaurant Modal
   function openEditRestaurantModal(id) {
     fetchRestaurantData(id);
     const modal = new bootstrap.Modal(document.getElementById('editRestaurantModal'));
@@ -269,11 +476,19 @@
     document.getElementById('editDeal').value = r.deal || '';
     document.getElementById('editSeats').value = r.total_seats || 0;
     document.getElementById('editSlotDuration').value = r.slot_duration || 60;
-    document.getElementById('editImageCurrent').value = r.image || '';
+    // Show current restaurant image preview
+    const imagePreview = document.getElementById('editImagePreview');
+    if (r.image) imagePreview.innerHTML = `<img src="${r.image}" class="image-preview">`;
+    else imagePreview.innerHTML = '';
+    // Show current QR code preview
+    const qrPreview = document.getElementById('editQrPreview');
+    if (r.qr_code) qrPreview.innerHTML = `<img src="${r.qr_code}" class="image-preview">`;
+    else qrPreview.innerHTML = '';
     document.getElementById('editImageFile').value = '';
+    document.getElementById('editQrImage').value = '';
   }
 
-  async function saveRestaurantChanges() {
+  document.getElementById('saveRestaurantChanges').addEventListener('click', async () => {
     const id = document.getElementById('editRestaurantId').value;
     const name = document.getElementById('editName').value.trim();
     const category = document.getElementById('editCuisine').value.trim();
@@ -284,53 +499,30 @@
     const deal = document.getElementById('editDeal').value.trim();
     const total_seats = parseInt(document.getElementById('editSeats').value) || 0;
     const slot_duration = parseInt(document.getElementById('editSlotDuration').value) || 60;
-    const currentImage = document.getElementById('editImageCurrent').value;
     const imageFile = document.getElementById('editImageFile').files[0];
+    const qrFile = document.getElementById('editQrImage').files[0];
     if (!name || !category || !location) { alert('Name, cuisine and location are required'); return; }
     const hoursPattern = /^\d{1,2}:\d{2}\s?(?:AM|PM)\s*-\s*\d{1,2}:\d{2}\s?(?:AM|PM)$/i;
-    if (hours && !hoursPattern.test(hours)) {
-      alert('Operating hours format invalid. Use "10:00 AM - 10:00 PM".');
-      return;
-    }
-    let imagePath = currentImage;
+    if (hours && !hoursPattern.test(hours)) { alert('Operating hours format invalid. Use "10:00 AM - 10:00 PM".'); return; }
+    let imagePath = null, qrPath = null;
     if (imageFile) {
-      const formData = new FormData();
-      formData.append('image', imageFile);
-      try {
-        const uploadRes = await fetch(`${API_BASE}/admin-upload-image.php`, {
-          method: 'POST',
-          body: formData,
-          credentials: 'same-origin'
-        });
-        const uploadData = await uploadRes.json();
-        if (uploadData.success) {
-          imagePath = uploadData.imagePath;
-        } else {
-          alert('Image upload failed: ' + (uploadData.error || 'Unknown error'));
-          return;
-        }
-      } catch(e) {
-        alert('Error uploading image: ' + e.message);
-        return;
-      }
+      try { imagePath = await uploadImage(imageFile); }
+      catch(e) { alert('Image upload failed: ' + e.message); return; }
     }
+    if (qrFile) {
+      try { qrPath = await uploadImage(qrFile); }
+      catch(e) { alert('QR code upload failed: ' + e.message); return; }
+    }
+    const updateData = { id, name, category, location, price_range, description, hours, deal, total_seats, slot_duration };
+    if (imagePath) updateData.image = imagePath;
+    if (qrPath) updateData.qr_code = qrPath;
     try {
-      await apiCall('/admin-restaurants.php', {
-        method: 'PUT',
-        body: JSON.stringify({ id, name, category, location, price_range, description, hours, deal, image: imagePath, total_seats, slot_duration })
-      });
+      await apiCall('/admin-restaurants.php', { method: 'PUT', body: JSON.stringify(updateData) });
       alert('Restaurant updated');
       bootstrap.Modal.getInstance(document.getElementById('editRestaurantModal')).hide();
       renderRestaurantTable(); renderStats();
     } catch(e) { alert('Error: ' + e.message); }
-  }
-
-  async function addRestaurant() {
-    let name = document.getElementById('restNameInput').value.trim();
-    if (!name) { alert('Name required'); return; }
-    await apiCall('/admin-restaurants.php', { method:'POST', body: JSON.stringify({ name, category: document.getElementById('restCuisine').value, location: document.getElementById('restLoc').value, price_range: document.getElementById('restPrice').value }) });
-    alert('Added'); renderRestaurantTable(); renderStats();
-  }
+  });
 
   async function deleteRestaurant(id) {
     if(confirm('Delete this restaurant? All associated data will be removed.')) {
@@ -355,13 +547,18 @@
 
   async function renderRequests() {
     let req = await apiCall('/admin-requests.php');
-    document.getElementById('requestRows').innerHTML = req.map(r=>`<tr>
-        <td>${r.id}</div>
-        <td>Owner ID: ${r.owner_id||'?'}</div>
+    document.getElementById('requestRows').innerHTML = req.map(r => `
+      <tr>
+        <td>${r.id}</td>
+        <td>${escapeHtml(r.owner_name)}</div>
         <td>${escapeHtml(r.name)}</div>
         <td><span class="status pending">${r.status}</span></div>
-        <td><button class="btn btn-sm btn-success" onclick="approveRequest(${r.id})">Approve</button> <button class="btn btn-sm btn-danger" onclick="rejectRequest(${r.id})">Reject</button></div>
-      </td>`).join('');
+        <td>
+          <button class="btn btn-sm btn-success" onclick="approveRequest(${r.id})">Approve</button>
+          <button class="btn btn-sm btn-danger" onclick="rejectRequest(${r.id})">Reject</button>
+        </td>
+      </tr>
+    `).join('');
   }
 
   async function approveRequest(id) {
@@ -376,14 +573,6 @@
 
   function escapeHtml(s) { if(!s) return ''; return s.replace(/[&<>]/g, m=>m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
 
-  const menuToggle = document.getElementById('menuToggle');
-  const sidebar = document.querySelector('.sidebar');
-  if (menuToggle && sidebar) {
-    menuToggle.addEventListener('click', () => sidebar.classList.toggle('show'));
-    document.addEventListener('click', (e) => { if (window.innerWidth <= 768 && !sidebar.contains(e.target) && e.target !== menuToggle) sidebar.classList.remove('show'); });
-  }
-
-  document.getElementById('saveRestaurantChanges').addEventListener('click', saveRestaurantChanges);
   window.addEventListener('DOMContentLoaded', async () => { await nav(); await loadAdminData(); });
 </script>
 </body>

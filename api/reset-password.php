@@ -4,8 +4,8 @@ require_once 'config/database.php';
 $pdo = getDB();
 
 $data = json_decode(file_get_contents('php://input'), true);
-$token = trim($data['token'] ?? '');
-$email = trim($data['email'] ?? '');
+$token = $data['token'] ?? '';
+$email = $data['email'] ?? '';
 $password = $data['password'] ?? '';
 
 if (!$token || !$email || !$password) {
@@ -14,26 +14,12 @@ if (!$token || !$email || !$password) {
     exit;
 }
 
-// Check token and expiry
-$stmt = $pdo->prepare("SELECT id, reset_token, token_expiry FROM users WHERE email = ?");
-$stmt->execute([$email]);
+$stmt = $pdo->prepare("SELECT id FROM users WHERE email = ? AND reset_token = ? AND token_expiry > NOW()");
+$stmt->execute([$email, $token]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
 if (!$user) {
     http_response_code(400);
-    echo json_encode(['error' => 'Email not found']);
-    exit;
-}
-
-if ($user['reset_token'] !== $token) {
-    http_response_code(400);
-    echo json_encode(['error' => 'Invalid token', 'db_token' => $user['reset_token']]);
-    exit;
-}
-
-if (strtotime($user['token_expiry']) < time()) {
-    http_response_code(400);
-    echo json_encode(['error' => 'Token expired']);
+    echo json_encode(['error' => 'Invalid or expired reset link. Please request a new one.']);
     exit;
 }
 

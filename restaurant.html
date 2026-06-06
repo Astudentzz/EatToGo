@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
   <link rel="stylesheet" href="assets/css/style.css">
   <style>
-    /* Navbar layout */
+    /* Navbar layout (unchanged) */
     .navbar-etg .container {
       display: flex;
       flex-wrap: wrap;
@@ -118,22 +118,90 @@
     }
 
     /* Restaurant page specific styles */
-    .restaurant-hero-img { background: linear-gradient(135deg, #ffe1ce, #fff3e9); padding: 40px 20px; text-align: center; border-radius: 24px; margin-bottom: 30px; overflow: auto; }
-    .hero-meta { display: flex; justify-content: center; gap: 20px; margin-top: 16px; margin-bottom: 20px; flex-wrap: wrap; }
-    .slot { border: 2px solid var(--cream-dark); border-radius: 999px; padding: 9px 15px; background: white; font-weight: 700; transition: .2s; cursor: pointer; }
-    .slot.active { background: var(--orange); border-color: var(--orange); color: white; }
-    .review-card { background: var(--cream); border-radius: 16px; padding: 16px; margin-bottom: 12px; }
-    .restaurant-img { max-width: 100%; height: auto; border-radius: 24px; margin-top: 20px; max-height: 300px; object-fit: cover; width: auto; box-shadow: 0 4px 12px rgba(0,0,0,.1); }
-    .menu-img { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; }
+    .restaurant-hero {
+      position: relative;
+      background-size: cover;
+      background-position: center;
+      border-radius: 24px;
+      margin-bottom: 30px;
+      overflow: hidden;
+    }
+    .restaurant-hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.55);
+      z-index: 1;
+    }
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      padding: 60px 30px;
+      color: white;
+      text-align: left;
+    }
+    .hero-content .badge-etg {
+      background: rgba(255,255,255,0.2);
+      backdrop-filter: blur(4px);
+      color: white;
+      border: none;
+    }
+    .hero-meta {
+      display: flex;
+      justify-content: flex-start;
+      gap: 20px;
+      margin-top: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .hero-meta span {
+      background: rgba(0,0,0,0.5);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 14px;
+    }
+    .slot {
+      border: 2px solid var(--cream-dark);
+      border-radius: 999px;
+      padding: 9px 15px;
+      background: white;
+      font-weight: 700;
+      transition: .2s;
+      cursor: pointer;
+    }
+    .slot.active {
+      background: var(--orange);
+      border-color: var(--orange);
+      color: white;
+    }
+    .review-card {
+      background: var(--cream);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    .menu-img {
+      width: 50px;
+      height: 50px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
     .summary-card {
       position: sticky;
       top: 90px;
     }
     @media (max-width: 768px) {
-      .restaurant-hero-img { padding: 20px 15px; }
-      .restaurant-img { max-height: 200px; }
+      .hero-content {
+        padding: 40px 20px;
+        text-align: center;
+      }
+      .hero-meta {
+        justify-content: center;
+      }
       .slot { padding: 6px 12px; font-size: 14px; }
-      .hero-meta { gap: 12px; font-size: 12px; }
       .summary-card {
         position: static;
         margin-top: 1.5rem;
@@ -147,7 +215,6 @@
 <nav class="navbar-etg">
   <div class="container">
     <a class="logo" href="index.html">Eat<span>To</span>Go</a>
-    <!-- Desktop navigation -->
     <div class="desktop-nav" id="mainNav"></div>
     <div class="right-group">
       <div id="authArea"></div>
@@ -156,7 +223,6 @@
   </div>
 </nav>
 
-<!-- Mobile sidebar -->
 <div class="mobile-sidebar" id="mobileSidebar">
   <button class="close-sidebar" id="closeSidebarBtn">×</button>
   <div id="mobileNavLinks"></div>
@@ -266,22 +332,42 @@
     } catch(e) { console.error(e); }
   }
 
+  // Helper to compute average rating from feedbacks array
+  function getAverageRating(feedbacks) {
+    if (!feedbacks || feedbacks.length === 0) return null;
+    const sum = feedbacks.reduce((acc, f) => acc + f.rating, 0);
+    const avg = sum / feedbacks.length;
+    return avg.toFixed(1);
+  }
+
   function renderPage(restaurant, menu, feedbacks) {
     const today = new Date().toISOString().split('T')[0];
+    const avgRating = getAverageRating(feedbacks);
+    const reviewCount = feedbacks.length;
+    let ratingDisplay = '';
+    if (avgRating === null) {
+      ratingDisplay = '⭐ No reviews yet';
+    } else {
+      ratingDisplay = `⭐ ${avgRating} (${reviewCount} review${reviewCount !== 1 ? 's' : ''})`;
+    }
+
     const reviewsHtml = feedbacks.length ? feedbacks.map(f => `<div class="review-card"><b>⭐ ${f.rating} — ${escapeHtml(f.customer_name)}</b><p>${escapeHtml(f.comment)}</p><small>${new Date(f.created_at).toLocaleDateString()}</small></div>`).join('') : '<p class="text-muted">No reviews yet.</p>';
+    
+    // Hero background image
+    const bgImage = restaurant.image || 'assets/img/default-restaurant.jpg';
+    
     const html = `
-      <div class="restaurant-hero-img">
-        <div class="container">
+      <div class="restaurant-hero" style="background-image: url('${bgImage}');">
+        <div class="hero-content">
           <span class="badge-etg">${escapeHtml(restaurant.category || 'Restaurant')} • ${escapeHtml(restaurant.location || 'Malaysia')}</span>
           <h1 class="mt-3">${escapeHtml(restaurant.name)}</h1>
           <p>${escapeHtml(restaurant.description || 'Reserve your table and pre-order food.')}</p>
           <div class="hero-meta">
-            <span>⭐ ${restaurant.rating || '4.5'}</span>
+            <span>${ratingDisplay}</span>
             <span>📍 ${escapeHtml(restaurant.location || 'Malaysia')}</span>
             <span>💵 ${escapeHtml(restaurant.price_range || 'RM10-50')}</span>
             <span>🕒 ${escapeHtml(restaurant.hours || '10:00 AM - 10:00 PM')}</span>
           </div>
-          <img src="${restaurant.image || 'assets/img/default-restaurant.jpg'}" class="restaurant-img" alt="${escapeHtml(restaurant.name)}" onerror="this.src='assets/img/default-restaurant.jpg'">
         </div>
       </div>
       <div class="row g-4 align-items-start">
@@ -301,7 +387,6 @@
             </div>
             <h5 class="mt-4">Available Time Slots</h5>
             <div class="d-flex gap-2 flex-wrap" id="slotArea"></div>
-            <div class="alert alert-warning mt-3">💵 Cash-only payment — pay at counter.</div>
           </div>
           <div class="card-etg p-4 mb-4">
             <h2>Menu Preview</h2>
@@ -340,7 +425,11 @@
 
   async function reserve() {
     const session = await checkSession();
-    if (!session.loggedIn || session.user.role !== 'customer') { alert('Please login as customer.'); window.location.href = 'login.html'; return; }
+    if (!session.loggedIn || session.user.role !== 'customer') { 
+        alert('Please login as customer.'); 
+        window.location.href = 'login.html'; 
+        return; 
+    }
     const date = document.getElementById('resDate').value;
     const time = document.getElementById('selectedTime').innerText;
     const guests = parseInt(document.getElementById('guests').value);
@@ -353,10 +442,23 @@
       return;
     }
     try {
-      const result = await apiCall('/reservations.php', { method: 'POST', body: JSON.stringify({ restaurant_id: restaurantId, date, time, guests }) });
-      if (result.id) window.location.href = `preorder.html?reservation_id=${result.id}&restaurant_id=${restaurantId}`;
-      else alert('Failed to create reservation.');
-    } catch(err) { alert('Error: ' + err.message); }
+      const result = await apiCall('/reservations.php', { 
+          method: 'POST', 
+          body: JSON.stringify({ restaurant_id: restaurantId, date, time, guests }) 
+      });
+      if (result.id) {
+          window.location.href = `preorder.html?reservation_id=${result.id}&restaurant_id=${restaurantId}`;
+      } else {
+          alert('Failed to create reservation.');
+      }
+    } catch(err) {
+      // Handle duplicate reservation error (409 Conflict)
+      if (err.message && err.message.includes('already have a reservation')) {
+          alert('You have already booked this restaurant for the same date and time. Please choose a different time slot or date.');
+      } else {
+          alert('Error: ' + err.message);
+      }
+    }
   }
 
   function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
@@ -384,7 +486,7 @@
   }
 
   window.addEventListener('DOMContentLoaded', async () => {
-    await nav(); // from api.js
+    await nav();
     await setupNav();
     await loadRestaurantDetail();
   });

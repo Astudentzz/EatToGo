@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
   <link rel="stylesheet" href="assets/css/style.css">
   <style>
-    /* Navbar styles (same as index) - include full block */
+    /* Navbar styles (same as before) */
     .navbar-etg .container {
       display: flex;
       flex-wrap: wrap;
@@ -34,12 +34,31 @@
     .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1050; display: none; }
     .sidebar-overlay.active { display: block; }
 
+    /* Order tracker */
     .order-tracker { display: flex; flex-direction: column; gap: 0; position: relative; margin-top: 20px; }
     .tracker-step { display: flex; gap: 20px; align-items: flex-start; position: relative; padding-bottom: 30px; }
-    .step-dot { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; border: 3px solid var(--cream-dark); background: white; z-index: 1; }
+    .step-dot { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; border: 3px solid var(--cream-dark); background: white; z-index: 1; flex-shrink: 0; }
     .step-dot.done { background: var(--green); border-color: var(--green); color: white; }
     .step-dot.active { background: var(--orange); border-color: var(--orange); color: white; box-shadow: 0 0 0 6px rgba(255,107,53,.18); }
     .step-dot.pending { background: white; border-color: var(--cream-dark); color: var(--gray); }
+    .step-dot.rejected { background: #dc3545; border-color: #dc3545; color: white; }
+    .step-body { flex: 1; }
+    .step-body h5 { margin-bottom: 4px; font-weight: 800; }
+    .step-body p { color: var(--gray); margin-bottom: 0; font-size: 14px; }
+    .receipt-card { background: #fffaf5; border-radius: 20px; padding: 20px; margin-top: 0; border: 1px solid var(--cream-dark); }
+    .receipt-card h5 { border-left: 4px solid var(--orange); padding-left: 12px; margin-bottom: 16px; }
+    .order-item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed #f0e0d0; }
+    .order-item:last-child { border-bottom: none; }
+    .status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+    .status-badge.pending { background: #fff3cd; color: #856404; }
+    .status-badge.preparing { background: #cfe2ff; color: #084298; }
+    .status-badge.ready { background: #d4edda; color: #155724; }
+    .status-badge.served { background: #d1ecf1; color: #0c5460; }
+    @media (max-width: 576px) {
+      .tracker-step { gap: 12px; }
+      .step-dot { width: 32px; height: 32px; font-size: 14px; }
+      .step-body h5 { font-size: 16px; }
+    }
   </style>
 </head>
 <body>
@@ -64,7 +83,7 @@
 <section class="page-head">
   <div class="container">
     <h1>Order Status</h1>
-    <p class="text-muted">Track your reservation and pre-order.</p>
+    <p class="text-muted">Track your reservation and pre‑order in real time.</p>
   </div>
 </section>
 
@@ -75,16 +94,10 @@
         <div class="card-etg p-4">
           <h3>Booking Progress</h3>
           <div id="trackerContainer"></div>
-          <div id="receiptBox" class="mt-4"></div>
         </div>
       </div>
       <div class="col-lg-4">
-        <div class="card-etg p-4">
-          <h3>Arrival Confirmation</h3>
-          <p class="text-muted">Confirm only when you reach the restaurant.</p>
-          <button id="arrivalBtn" class="btn btn-etg w-100" onclick="confirmArrival()">I Have Arrived</button>
-          <div id="arrivalMsg" class="mt-2 small text-muted"></div>
-        </div>
+        <div id="receiptBox" class="mt-0"></div>
       </div>
     </div>
   </div>
@@ -111,11 +124,181 @@
   if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
   if (overlay) overlay.addEventListener('click', closeSidebar);
 
-  let currentReservation = null, currentOrder = null;
-  async function getReservationId() { const urlParams = new URLSearchParams(window.location.search); let rid = urlParams.get('reservation_id'); if (rid) return parseInt(rid); const session = await checkSession(); if (!session.loggedIn) return null; const reservations = await apiCall('/user-reservations.php'); if (!reservations.length) return null; reservations.sort((a,b) => b.id - a.id); return reservations[0].id; }
-  async function loadOrderStatus() { const trackerDiv = document.getElementById('trackerContainer'); const receiptDiv = document.getElementById('receiptBox'); const arrivalBtn = document.getElementById('arrivalBtn'); const arrivalMsg = document.getElementById('arrivalMsg'); try { const rid = await getReservationId(); if (!rid) { trackerDiv.innerHTML = '<p class="text-muted">No reservation found. <a href="index.html">Make a reservation</a> first.</p>'; arrivalBtn.disabled = true; arrivalMsg.innerText = 'No active reservation.'; return; } const reservations = await apiCall('/user-reservations.php'); currentReservation = reservations.find(r => r.id === rid); if (!currentReservation) throw new Error('Reservation not found'); currentOrder = currentReservation.order || null; const steps = [ { label: 'Reservation Submitted', desc: `Booking #${currentReservation.id} • ${currentReservation.reservation_date} ${currentReservation.reservation_time}`, done: true }, { label: 'Reservation Confirmed', desc: currentReservation.status === 'confirmed' ? 'Confirmed by staff.' : (currentReservation.status === 'rejected' ? 'Rejected.' : 'Pending confirmation.'), done: currentReservation.status === 'confirmed', active: currentReservation.status === 'pending', rejected: currentReservation.status === 'rejected' }, { label: 'Pre-Order Received', desc: currentOrder ? 'Order received.' : 'No pre-order placed.', done: !!currentOrder, active: currentReservation.status === 'confirmed' && !currentOrder }, { label: 'Being Prepared', desc: currentOrder ? (currentOrder.status === 'ready' ? 'Ready for pickup.' : (currentOrder.status === 'preparing' ? 'Preparing...' : 'Pending')) : '—', done: currentOrder && currentOrder.status === 'ready', active: currentOrder && (currentOrder.status === 'pending' || currentOrder.status === 'preparing') }, { label: 'Ready – Pay at Counter', desc: 'Pay when you arrive.', done: currentOrder && currentOrder.status === 'ready' && currentReservation.arrival_confirmed, active: currentOrder && currentOrder.status === 'ready' && !currentReservation.arrival_confirmed }, { label: 'Arrived', desc: currentReservation.arrival_confirmed ? '✅ Arrival confirmed.' : 'Confirm when at restaurant.', done: currentReservation.arrival_confirmed } ]; const stepsHtml = steps.map(s => { let cls = s.rejected ? 'pending' : s.done ? 'done' : s.active ? 'active' : 'pending'; let icon = s.rejected ? '✕' : s.done ? '✓' : s.active ? '●' : '○'; return `<div class="tracker-step"><div class="step-dot ${cls}">${icon}</div><div class="step-body"><h5>${s.label}</h5><p>${s.desc}</p></div></div>`; }).join(''); trackerDiv.innerHTML = `<div class="order-tracker">${stepsHtml}</div>`; receiptDiv.innerHTML = `<div class="receipt-card"><h5>Booking Receipt</h5><p><b>Restaurant:</b> ${escapeHtml(currentReservation.restaurant_name)}</p><p><b>Date/Time:</b> ${currentReservation.reservation_date} ${currentReservation.reservation_time}</p><p><b>Guests:</b> ${currentReservation.num_people}</p>${currentOrder ? `<p><b>Order Status:</b> <span class="status-badge ${currentOrder.status}">${currentOrder.status}</span></p>` : ''}</div>`; if (currentReservation.status !== 'confirmed') { arrivalBtn.disabled = true; arrivalMsg.innerText = 'Awaiting staff confirmation.'; } else if (currentReservation.arrival_confirmed) { arrivalBtn.disabled = true; arrivalMsg.innerText = 'Already confirmed.'; } else { arrivalBtn.disabled = false; arrivalMsg.innerText = 'Confirm only when physically at the restaurant.'; } } catch(err) { console.error(err); trackerDiv.innerHTML = '<p class="text-danger">Failed to load order status.</p>'; } }
-  async function confirmArrival() { if (!currentReservation) return; try { await apiCall('/arrival.php', { method: 'POST', body: JSON.stringify({ reservation_id: currentReservation.id }) }); alert('Arrival confirmed! Enjoy your meal.'); window.location.reload(); } catch(err) { alert('Error: ' + err.message); } }
-  function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
+  let currentReservation = null;
+  let currentOrder = null;
+
+  async function getReservationId() {
+    const urlParams = new URLSearchParams(window.location.search);
+    let rid = urlParams.get('reservation_id');
+    if (rid) return parseInt(rid);
+    const session = await checkSession();
+    if (!session.loggedIn) return null;
+    const reservations = await apiCall('/user-reservations.php');
+    if (!reservations.length) return null;
+    reservations.sort((a,b) => b.id - a.id);
+    return reservations[0].id;
+  }
+
+  async function loadOrderStatus() {
+    const trackerDiv = document.getElementById('trackerContainer');
+    const receiptDiv = document.getElementById('receiptBox');
+    try {
+      const rid = await getReservationId();
+      if (!rid) {
+        trackerDiv.innerHTML = '<p class="text-muted">No reservation found. <a href="index.html">Make a reservation</a> first.</p>';
+        receiptDiv.innerHTML = '';
+        return;
+      }
+      const reservations = await apiCall('/user-reservations.php');
+      currentReservation = reservations.find(r => r.id === rid);
+      if (!currentReservation) throw new Error('Reservation not found');
+      currentOrder = currentReservation.order || null;
+
+      // Build steps dynamically
+      let steps = [];
+
+      // Step 1: Reservation Submitted
+      steps.push({
+        label: 'Reservation Submitted',
+        desc: `Booking #${currentReservation.id} • ${currentReservation.reservation_date} ${currentReservation.reservation_time}`,
+        done: true,
+        active: false,
+        rejected: false
+      });
+
+      // Step 2: Reservation Confirmed
+      if (currentReservation.status === 'rejected') {
+        steps.push({
+          label: 'Reservation Confirmed',
+          desc: 'Your reservation was rejected.',
+          done: false,
+          active: false,
+          rejected: true
+        });
+      } else {
+        steps.push({
+          label: 'Reservation Confirmed',
+          desc: currentReservation.status === 'confirmed' ? 'Confirmed by restaurant staff.' : 'Waiting for staff confirmation.',
+          done: currentReservation.status === 'confirmed',
+          active: currentReservation.status === 'pending',
+          rejected: false
+        });
+      }
+
+      // If rejected, stop adding further steps
+      if (currentReservation.status === 'rejected') {
+        renderTracker(steps, receiptDiv);
+        return;
+      }
+
+      // Step 3: Pre-Order Received
+      steps.push({
+        label: 'Pre-Order Received',
+        desc: currentOrder ? 'Your order has been received.' : 'No pre‑order placed.',
+        done: !!currentOrder,
+        active: currentReservation.status === 'confirmed' && !currentOrder,
+        rejected: false
+      });
+
+      // Step 4: Being Prepared (only if order exists)
+      if (currentOrder) {
+        let orderStatusText = '';
+        let orderDone = false;
+        let orderActive = false;
+        if (currentOrder.status === 'pending') {
+          orderStatusText = 'Order received, kitchen will start soon.';
+          orderActive = true;
+        } else if (currentOrder.status === 'preparing') {
+          orderStatusText = 'Chef is preparing your meal.';
+          orderActive = true;
+        } else if (currentOrder.status === 'ready') {
+          orderStatusText = 'Your meal is ready for pickup!';
+          orderDone = true;
+        } else if (currentOrder.status === 'served') {
+          orderStatusText = 'Order has been served.';
+          orderDone = true;
+        } else {
+          orderStatusText = 'Processing...';
+        }
+        steps.push({
+          label: 'Being Prepared',
+          desc: orderStatusText,
+          done: orderDone,
+          active: orderActive,
+          rejected: false
+        });
+      } else {
+        steps.push({
+          label: 'Being Prepared',
+          desc: 'No pre‑order to prepare.',
+          done: false,
+          active: false,
+          rejected: false
+        });
+      }
+
+      // Step 5: Arrived (informational only, no button)
+      steps.push({
+        label: 'Arrived',
+        desc: currentReservation.arrival_confirmed ? '✅ You have arrived. Enjoy your meal!' : 'Arrival will be confirmed by staff when you check in.',
+        done: currentReservation.arrival_confirmed,
+        active: false,
+        rejected: false
+      });
+
+      renderTracker(steps, receiptDiv);
+    } catch (err) {
+      console.error(err);
+      trackerDiv.innerHTML = '<p class="text-danger">Failed to load order status.</p>';
+    }
+  }
+
+  function renderTracker(steps, receiptDiv) {
+    const stepsHtml = steps.map(s => {
+      let cls = s.rejected ? 'rejected' : s.done ? 'done' : s.active ? 'active' : 'pending';
+      let icon = s.rejected ? '✕' : s.done ? '✓' : s.active ? '●' : '○';
+      return `
+        <div class="tracker-step">
+          <div class="step-dot ${cls}">${icon}</div>
+          <div class="step-body">
+            <h5>${escapeHtml(s.label)}</h5>
+            <p>${escapeHtml(s.desc)}</p>
+          </div>
+        </div>
+      `;
+    }).join('');
+    document.getElementById('trackerContainer').innerHTML = `<div class="order-tracker">${stepsHtml}</div>`;
+
+    // Build receipt with itemized pre-order
+    let receiptHtml = `<div class="receipt-card"><h5>Booking Receipt</h5>`;
+    receiptHtml += `<p><b>Restaurant:</b> ${escapeHtml(currentReservation.restaurant_name)}</p>`;
+    receiptHtml += `<p><b>Date/Time:</b> ${currentReservation.reservation_date} ${currentReservation.reservation_time}</p>`;
+    receiptHtml += `<p><b>Guests:</b> ${currentReservation.num_people}</p>`;
+
+    if (currentOrder && currentOrder.items && currentOrder.items.length) {
+      receiptHtml += `<hr><div><b>Pre‑ordered items:</b></div>`;
+      let total = 0;
+      for (const item of currentOrder.items) {
+        const subtotal = item.quantity * item.price;
+        total += subtotal;
+        receiptHtml += `<div class="order-item"><span>${item.emoji || '🍽️'} ${escapeHtml(item.name)} × ${item.quantity}</span><span>RM ${subtotal.toFixed(2)}</span></div>`;
+      }
+      receiptHtml += `<div class="order-item fw-bold mt-2"><span>Total</span><span>RM ${total.toFixed(2)}</span></div>`;
+    } else if (currentOrder && currentOrder.total_amount) {
+      receiptHtml += `<hr><div class="order-item"><b>Total:</b> RM ${parseFloat(currentOrder.total_amount).toFixed(2)}</div>`;
+    } else {
+      receiptHtml += `<hr><p class="text-muted">No pre‑order placed.</p>`;
+    }
+
+    receiptHtml += `</div>`;
+    receiptDiv.innerHTML = receiptHtml;
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
+  }
+
   async function setupNav() {
     const s = await checkSession();
     const desktopNav = document.getElementById('mainNav');
@@ -137,7 +320,12 @@
     desktopNav.innerHTML = navHtml;
     if (mobileNav) mobileNav.innerHTML = navHtml;
   }
-  window.addEventListener('DOMContentLoaded', async () => { await nav(); await setupNav(); await loadOrderStatus(); });
+
+  window.addEventListener('DOMContentLoaded', async () => {
+    await nav();
+    await setupNav();
+    await loadOrderStatus();
+  });
 </script>
 </body>
 </html>

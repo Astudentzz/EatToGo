@@ -3,6 +3,23 @@ header('Content-Type: application/json');
 require_once 'config/database.php';
 $pdo = getDB();
 
+// Include SMTP configuration
+$smtpConfigPath = __DIR__ . '/../contact/config.php';
+if (!file_exists($smtpConfigPath)) {
+    http_response_code(500);
+    echo json_encode(['error' => 'SMTP configuration missing']);
+    exit;
+}
+require_once $smtpConfigPath;
+
+// Include PHPMailer
+require_once __DIR__ . '/../lib/PHPMailer/src/PHPMailer.php';
+require_once __DIR__ . '/../lib/PHPMailer/src/SMTP.php';
+require_once __DIR__ . '/../lib/PHPMailer/src/Exception.php';
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
 $data = json_decode(file_get_contents('php://input'), true);
 $email = trim($data['email'] ?? '');
 
@@ -26,54 +43,39 @@ try {
     $stmt = $pdo->prepare("UPDATE users SET reset_token = ?, token_expiry = ? WHERE id = ?");
     $stmt->execute([$token, $expiry, $user['id']]);
 
-    $resetLink = "http://localhost/EatToGo/reset-password.html?token=$token&email=" . urlencode($email);
+    $protocol = isset($_SERVER['HTTPS']) ? 'https://' : 'http://';
+    $domain = $_SERVER['HTTP_HOST'];
+    $resetLink = $protocol . $domain . "/reset-password.html?token=$token&email=" . urlencode($email);
 
-    // Load SMTP credentials from external config file (ignored by Git)
-    $configPath = __DIR__ . '/../config/smtp.php';
-    if (!file_exists($configPath)) {
-        // Fallback to environment variables (safer for production)
-        $smtp_host = getenv('SMTP_HOST') ?: 'smtp.gmail.com';
-        $smtp_username = getenv('SMTP_USERNAME') ?: '';
-        $smtp_password = getenv('SMTP_PASSWORD') ?: '';
-        $smtp_port = getenv('SMTP_PORT') ?: 587;
-        $smtp_secure = getenv('SMTP_SECURE') ?: 'tls';
-    } else {
-        require $configPath;
-    }
+    $mail = new PHPMailer(true);
+    $mail->isSMTP();
+    $mail->Host       = SMTP_HOST;
+    $mail->SMTPAuth   = true;
+    $mail->Username   = SMTP_USERNAME;
+    $mail->Password   = SMTP_PASSWORD;
+    $mail->SMTPSecure = SMTP_ENCRYPTION;
+    $mail->Port       = SMTP_PORT;
 
-    // Include PHPMailer
-    require_once __DIR__ . '/../lib/PHPMailer/PHPMailer.php';
-    require_once __DIR__ . '/../lib/PHPMailer/SMTP.php';
-    require_once __DIR__ . '/../lib/PHPMailer/Exception.php';
+    $mail->setFrom(MAIL_FROM_ADDRESS, MAIL_FROM_NAME);
+    $mail->addAddress($email, $user['name']);
+    $mail->isHTML(false);                    // plain text
+    $mail->Subject = 'Password reset request for EatToGo';
+    $mail->Body    = "Hello {$user['name']},\n\n"
+                   . "We received a request to reset the password for your EatToGo account.\n\n"
+                   . "Click or copy the link below to set a new password (valid for 1 hour):\n"
+                   . $resetLink . "\n\n"
+                   . "If you did not request this, please ignore this email. Your password will not change.\n\n"
+                   . "— EatToGo Team";
 
-    $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
-    try {
-        $mail->isSMTP();
-        $mail->Host       = $smtp_host;
-        $mail->SMTPAuth   = true;
-        $mail->Username   = $smtp_username;
-        $mail->Password   = $smtp_password;
-        $mail->SMTPSecure = $smtp_secure;
-        $mail->Port       = $smtp_port;
-
-        $mail->setFrom('noreply@eattogo.com', 'EatToGo Support');
-        $mail->addAddress($email, $user['name']);
-        $mail->isHTML(true);
-        $mail->Subject = 'Password Reset - EatToGo';
-        $mail->Body    = "Hello {$user['name']},<br><br>Click the link to reset your password:<br><a href='$resetLink'>$resetLink</a><br><br>Expires in 1 hour.";
-        $mail->AltBody = "Hello {$user['name']},\n\nReset link: $resetLink\n\nExpires in 1 hour.";
-        $mail->send();
-        echo json_encode(['success' => true, 'message' => 'Reset link sent to your email.']);
-        exit;
-    } catch (\PHPMailer\PHPMailer\Exception $e) {
-        error_log('Mail error: ' . $mail->ErrorInfo);
-        http_response_code(500);
-        echo json_encode(['success' => false, 'error' => 'Could not send email.']);
-        exit;
-    }
+    $mail->send();
+    echo json_encode(['success' => true, 'message' => 'Reset link sent to your email.']);
+} catch (Exception $e) {
+    error_log('Mail error: ' . $mail->ErrorInfo);
+    http_response_code(500);
+    echo json_encode(['error' => 'Could not send email. Please try again later.']);
 } catch (Throwable $e) {
     error_log('Forgot password error: ' . $e->getMessage());
     http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Server error.']);
+    echo json_encode(['error' => 'Server error.']);
 }
 ?>

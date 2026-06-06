@@ -29,7 +29,7 @@ if (!in_array($ext, $allowed)) {
 $filename = uniqid() . '.' . $ext;
 $destination = $uploadDir . $filename;
 if (move_uploaded_file($_FILES['qr_code']['tmp_name'], $destination)) {
-    $filePath = '/EatToGo/uploads/qrcodes/' . $filename;
+    $filePath = '/uploads/qrcodes/' . $filename;
     echo json_encode(['success' => true, 'filePath' => $filePath]);
 } else {
     http_response_code(500);
