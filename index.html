@@ -38,7 +38,6 @@
       cursor: pointer;
       padding: 0;
     }
-    /* Mobile layout: hamburger below logo, auth area top-right */
     @media (max-width: 768px) {
       .navbar-etg .container {
         display: grid;
@@ -128,6 +127,53 @@
     .sidebar-overlay.active {
       display: block;
     }
+
+    /* Cuisine filter buttons (dynamic) */
+    .mood-filter-bar {
+      background: rgba(255,255,255,0.9);
+      border-radius: 48px;
+      padding: 8px 18px;
+      display: inline-flex;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      backdrop-filter: blur(4px);
+    }
+    .mood-label {
+      font-weight: 700;
+      font-size: 15px;
+      color: #1C1208;
+      margin-right: 6px;
+      white-space: nowrap;
+    }
+    .mood-btn {
+      background: none;
+      border: 2px solid transparent;
+      border-radius: 999px;
+      padding: 6px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #6c5a48;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .mood-btn:hover {
+      color: var(--orange);
+      border-color: rgba(255,107,53,0.3);
+    }
+    .mood-btn.active {
+      border-color: var(--orange);
+      color: var(--orange);
+      font-weight: 700;
+      background: rgba(255,107,53,0.08);
+    }
+    @media (max-width: 600px) {
+      .mood-filter-bar { border-radius: 24px; padding: 10px 14px; }
+      .mood-btn { padding: 4px 12px; font-size: 12px; }
+    }
   </style>
 </head>
 <body>
@@ -135,7 +181,6 @@
 <nav class="navbar-etg">
   <div class="container">
     <a class="logo" href="index.html">Eat<span>To</span>Go</a>
-    <!-- Desktop navigation -->
     <div class="desktop-nav" id="mainNav"></div>
     <div class="right-group">
       <div id="authArea"></div>
@@ -154,21 +199,27 @@
 <section class="hero">
   <div class="container text-center">
     <span class="badge-etg">Reserve + Pre-Order • EatToGo</span>
-    <h1 class="mt-4">Book your table, <span class="highlight">pre-order food</span> &amp; enjoy faster dining</h1>
-    <p class="lead text-muted mt-3">Search restaurants, choose time slots, pre-order meals, pay at counter, and confirm arrival.</p>
+    <h1 class="mt-4">Dine smarter,<br><span class="highlight">Order faster</span></h1>
+    <p class="lead text-muted mt-3">Reserve a table, pre-order your meal, and skip the wait.</p>
+    
+    <!-- Search bar -->
     <div class="search-card glass-card p-4">
       <div class="row g-3 justify-content-center">
-        <div class="col-md-6 col-lg-5">
+        <div class="col-md-8 col-lg-9">
           <input type="text" id="searchInput" class="form-control form-control-lg" placeholder="Search by restaurant or cuisine..." autocomplete="off">
         </div>
-        <div class="col-md-3 col-lg-2">
-          <select id="cuisineFilter" class="form-select form-select-lg">
-            <option value="">All Cuisines</option>
-          </select>
-        </div>
-        <div class="col-md-3 col-lg-2">
+        <div class="col-md-4 col-lg-3">
           <button id="searchButton" class="btn btn-etg btn-lg w-100">Search</button>
         </div>
+      </div>
+    </div>
+
+    <!-- Dynamic cuisine filter buttons (loaded from DB) -->
+    <div style="text-align:center; margin-top: 20px;">
+      <div class="mood-filter-bar" id="cuisineFilterBar">
+        <span class="mood-label">Cuisine:</span>
+        <button class="mood-btn active" data-cuisine="" onclick="setCuisine(this)">All Cuisines</button>
+        <!-- buttons will be inserted here dynamically -->
       </div>
     </div>
   </div>
@@ -215,26 +266,58 @@
 
   function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
 
+  // Populate dynamic cuisine buttons
+  function populateCuisineButtons(cuisines) {
+    const container = document.getElementById('cuisineFilterBar');
+    // Keep the "All Cuisines" button and remove any other dynamic ones (except the first)
+    const allBtn = container.querySelector('.mood-btn.active');
+    if (!allBtn || allBtn.getAttribute('data-cuisine') !== '') {
+      // Rebuild from scratch safely
+      container.innerHTML = `<span class="mood-label">Cuisine:</span>
+        <button class="mood-btn active" data-cuisine="" onclick="setCuisine(this)">All Cuisines</button>`;
+    }
+    for (let c of cuisines) {
+      const btn = document.createElement('button');
+      btn.className = 'mood-btn';
+      btn.setAttribute('data-cuisine', c);
+      btn.setAttribute('onclick', 'setCuisine(this)');
+      btn.innerHTML = `<span>${escapeHtml(c)}</span>`;
+      container.appendChild(btn);
+    }
+  }
+
   async function renderRestaurants() {
     const container = document.getElementById('restaurantList');
     try {
       allRestaurants = await apiCall('/restaurants.php');
+      // Extract unique cuisines
       const cuisineSet = new Set();
       allRestaurants.forEach(r => { if (r.category) cuisineSet.add(r.category); });
-      const cuisineSelect = document.getElementById('cuisineFilter');
-      cuisineSelect.innerHTML = '<option value="">All Cuisines</option>' + 
-        Array.from(cuisineSet).sort().map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+      const uniqueCuisines = Array.from(cuisineSet).sort();
+      populateCuisineButtons(uniqueCuisines);
       applyFilter();
     } catch (err) {
       container.innerHTML = '<div class="col-12 text-center text-danger">Failed to load restaurants.</div>';
     }
   }
 
+  function setCuisine(btn) {
+    // Toggle active state
+    if (btn.classList.contains('active') && btn.getAttribute('data-cuisine') === '') {
+      // Already "All" active – do nothing
+      return;
+    }
+    // Remove active from all
+    document.querySelectorAll('#cuisineFilterBar .mood-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentCuisine = btn.getAttribute('data-cuisine');
+    applyFilter();
+  }
+
   function applyFilter() {
     const container = document.getElementById('restaurantList');
     const noResults = document.getElementById('noResultsMsg');
     const term = currentSearchTerm.trim().toLowerCase();
-    const cuisine = currentCuisine;
     let filtered = allRestaurants;
     if (term) {
       filtered = filtered.filter(r => 
@@ -242,8 +325,8 @@
         (r.category && r.category.toLowerCase().includes(term))
       );
     }
-    if (cuisine) {
-      filtered = filtered.filter(r => r.category === cuisine);
+    if (currentCuisine) {
+      filtered = filtered.filter(r => r.category === currentCuisine);
     }
     if (filtered.length === 0) {
       container.innerHTML = '';
@@ -267,7 +350,6 @@
 
   function updateFilters() {
     currentSearchTerm = document.getElementById('searchInput').value;
-    currentCuisine = document.getElementById('cuisineFilter').value;
     applyFilter();
   }
 
@@ -298,11 +380,10 @@
     await setupNav();
     await renderRestaurants();
     const searchInput = document.getElementById('searchInput');
-    const cuisineSelect = document.getElementById('cuisineFilter');
     const searchButton = document.getElementById('searchButton');
     searchInput.addEventListener('input', updateFilters);
-    cuisineSelect.addEventListener('change', updateFilters);
     searchButton.addEventListener('click', updateFilters);
+    // Optional: auto-redirect for admin/staff/owner – same as old index
     const session = (await checkSession()).loggedIn ? (await checkSession()).user : null;
     if (session && (session.role === 'admin' || session.role === 'staff' || session.role === 'owner')) {
       if (session.role === 'admin') location.href = 'admin.html';
