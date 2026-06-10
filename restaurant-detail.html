@@ -289,6 +289,8 @@
       // Hero background image (same as restaurant.html)
       const bgImage = restaurant.image || 'assets/img/default-restaurant.jpg';
       
+      // MODIFIED: Removed the gallery-grid section (Main Dining, Specials, Seating, Gallery boxes)
+      // Also preserved all other sections: about, menu highlights, reviews, summary card.
       const html = `
         <div class="restaurant-hero" style="background-image: url('${bgImage}');">
           <div class="hero-content">
@@ -310,12 +312,7 @@
               <p>${escapeHtml(restaurant.description || 'We offer authentic cuisine.')}</p>
               <p class="text-muted">Promotion: <b>${escapeHtml(restaurant.deal || 'Special combo deals')}</b></p>
             </div>
-            <div class="gallery-grid mb-4">
-              <div>🍽️<br><small>Main Dining</small></div>
-              <div>🍣<br><small>Specials</small></div>
-              <div>🪑<br><small>Seating</small></div>
-              <div>📸<br><small>Gallery</small></div>
-            </div>
+            <!-- Gallery grid removed as requested: no "Main Dining", "Specials", "Seating", "Photo boxes" -->
             <div class="card-etg p-4 mb-4">
               <h2>Menu Highlights</h2>
               <div class="row g-3">
@@ -344,14 +341,17 @@
               <p><b>Promotion:</b> ${escapeHtml(restaurant.deal || 'Check latest deals')}</p>
               <p><b>Total Seats:</b> ${restaurant.total_seats || 'N/A'}</p>
               <hr>
-              <a class="btn btn-etg w-100" href="restaurant-detail.html?id=${restaurant.id}">Reserve a Table →</a>
+              <a class="btn btn-etg w-100" href="reservation.html?restaurant_id=${restaurant.id}">Reserve a Table →</a>
               <a class="btn btn-outline-etg w-100 mt-2" href="index.html">← Browse All</a>
             </div>
           </div>
         </div>
       `;
       document.getElementById('restaurantInfoPage').innerHTML = html;
-    } catch(err) { document.getElementById('restaurantInfoPage').innerHTML = '<div class="alert alert-danger">Failed to load.</div>'; }
+    } catch(err) { 
+      console.error(err);
+      document.getElementById('restaurantInfoPage').innerHTML = '<div class="alert alert-danger">Failed to load restaurant details. Please try again later.</div>'; 
+    }
   }
 
   async function setupNav() {

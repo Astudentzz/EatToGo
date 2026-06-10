@@ -231,6 +231,27 @@
 
 <div id="restaurantDetail" class="container mt-4"></div>
 
+<!-- Seat Limit Modal -->
+<div class="modal fade" id="seatLimitModal" tabindex="-1" aria-labelledby="seatLimitModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="seatLimitModalLabel">⚠️ Seating Limit Exceeded</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>The number of guests you selected exceeds the available seats for this time slot.</p>
+        <p><strong>Available seats:</strong> <span id="modalAvailableSeats">0</span></p>
+        <p><strong>Your selection:</strong> <span id="modalSelectedGuests">0</span> guests</p>
+        <p>Please reduce the number of guests or choose a different time slot.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-etg" data-bs-dismiss="modal">OK, Go Back</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <footer class="minimal-footer">
   <div class="container d-flex justify-content-between flex-wrap gap-5">
     <div class="footer-brand"><h2>Eat<span>To</span>Go</h2><p>Final Year Project – Restaurant and Food Reservation System.</p></div>
@@ -323,10 +344,10 @@
         }
       }
       if (guestsInput) {
-        const maxGuests = Math.min(available, 20);
-        guestsInput.max = maxGuests;
-        if (parseInt(guestsInput.value) > maxGuests) {
-          guestsInput.value = maxGuests;
+        // Set max guests to the available seats (no global cap)
+        guestsInput.max = available;
+        if (parseInt(guestsInput.value) > available) {
+          guestsInput.value = available;
         }
       }
     } catch(e) { console.error(e); }
@@ -381,7 +402,7 @@
               </div>
               <div class="col-md-6">
                 <label>Guests</label>
-                <input type="number" id="guests" class="form-control" min="1" max="20" value="2" onchange="checkAvailability()">
+                <input type="number" id="guests" class="form-control" min="1" value="2" onchange="checkAvailability()" oninput="validateGuestCount()">
                 <small id="availabilityMsg" class="text-muted d-block mt-1"></small>
               </div>
             </div>
@@ -421,6 +442,28 @@
     `;
     document.getElementById('restaurantDetail').innerHTML = html;
     renderTimeSlots(today);
+    // Attach input event after DOM is updated
+    const guestsInput = document.getElementById('guests');
+    if (guestsInput) {
+      guestsInput.addEventListener('input', validateGuestCount);
+    }
+  }
+
+  function validateGuestCount() {
+    const guestsInput = document.getElementById('guests');
+    const availableSpan = document.getElementById('selectedAvailable');
+    if (!guestsInput || !availableSpan) return;
+    let guests = parseInt(guestsInput.value);
+    const maxGuests = parseInt(availableSpan.innerText);
+    if (!isNaN(maxGuests) && !isNaN(guests) && guests > maxGuests) {
+      // Show modal
+      document.getElementById('modalAvailableSeats').innerText = maxGuests;
+      document.getElementById('modalSelectedGuests').innerText = guests;
+      const modal = new bootstrap.Modal(document.getElementById('seatLimitModal'));
+      modal.show();
+      // Reset to max allowed
+      guestsInput.value = maxGuests;
+    }
   }
 
   async function reserve() {
@@ -435,12 +478,18 @@
     const guests = parseInt(document.getElementById('guests').value);
     if (!date) { alert('Select a date'); return; }
     if (isNaN(guests) || guests < 1) { alert('Please enter a valid number of guests.'); return; }
+    
     const availableSpan = document.getElementById('selectedAvailable');
     const maxGuests = parseInt(availableSpan.innerText);
     if (!isNaN(maxGuests) && guests > maxGuests) {
-      alert(`Only ${maxGuests} seat(s) available for this time slot. Please reduce the number of guests.`);
+      // Show modal
+      document.getElementById('modalAvailableSeats').innerText = maxGuests;
+      document.getElementById('modalSelectedGuests').innerText = guests;
+      const modal = new bootstrap.Modal(document.getElementById('seatLimitModal'));
+      modal.show();
       return;
     }
+    
     try {
       const result = await apiCall('/reservations.php', { 
           method: 'POST', 

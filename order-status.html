@@ -2,22 +2,55 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Order Status – EatToGo</title>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="assets/css/style.css">
   <style>
-    /* Navbar styles (same as before) */
-    .navbar-etg .container {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
+    /* (same enhanced sidebar & auth styles as before) */
+    :root {
+      --orange: #ff6b35;
+      --dark-wood: #1C1208;
+      --sidebar-width: 280px;
     }
+    .mobile-sidebar {
+      position: fixed; top: 0; left: 0; width: var(--sidebar-width); height: 100%;
+      background: linear-gradient(145deg, #1a130b 0%, #0e0a05 100%);
+      z-index: 1200; transform: translateX(-100%); transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+      box-shadow: 8px 0 32px rgba(0,0,0,0.5); display: flex; flex-direction: column;
+      border-right: 1px solid rgba(255,107,53,0.2);
+    }
+    .mobile-sidebar.open { transform: translateX(0); }
+    .sidebar-header { padding: 28px 20px 20px 20px; display: flex; align-items: center; gap: 14px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .sidebar-avatar { width: 52px; height: 52px; background: rgba(255,107,53,0.2); border-radius: 32px; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 600; color: var(--orange); border: 1.5px solid rgba(255,107,53,0.4); }
+    .sidebar-userinfo { flex: 1; }
+    .sidebar-userinfo .user-display-name { font-weight: 800; font-size: 1.1rem; color: white; }
+    .sidebar-userinfo .user-display-email { font-size: 0.7rem; color: rgba(255,255,255,0.6); }
+    .sidebar-userinfo .guest-label { font-size: 0.75rem; color: rgba(255,255,255,0.7); background: rgba(255,107,53,0.2); display: inline-block; padding: 2px 10px; border-radius: 20px; }
+    .close-sidebar { background: rgba(255,255,255,0.1); border: none; width: 36px; height: 36px; border-radius: 30px; font-size: 24px; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
+    .close-sidebar:hover { background: var(--orange); color: #1C1208; transform: rotate(90deg); }
+    .sidebar-nav-links { flex: 1; padding: 24px 16px; display: flex; flex-direction: column; gap: 8px; }
+    .sidebar-nav-links a { display: flex; align-items: center; gap: 14px; padding: 12px 18px; border-radius: 16px; color: rgba(255,255,255,0.85); text-decoration: none; font-weight: 600; transition: 0.2s; }
+    .sidebar-nav-links a i { font-size: 1.3rem; width: 28px; color: var(--orange); }
+    .sidebar-nav-links a:hover, .sidebar-nav-links a.active { background: rgba(255,107,53,0.25); color: var(--orange); }
+    .sidebar-footer { padding: 20px 16px 30px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; gap: 10px; }
+    .sidebar-action-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 40px; padding: 10px 16px; font-weight: 600; color: white; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .sidebar-action-btn.primary-action { background: var(--orange); color: #1C1208; }
+    .sidebar-action-btn.logout-btn { background: rgba(255,70,70,0.15); color: #ffb4a2; }
+    .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(6px); z-index: 1150; display: none; }
+    .sidebar-overlay.active { display: block; }
+    body.sidebar-open { overflow: hidden; }
+    .sidebar-divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(255,107,53,0.3), transparent); margin: 6px 16px; }
+    .auth-buttons { display: flex; gap: 10px; align-items: center; }
+    .auth-buttons .btn-outline-etg { border: 2px solid var(--orange); background: transparent; color: var(--orange); border-radius: 40px; padding: 6px 18px; font-weight: 700; }
+    .auth-buttons .btn-etg { background: var(--orange); border: none; color: #1C1208; font-weight: 700; border-radius: 40px; padding: 6px 18px; }
+    .user-greeting { display: inline-flex; align-items: center; gap: 12px; background: #fef2e8; padding: 4px 12px 4px 18px; border-radius: 50px; font-weight: 600; }
+    .user-greeting .logout-link { color: var(--orange); cursor: pointer; font-weight: 700; }
+    .navbar-etg .container { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; }
     .desktop-nav { display: flex; gap: 1rem; }
-    .hamburger { display: none; background: none; border: none; font-size: 28px; color: var(--orange); cursor: pointer; padding: 0; }
+    .hamburger { display: none; background: none; border: none; font-size: 28px; color: var(--orange); cursor: pointer; }
     @media (max-width: 768px) {
       .navbar-etg .container { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; }
       .logo { grid-column: 1; grid-row: 1; justify-self: start; }
@@ -25,70 +58,54 @@
       .hamburger { display: block; grid-column: 1; grid-row: 2; justify-self: start; margin-top: 4px; }
       .desktop-nav { display: none; }
     }
-    @media (min-width: 769px) { .hamburger, .mobile-sidebar, .sidebar-overlay, .close-sidebar { display: none; } }
-    .mobile-sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100%; background: #1C1208; z-index: 1100; transform: translateX(-100%); transition: transform 0.3s ease; padding: 60px 20px 20px; }
-    .mobile-sidebar.open { transform: translateX(0); }
-    .mobile-sidebar a { display: block; color: rgba(255,255,255,.8); text-decoration: none; padding: 12px 16px; font-weight: 700; border-radius: 12px; margin: 8px 0; }
-    .mobile-sidebar a:hover, .mobile-sidebar a.active { background: rgba(255,107,53,.2); color: var(--orange); }
-    .close-sidebar { position: absolute; top: 15px; right: 20px; font-size: 28px; color: white; background: none; border: none; cursor: pointer; }
-    .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1050; display: none; }
-    .sidebar-overlay.active { display: block; }
-
-    /* Order tracker */
-    .order-tracker { display: flex; flex-direction: column; gap: 0; position: relative; margin-top: 20px; }
-    .tracker-step { display: flex; gap: 20px; align-items: flex-start; position: relative; padding-bottom: 30px; }
-    .step-dot { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; border: 3px solid var(--cream-dark); background: white; z-index: 1; flex-shrink: 0; }
-    .step-dot.done { background: var(--green); border-color: var(--green); color: white; }
-    .step-dot.active { background: var(--orange); border-color: var(--orange); color: white; box-shadow: 0 0 0 6px rgba(255,107,53,.18); }
-    .step-dot.pending { background: white; border-color: var(--cream-dark); color: var(--gray); }
+    @media (min-width: 769px) { .hamburger, .mobile-sidebar, .sidebar-overlay { display: none; } }
+    .order-tracker { display: flex; flex-direction: column; gap: 0; margin-top: 20px; }
+    .tracker-step { display: flex; gap: 20px; align-items: flex-start; padding-bottom: 30px; }
+    .step-dot { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; border: 3px solid #e2d4c8; background: white; flex-shrink: 0; }
+    .step-dot.done { background: #28a745; border-color: #28a745; color: white; }
+    .step-dot.active { background: var(--orange); border-color: var(--orange); color: white; box-shadow: 0 0 0 4px rgba(255,107,53,.2); }
+    .step-dot.pending { background: white; border-color: #e2d4c8; color: #6c757d; }
     .step-dot.rejected { background: #dc3545; border-color: #dc3545; color: white; }
     .step-body { flex: 1; }
-    .step-body h5 { margin-bottom: 4px; font-weight: 800; }
-    .step-body p { color: var(--gray); margin-bottom: 0; font-size: 14px; }
-    .receipt-card { background: #fffaf5; border-radius: 20px; padding: 20px; margin-top: 0; border: 1px solid var(--cream-dark); }
-    .receipt-card h5 { border-left: 4px solid var(--orange); padding-left: 12px; margin-bottom: 16px; }
+    .step-body h5 { font-weight: 800; margin-bottom: 4px; }
+    .receipt-card { background: #fffaf5; border-radius: 20px; padding: 20px; border: 1px solid #f0e0d0; }
     .order-item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed #f0e0d0; }
-    .order-item:last-child { border-bottom: none; }
-    .status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
-    .status-badge.pending { background: #fff3cd; color: #856404; }
-    .status-badge.preparing { background: #cfe2ff; color: #084298; }
-    .status-badge.ready { background: #d4edda; color: #155724; }
-    .status-badge.served { background: #d1ecf1; color: #0c5460; }
-    @media (max-width: 576px) {
-      .tracker-step { gap: 12px; }
-      .step-dot { width: 32px; height: 32px; font-size: 14px; }
-      .step-body h5 { font-size: 16px; }
-    }
+    .booking-selector { background: #fffaf5; border-radius: 20px; padding: 15px 20px; margin-bottom: 24px; border: 1px solid #f0e0d0; display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+    .booking-selector label { font-weight: 800; margin: 0; color: #1C1208; }
+    .booking-selector select { flex: 1; min-width: 200px; padding: 10px 15px; border-radius: 40px; border: 1px solid #e2d4c8; background: white; font-weight: 500; }
+    @media (max-width: 576px) { .tracker-step { gap: 12px; } .step-dot { width: 32px; height: 32px; font-size: 14px; } }
   </style>
 </head>
 <body>
-
 <nav class="navbar-etg">
   <div class="container">
     <a class="logo" href="index.html">Eat<span>To</span>Go</a>
     <div class="desktop-nav" id="mainNav"></div>
-    <div class="right-group">
-      <div id="authArea"></div>
-    </div>
+    <div class="right-group"><div id="authArea" class="auth-buttons"></div></div>
     <button class="hamburger" id="hamburgerBtn">☰</button>
   </div>
 </nav>
 
 <div class="mobile-sidebar" id="mobileSidebar">
-  <button class="close-sidebar" id="closeSidebarBtn">×</button>
-  <div id="mobileNavLinks"></div>
+  <div class="sidebar-header">
+    <div class="sidebar-avatar" id="mobileUserAvatar">🍽️</div>
+    <div class="sidebar-userinfo" id="mobileUserInfo"><div class="user-display-name">Guest</div><div class="user-display-email">sign in</div></div>
+    <button class="close-sidebar" id="closeSidebarBtn">✕</button>
+  </div>
+  <div class="sidebar-divider"></div>
+  <div id="mobileNavLinks" class="sidebar-nav-links"></div>
+  <div class="sidebar-footer" id="mobileSidebarFooter"></div>
 </div>
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-<section class="page-head">
-  <div class="container">
-    <h1>Order Status</h1>
-    <p class="text-muted">Track your reservation and pre‑order in real time.</p>
-  </div>
-</section>
+<section class="page-head"><div class="container"><h1>Order Status</h1><p class="text-muted">Track your reservation and pre‑order in real time.</p></div></section>
 
 <section class="section">
   <div class="container">
+    <div class="booking-selector" id="bookingSelectorContainer" style="display: none;">
+      <label><i class="bi bi-calendar-event"></i> Switch booking:</label>
+      <select id="bookingSelect" class="form-select"></select>
+    </div>
     <div class="row g-4">
       <div class="col-lg-8">
         <div class="card-etg p-4">
@@ -97,234 +114,226 @@
         </div>
       </div>
       <div class="col-lg-4">
-        <div id="receiptBox" class="mt-0"></div>
+        <div id="receiptBox"></div>
       </div>
     </div>
   </div>
 </section>
 
-<footer class="minimal-footer">
-  <div class="container d-flex justify-content-between flex-wrap gap-5">
-    <div class="footer-brand"><h2>Eat<span>To</span>Go</h2><p>Final Year Project – Restaurant and Food Reservation System.</p></div>
-    <div class="footer-members"><h4>Project Team</h4><ul class="list-unstyled"><li>Navin Ramu</li><li>Muhamamd Nazim</li><li>Hadif</li><li>Ng Yue Yang</li></ul></div>
-  </div>
-  <div class="footer-bottom">© 2026 EatToGo • Universiti Teknologi Malaysia (UTM)</div>
-</footer>
+<footer class="minimal-footer"><div class="container d-flex justify-content-between flex-wrap gap-5"><div class="footer-brand"><h2>Eat<span>To</span>Go</h2><p>Final Year Project – Restaurant and Food Reservation System.</p></div><div class="footer-members"><h4>Project Team</h4><ul class="list-unstyled"><li>Navin Ramu</li><li>Muhamamd Nazim</li><li>Hadif</li><li>Ng Yue Yang</li></ul></div></div><div class="footer-bottom">© 2026 EatToGo • Universiti Teknologi Malaysia (UTM)</div></footer>
 
 <script src="assets/js/api.js"></script>
 <script>
-  // Sidebar toggle
+  // Sidebar logic (same as before)
   const hamburger = document.getElementById('hamburgerBtn');
   const sidebar = document.getElementById('mobileSidebar');
   const overlay = document.getElementById('sidebarOverlay');
   const closeBtn = document.getElementById('closeSidebarBtn');
-  function openSidebar() { sidebar.classList.add('open'); overlay.classList.add('active'); }
-  function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('active'); }
-  if (hamburger) hamburger.addEventListener('click', openSidebar);
-  if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
-  if (overlay) overlay.addEventListener('click', closeSidebar);
+  function openSidebar() { sidebar.classList.add('open'); overlay.classList.add('active'); document.body.classList.add('sidebar-open'); }
+  function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('active'); document.body.classList.remove('sidebar-open'); }
+  hamburger?.addEventListener('click', openSidebar);
+  closeBtn?.addEventListener('click', closeSidebar);
+  overlay?.addEventListener('click', closeSidebar);
+  document.addEventListener('click', (e) => { if(sidebar?.classList.contains('open') && (e.target.closest('#mobileNavLinks a') || e.target.closest('.sidebar-action-btn'))) setTimeout(closeSidebar, 80); });
 
+  function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m=>m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
+
+  // Auth & sidebar functions (same as index)
+  async function updateAuthAreaOldStyle() {
+    const authDiv = document.getElementById('authArea'); if(!authDiv) return;
+    const s = await checkSession();
+    const user = s.loggedIn ? s.user : null;
+    if(!user) { authDiv.innerHTML = `<a href="login.html" class="btn btn-outline-etg">Sign in</a><a href="signup.html" class="btn btn-etg">Register</a>`; }
+    else { authDiv.innerHTML = `<div class="user-greeting"><span>👋 ${escapeHtml(user.name || user.email.split('@')[0])}</span><a class="logout-link" id="topLogoutBtn">Logout</a></div>`; document.getElementById('topLogoutBtn')?.addEventListener('click', async()=>{ await apiCall('/logout.php',{method:'POST'}); location.href='index.html'; }); }
+  }
+
+  async function updateMobileSidebarUI() {
+    const s = await checkSession();
+    const user = s.loggedIn ? s.user : null;
+    const avatarDiv = document.getElementById('mobileUserAvatar');
+    const userInfoDiv = document.getElementById('mobileUserInfo');
+    const footerContainer = document.getElementById('mobileSidebarFooter');
+    if(user) {
+      const letter = (user.name?.charAt(0) || user.email.charAt(0).toUpperCase() || 'U');
+      avatarDiv.innerHTML = `<span style="font-size:28px;">${escapeHtml(letter)}</span>`;
+      userInfoDiv.innerHTML = `<div class="user-display-name">${escapeHtml(user.name || user.email.split('@')[0])}</div><div class="user-display-email">${escapeHtml(user.email)}</div>`;
+      let footerHtml = '';
+      if(user.role === 'customer') footerHtml = `<a href="booking-history.html" class="sidebar-action-btn"><i class="bi bi-journal-bookmark-fill"></i> My Bookings</a><a href="order-status.html" class="sidebar-action-btn"><i class="bi bi-truck"></i> Order Status</a><button id="mobileLogoutBtn" class="sidebar-action-btn logout-btn"><i class="bi bi-box-arrow-right"></i> Sign Out</button>`;
+      else if(user.role === 'staff') footerHtml = `<a href="staff-dashboard.html" class="sidebar-action-btn primary-action"><i class="bi bi-person-badge"></i> Staff Dashboard</a><button id="mobileLogoutBtn" class="sidebar-action-btn logout-btn">Sign Out</button>`;
+      else if(user.role === 'owner') footerHtml = `<a href="owner-dashboard.html" class="sidebar-action-btn primary-action"><i class="bi bi-building"></i> Owner Dashboard</a><button id="mobileLogoutBtn" class="sidebar-action-btn logout-btn">Sign Out</button>`;
+      else if(user.role === 'admin') footerHtml = `<a href="admin.html" class="sidebar-action-btn primary-action"><i class="bi bi-shield-lock"></i> Admin Panel</a><button id="mobileLogoutBtn" class="sidebar-action-btn logout-btn">Sign Out</button>`;
+      else footerHtml = `<button id="mobileLogoutBtn" class="sidebar-action-btn logout-btn">Sign Out</button>`;
+      footerContainer.innerHTML = footerHtml;
+      document.getElementById('mobileLogoutBtn')?.addEventListener('click', async()=>{ await apiCall('/logout.php',{method:'POST'}); location.href='index.html'; });
+    } else {
+      avatarDiv.innerHTML = `👤`;
+      userInfoDiv.innerHTML = `<div class="user-display-name">Guest User</div><div class="guest-label">Not signed in</div>`;
+      footerContainer.innerHTML = `<a href="login.html" class="sidebar-action-btn primary-action"><i class="bi bi-box-arrow-in-right"></i> Log In</a><a href="signup.html" class="sidebar-action-btn"><i class="bi bi-person-plus"></i> Create Account</a><a href="signup.html?role=owner" class="sidebar-action-btn"><i class="bi bi-shop"></i> Partner with Us</a>`;
+    }
+  }
+
+  async function setupEnhancedNav() {
+    const s = await checkSession();
+    const user = s.loggedIn ? s.user : null;
+    const desktopNav = document.getElementById('mainNav');
+    const mobileNav = document.getElementById('mobileNavLinks');
+    let navItems = [];
+    if(!user || user.role === 'customer') navItems = [{href:"index.html", icon:"bi bi-shop", label:"Restaurants"},{href:"booking-history.html", icon:"bi bi-calendar-check", label:"My Bookings"},{href:"order-status.html", icon:"bi bi-clock-history", label:"Order Status"}];
+    else if(user.role === 'staff') navItems = [{href:"staff-dashboard.html", icon:"bi bi-person-badge", label:"Staff Dashboard"}];
+    else if(user.role === 'owner') navItems = [{href:"owner-dashboard.html", icon:"bi bi-building", label:"Owner Dashboard"}];
+    else if(user.role === 'admin') navItems = [{href:"admin.html", icon:"bi bi-shield-lock", label:"Admin Dashboard"}];
+    const render = (items) => items.map(i => `<a class="nav-link" href="${i.href}"><i class="${i.icon}"></i> ${i.label}</a>`).join('');
+    desktopNav.innerHTML = render(navItems);
+    if(mobileNav) mobileNav.innerHTML = render(navItems);
+  }
+
+  // Order tracking logic with sorting by created_at DESC
+  let allUserReservations = [];
   let currentReservation = null;
   let currentOrder = null;
 
-  async function getReservationId() {
-    const urlParams = new URLSearchParams(window.location.search);
-    let rid = urlParams.get('reservation_id');
-    if (rid) return parseInt(rid);
-    const session = await checkSession();
-    if (!session.loggedIn) return null;
-    const reservations = await apiCall('/user-reservations.php');
-    if (!reservations.length) return null;
-    reservations.sort((a,b) => b.id - a.id);
-    return reservations[0].id;
+  async function loadUserReservations() {
+    try {
+      const session = await checkSession();
+      if(!session.loggedIn) return [];
+      let reservations = await apiCall('/user-reservations.php');
+      // Sort by created_at descending (newest first)
+      reservations.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+      allUserReservations = reservations || [];
+      return allUserReservations;
+    } catch(err) {
+      console.error('Failed to load reservations', err);
+      return [];
+    }
   }
 
-  async function loadOrderStatus() {
+  async function populateBookingSelector(selectedId) {
+    const container = document.getElementById('bookingSelectorContainer');
+    const selectEl = document.getElementById('bookingSelect');
+    if(!allUserReservations.length) {
+      container.style.display = 'none';
+      return;
+    }
+    container.style.display = 'flex';
+    selectEl.innerHTML = allUserReservations.map(r => 
+      `<option value="${r.id}" ${r.id == selectedId ? 'selected' : ''}>
+        #${r.id} - ${escapeHtml(r.restaurant_name)} - ${r.reservation_date} ${r.reservation_time}
+      </option>`
+    ).join('');
+    selectEl.onchange = (e) => {
+      const newId = parseInt(e.target.value);
+      loadOrderStatusForReservation(newId);
+    };
+  }
+
+  async function loadOrderStatusForReservation(reservationId) {
+    if(!reservationId) return;
+    currentReservation = allUserReservations.find(r => r.id === reservationId);
+    if(!currentReservation) return;
+    currentOrder = currentReservation.order || null;
+    renderTrackerAndReceipt();
+    // Update URL without reload
+    const url = new URL(window.location);
+    url.searchParams.set('reservation_id', reservationId);
+    window.history.pushState({}, '', url);
+  }
+
+  async function getInitialReservationId() {
+    const urlParams = new URLSearchParams(window.location.search);
+    let rid = urlParams.get('reservation_id');
+    if(rid) return parseInt(rid);
+    const session = await checkSession();
+    if(!session.loggedIn) return null;
+    if(allUserReservations.length) return allUserReservations[0].id;
+    return null;
+  }
+
+  function renderTrackerAndReceipt() {
     const trackerDiv = document.getElementById('trackerContainer');
     const receiptDiv = document.getElementById('receiptBox');
-    try {
-      const rid = await getReservationId();
-      if (!rid) {
-        trackerDiv.innerHTML = '<p class="text-muted">No reservation found. <a href="index.html">Make a reservation</a> first.</p>';
-        receiptDiv.innerHTML = '';
-        return;
-      }
-      const reservations = await apiCall('/user-reservations.php');
-      currentReservation = reservations.find(r => r.id === rid);
-      if (!currentReservation) throw new Error('Reservation not found');
-      currentOrder = currentReservation.order || null;
-
-      // Build steps dynamically
-      let steps = [];
-
-      // Step 1: Reservation Submitted
-      steps.push({
-        label: 'Reservation Submitted',
-        desc: `Booking #${currentReservation.id} • ${currentReservation.reservation_date} ${currentReservation.reservation_time}`,
-        done: true,
-        active: false,
-        rejected: false
-      });
-
-      // Step 2: Reservation Confirmed
-      if (currentReservation.status === 'rejected') {
-        steps.push({
-          label: 'Reservation Confirmed',
-          desc: 'Your reservation was rejected.',
-          done: false,
-          active: false,
-          rejected: true
-        });
-      } else {
-        steps.push({
-          label: 'Reservation Confirmed',
-          desc: currentReservation.status === 'confirmed' ? 'Confirmed by restaurant staff.' : 'Waiting for staff confirmation.',
-          done: currentReservation.status === 'confirmed',
-          active: currentReservation.status === 'pending',
-          rejected: false
-        });
-      }
-
-      // If rejected, stop adding further steps
-      if (currentReservation.status === 'rejected') {
-        renderTracker(steps, receiptDiv);
-        return;
-      }
-
-      // Step 3: Pre-Order Received
-      steps.push({
-        label: 'Pre-Order Received',
-        desc: currentOrder ? 'Your order has been received.' : 'No pre‑order placed.',
-        done: !!currentOrder,
-        active: currentReservation.status === 'confirmed' && !currentOrder,
-        rejected: false
-      });
-
-      // Step 4: Being Prepared (only if order exists)
-      if (currentOrder) {
-        let orderStatusText = '';
-        let orderDone = false;
-        let orderActive = false;
-        if (currentOrder.status === 'pending') {
-          orderStatusText = 'Order received, kitchen will start soon.';
-          orderActive = true;
-        } else if (currentOrder.status === 'preparing') {
-          orderStatusText = 'Chef is preparing your meal.';
-          orderActive = true;
-        } else if (currentOrder.status === 'ready') {
-          orderStatusText = 'Your meal is ready for pickup!';
-          orderDone = true;
-        } else if (currentOrder.status === 'served') {
-          orderStatusText = 'Order has been served.';
-          orderDone = true;
-        } else {
-          orderStatusText = 'Processing...';
-        }
-        steps.push({
-          label: 'Being Prepared',
-          desc: orderStatusText,
-          done: orderDone,
-          active: orderActive,
-          rejected: false
-        });
-      } else {
-        steps.push({
-          label: 'Being Prepared',
-          desc: 'No pre‑order to prepare.',
-          done: false,
-          active: false,
-          rejected: false
-        });
-      }
-
-      // Step 5: Arrived (informational only, no button)
-      steps.push({
-        label: 'Arrived',
-        desc: currentReservation.arrival_confirmed ? '✅ You have arrived. Enjoy your meal!' : 'Arrival will be confirmed by staff when you check in.',
-        done: currentReservation.arrival_confirmed,
-        active: false,
-        rejected: false
-      });
-
-      renderTracker(steps, receiptDiv);
-    } catch (err) {
-      console.error(err);
-      trackerDiv.innerHTML = '<p class="text-danger">Failed to load order status.</p>';
+    if(!currentReservation) {
+      trackerDiv.innerHTML = '<p class="text-muted">No reservation selected.</p>';
+      receiptDiv.innerHTML = '';
+      return;
     }
+
+    let steps = [];
+    steps.push({ label:'Reservation Submitted', desc:`Booking #${currentReservation.id} • ${currentReservation.reservation_date} ${currentReservation.reservation_time}`, done:true });
+    
+    if(currentReservation.status === 'rejected') {
+      steps.push({ label:'Reservation Confirmed', desc:'Your reservation was rejected.', done:false, rejected:true });
+    } else {
+      steps.push({ label:'Reservation Confirmed', desc:currentReservation.status==='confirmed'?'Confirmed by restaurant.':'Waiting for confirmation.', done:currentReservation.status==='confirmed', active:currentReservation.status==='pending' });
+    }
+    
+    if(currentReservation.status === 'rejected') {
+      renderTracker(steps, receiptDiv);
+      return;
+    }
+    
+    if(!currentOrder) {
+      steps.push({ label:'No Pre‑Order', desc:'You did not place any pre‑order.', done:true, skipped:true });
+    } else {
+      steps.push({ label:'Pre-Order Received', desc:'Your order has been received.', done:true });
+    }
+    
+    if(currentOrder) {
+      let orderStatusText = '', orderDone=false, orderActive=false;
+      if(currentOrder.status==='pending') { orderStatusText='Order received, kitchen will start soon.'; orderActive=true; }
+      else if(currentOrder.status==='preparing') { orderStatusText='Chef is preparing your meal.'; orderActive=true; }
+      else if(currentOrder.status==='ready') { orderStatusText='Your meal is ready for pickup!'; orderDone=true; }
+      else if(currentOrder.status==='served') { orderStatusText='Order has been served.'; orderDone=true; }
+      else orderStatusText='Processing...';
+      steps.push({ label:'Being Prepared', desc:orderStatusText, done:orderDone, active:orderActive });
+    }
+    
+    steps.push({ label:'Arrived', desc:currentReservation.arrival_confirmed?'✅ You have arrived. Enjoy!':'Arrival will be confirmed by staff when you check in.', done:currentReservation.arrival_confirmed });
+    
+    renderTracker(steps, receiptDiv);
   }
 
   function renderTracker(steps, receiptDiv) {
     const stepsHtml = steps.map(s => {
       let cls = s.rejected ? 'rejected' : s.done ? 'done' : s.active ? 'active' : 'pending';
       let icon = s.rejected ? '✕' : s.done ? '✓' : s.active ? '●' : '○';
-      return `
-        <div class="tracker-step">
-          <div class="step-dot ${cls}">${icon}</div>
-          <div class="step-body">
-            <h5>${escapeHtml(s.label)}</h5>
-            <p>${escapeHtml(s.desc)}</p>
-          </div>
-        </div>
-      `;
+      return `<div class="tracker-step"><div class="step-dot ${cls}">${icon}</div><div class="step-body"><h5>${escapeHtml(s.label)}</h5><p>${escapeHtml(s.desc)}</p></div></div>`;
     }).join('');
     document.getElementById('trackerContainer').innerHTML = `<div class="order-tracker">${stepsHtml}</div>`;
-
-    // Build receipt with itemized pre-order
-    let receiptHtml = `<div class="receipt-card"><h5>Booking Receipt</h5>`;
-    receiptHtml += `<p><b>Restaurant:</b> ${escapeHtml(currentReservation.restaurant_name)}</p>`;
-    receiptHtml += `<p><b>Date/Time:</b> ${currentReservation.reservation_date} ${currentReservation.reservation_time}</p>`;
-    receiptHtml += `<p><b>Guests:</b> ${currentReservation.num_people}</p>`;
-
-    if (currentOrder && currentOrder.items && currentOrder.items.length) {
+    
+    let receiptHtml = `<div class="receipt-card"><h5>Booking Receipt</h5><p><b>Restaurant:</b> ${escapeHtml(currentReservation.restaurant_name)}</p><p><b>Date/Time:</b> ${currentReservation.reservation_date} ${currentReservation.reservation_time}</p><p><b>Guests:</b> ${currentReservation.num_people}</p>`;
+    if(currentOrder && currentOrder.items?.length) {
       receiptHtml += `<hr><div><b>Pre‑ordered items:</b></div>`;
       let total = 0;
-      for (const item of currentOrder.items) {
-        const subtotal = item.quantity * item.price;
-        total += subtotal;
-        receiptHtml += `<div class="order-item"><span>${item.emoji || '🍽️'} ${escapeHtml(item.name)} × ${item.quantity}</span><span>RM ${subtotal.toFixed(2)}</span></div>`;
-      }
+      for(const item of currentOrder.items) { const subtotal = item.quantity * item.price; total += subtotal; receiptHtml += `<div class="order-item"><span>${item.emoji||'🍽️'} ${escapeHtml(item.name)} × ${item.quantity}</span><span>RM ${subtotal.toFixed(2)}</span></div>`; }
       receiptHtml += `<div class="order-item fw-bold mt-2"><span>Total</span><span>RM ${total.toFixed(2)}</span></div>`;
-    } else if (currentOrder && currentOrder.total_amount) {
-      receiptHtml += `<hr><div class="order-item"><b>Total:</b> RM ${parseFloat(currentOrder.total_amount).toFixed(2)}</div>`;
-    } else {
-      receiptHtml += `<hr><p class="text-muted">No pre‑order placed.</p>`;
-    }
-
+    } else if(currentOrder?.total_amount) receiptHtml += `<hr><div class="order-item"><b>Total:</b> RM ${parseFloat(currentOrder.total_amount).toFixed(2)}</div>`;
+    else receiptHtml += `<hr><p class="text-muted">No pre‑order placed.</p>`;
     receiptHtml += `</div>`;
     receiptDiv.innerHTML = receiptHtml;
   }
 
-  function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
-  }
-
-  async function setupNav() {
-    const s = await checkSession();
-    const desktopNav = document.getElementById('mainNav');
-    const mobileNav = document.getElementById('mobileNavLinks');
-    if (!desktopNav) return;
-    const u = s.loggedIn ? s.user : null;
-    let navHtml = '';
-    if (!u || u.role === 'customer') {
-      navHtml = `<a class="nav-link" href="index.html">Restaurants</a>
-                 <a class="nav-link" href="booking-history.html">My Bookings</a>
-                 <a class="nav-link" href="order-status.html">Order Status</a>`;
-    } else if (u.role === 'staff') {
-      navHtml = `<a class="nav-link fw-bold" href="staff-dashboard.html">↗ Staff Dashboard</a>`;
-    } else if (u.role === 'owner') {
-      navHtml = `<a class="nav-link fw-bold" href="owner-dashboard.html">↗ Owner Dashboard</a>`;
-    } else if (u.role === 'admin') {
-      navHtml = `<a class="nav-link fw-bold" href="admin.html">↗ Admin Dashboard</a>`;
+  async function initOrderStatus() {
+    await loadUserReservations(); // this sorts by created_at DESC
+    const initialId = await getInitialReservationId();
+    if(initialId && allUserReservations.length) {
+      await loadOrderStatusForReservation(initialId);
+      await populateBookingSelector(initialId);
+    } else if(allUserReservations.length) {
+      await loadOrderStatusForReservation(allUserReservations[0].id);
+      await populateBookingSelector(allUserReservations[0].id);
+    } else {
+      document.getElementById('bookingSelectorContainer').style.display = 'none';
+      document.getElementById('trackerContainer').innerHTML = '<p class="text-muted">No reservations found. <a href="index.html">Make a reservation</a> first.</p>';
+      document.getElementById('receiptBox').innerHTML = '';
     }
-    desktopNav.innerHTML = navHtml;
-    if (mobileNav) mobileNav.innerHTML = navHtml;
   }
 
   window.addEventListener('DOMContentLoaded', async () => {
     await nav();
-    await setupNav();
-    await loadOrderStatus();
+    await setupEnhancedNav();
+    await updateAuthAreaOldStyle();
+    await updateMobileSidebarUI();
+    await initOrderStatus();
   });
 </script>
 </body>

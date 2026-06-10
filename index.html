@@ -2,13 +2,321 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>EatToGo – Reserve & Pre-Order</title>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+  <!-- Bootstrap Icons for modern sidebar icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="assets/css/style.css">
   <style>
+    /* ----- enhanced mobile sidebar UI ----- */
+    :root {
+      --orange: #ff6b35;
+      --dark-wood: #1C1208;
+      --sidebar-bg: #0f0b06;
+      --sidebar-width: 280px;
+    }
+
+    .mobile-sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--sidebar-width);
+      height: 100%;
+      background: linear-gradient(145deg, #1a130b 0%, #0e0a05 100%);
+      backdrop-filter: blur(0px);
+      z-index: 1200;
+      transform: translateX(-100%);
+      transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+      box-shadow: 8px 0 32px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid rgba(255, 107, 53, 0.2);
+    }
+
+    .mobile-sidebar.open {
+      transform: translateX(0);
+    }
+
+    /* header area with avatar + info + close button */
+    .sidebar-header {
+      padding: 28px 20px 20px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      position: relative;
+    }
+
+    .sidebar-avatar {
+      width: 52px;
+      height: 52px;
+      background: rgba(255,107,53,0.2);
+      border-radius: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--orange);
+      border: 1.5px solid rgba(255,107,53,0.4);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    .sidebar-userinfo {
+      flex: 1;
+    }
+
+    .sidebar-userinfo .user-display-name {
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: white;
+      letter-spacing: -0.2px;
+      margin-bottom: 4px;
+    }
+
+    .sidebar-userinfo .user-display-email {
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.6);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 140px;
+    }
+
+    .sidebar-userinfo .guest-label {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.7);
+      font-weight: 500;
+      background: rgba(255,107,53,0.2);
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 20px;
+    }
+
+    .close-sidebar {
+      background: rgba(255,255,255,0.1);
+      border: none;
+      width: 36px;
+      height: 36px;
+      border-radius: 30px;
+      font-size: 24px;
+      font-weight: 500;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: 0.2s;
+      cursor: pointer;
+    }
+
+    .close-sidebar:hover {
+      background: var(--orange);
+      color: #1C1208;
+      transform: rotate(90deg);
+    }
+
+    /* navigation links area */
+    .sidebar-nav-links {
+      flex: 1;
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .sidebar-nav-links a {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 18px;
+      border-radius: 16px;
+      color: rgba(255,255,255,0.85);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1rem;
+      transition: all 0.2s ease;
+      background: transparent;
+    }
+
+    .sidebar-nav-links a i {
+      font-size: 1.3rem;
+      width: 28px;
+      color: var(--orange);
+    }
+
+    .sidebar-nav-links a:hover {
+      background: rgba(255,107,53,0.18);
+      color: white;
+      transform: translateX(4px);
+    }
+
+    .sidebar-nav-links a.active {
+      background: rgba(255,107,53,0.25);
+      color: var(--orange);
+      border-left: 3px solid var(--orange);
+    }
+
+    /* footer actions: login/logout/register */
+    .sidebar-footer {
+      padding: 20px 16px 30px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .sidebar-action-btn {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 40px;
+      padding: 10px 16px;
+      font-weight: 600;
+      color: white;
+      text-align: center;
+      text-decoration: none;
+      transition: 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 0.9rem;
+    }
+
+    .sidebar-action-btn i {
+      font-size: 1.1rem;
+    }
+
+    .sidebar-action-btn.logout-btn {
+      background: rgba(255,70,70,0.15);
+      border-color: rgba(255,100,100,0.3);
+      color: #ffb4a2;
+    }
+
+    .sidebar-action-btn.logout-btn:hover {
+      background: rgba(255,70,70,0.4);
+      color: white;
+    }
+
+    .sidebar-action-btn.primary-action {
+      background: var(--orange);
+      border: none;
+      color: #1C1208;
+      font-weight: 800;
+    }
+
+    .sidebar-action-btn.primary-action:hover {
+      background: #ff8555;
+      transform: scale(0.98);
+    }
+
+    /* overlay with blur */
+    .sidebar-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(6px);
+      z-index: 1150;
+      display: none;
+      transition: all 0.25s;
+    }
+
+    .sidebar-overlay.active {
+      display: block;
+    }
+
+    /* disable body scroll when sidebar open */
+    body.sidebar-open {
+      overflow: hidden;
+    }
+
+    /* divider */
+    .sidebar-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,107,53,0.3), transparent);
+      margin: 6px 16px;
+    }
+
+    /* hamburger icon improvement */
+    .hamburger {
+      background: rgba(0,0,0,0.05);
+      border-radius: 50px;
+      width: 44px;
+      height: 44px;
+      transition: 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .hamburger:hover {
+      background: rgba(255,107,53,0.1);
+      transform: scale(1.02);
+    }
+
+    /* top-right auth area - older version style (simple inline buttons) */
+    .auth-buttons {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .auth-buttons .btn-outline-etg {
+      border: 2px solid var(--orange);
+      background: transparent;
+      color: var(--orange);
+      border-radius: 40px;
+      padding: 6px 18px;
+      font-weight: 700;
+      transition: 0.2s;
+    }
+    .auth-buttons .btn-outline-etg:hover {
+      background: var(--orange);
+      color: #1C1208;
+    }
+    .auth-buttons .btn-etg {
+      background: var(--orange);
+      border: none;
+      color: #1C1208;
+      font-weight: 700;
+      border-radius: 40px;
+      padding: 6px 18px;
+    }
+    .user-greeting {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: #fef2e8;
+      padding: 4px 12px 4px 18px;
+      border-radius: 50px;
+      font-weight: 600;
+    }
+    .user-greeting span {
+      color: #1C1208;
+    }
+    .user-greeting .logout-link {
+      color: var(--orange);
+      cursor: pointer;
+      text-decoration: none;
+      font-weight: 700;
+      padding: 6px 10px;
+      border-radius: 30px;
+      transition: 0.2s;
+    }
+    .user-greeting .logout-link:hover {
+      background: rgba(255,107,53,0.1);
+    }
+
+    @media (max-width: 768px) {
+      .desktop-nav {
+        display: none;
+      }
+    }
+
+    /* rest of original styles remain intact */
     .owner-cta { background: linear-gradient(135deg, #1C1208, #2f1a08); border-radius: 18px; padding: 18px 26px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap:12px; margin-bottom: 28px; }
     .owner-cta p { margin:0; color:rgba(255,255,255,.8); font-size:15px; }
     .owner-cta strong { color:white; }
@@ -17,27 +325,9 @@
     .rest-card img { width: 100%; height: 160px; object-fit: cover; }
     .rest-card .card-body { padding: 16px; }
     .rest-card h3 { font-size: 1.25rem; font-weight: 800; margin-bottom: 6px; }
-
-    /* Navbar layout */
-    .navbar-etg .container {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .desktop-nav {
-      display: flex;
-      gap: 1rem;
-    }
-    .hamburger {
-      display: none;
-      background: none;
-      border: none;
-      font-size: 28px;
-      color: var(--orange);
-      cursor: pointer;
-      padding: 0;
-    }
+    .navbar-etg .container { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+    .desktop-nav { display: flex; gap: 1rem; }
+    .hamburger { display: none; background: none; border: none; font-size: 28px; color: var(--orange); cursor: pointer; padding: 0; }
     @media (max-width: 768px) {
       .navbar-etg .container {
         display: grid;
@@ -74,106 +364,18 @@
         display: none;
       }
     }
-
-    /* Mobile sidebar (slide-out) */
-    .mobile-sidebar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 260px;
-      height: 100%;
-      background: #1C1208;
-      z-index: 1100;
-      transform: translateX(-100%);
-      transition: transform 0.3s ease;
-      padding: 60px 20px 20px;
-    }
-    .mobile-sidebar.open {
-      transform: translateX(0);
-    }
-    .mobile-sidebar a {
-      display: block;
-      color: rgba(255,255,255,.8);
-      text-decoration: none;
-      padding: 12px 16px;
-      font-weight: 700;
-      border-radius: 12px;
-      margin: 8px 0;
-    }
-    .mobile-sidebar a:hover, .mobile-sidebar a.active {
-      background: rgba(255,107,53,.2);
-      color: var(--orange);
-    }
-    .close-sidebar {
-      position: absolute;
-      top: 15px;
-      right: 20px;
-      font-size: 28px;
-      color: white;
-      background: none;
-      border: none;
-      cursor: pointer;
-    }
-    .sidebar-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.5);
-      z-index: 1050;
-      display: none;
-    }
-    .sidebar-overlay.active {
-      display: block;
-    }
-
-    /* Cuisine filter buttons (dynamic) */
-    .mood-filter-bar {
-      background: rgba(255,255,255,0.9);
-      border-radius: 48px;
-      padding: 8px 18px;
-      display: inline-flex;
-      align-items: center;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 8px;
-      margin-top: 20px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-      backdrop-filter: blur(4px);
-    }
-    .mood-label {
-      font-weight: 700;
-      font-size: 15px;
-      color: #1C1208;
-      margin-right: 6px;
-      white-space: nowrap;
-    }
-    .mood-btn {
-      background: none;
-      border: 2px solid transparent;
-      border-radius: 999px;
-      padding: 6px 18px;
-      font-size: 14px;
-      font-weight: 600;
-      color: #6c5a48;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-    .mood-btn:hover {
-      color: var(--orange);
-      border-color: rgba(255,107,53,0.3);
-    }
-    .mood-btn.active {
-      border-color: var(--orange);
-      color: var(--orange);
-      font-weight: 700;
-      background: rgba(255,107,53,0.08);
-    }
+    .mood-filter-bar { background: rgba(255,255,255,0.9); border-radius: 48px; padding: 8px 18px; display: inline-flex; align-items: center; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); backdrop-filter: blur(4px); }
+    .mood-label { font-weight: 700; font-size: 15px; color: #1C1208; margin-right: 6px; white-space: nowrap; }
+    .mood-btn { background: none; border: 2px solid transparent; border-radius: 999px; padding: 6px 18px; font-size: 14px; font-weight: 600; color: #6c5a48; cursor: pointer; transition: all 0.2s ease; }
+    .mood-btn:hover { color: var(--orange); border-color: rgba(255,107,53,0.3); }
+    .mood-btn.active { border-color: var(--orange); color: var(--orange); font-weight: 700; background: rgba(255,107,53,0.08); }
     @media (max-width: 600px) {
       .mood-filter-bar { border-radius: 24px; padding: 10px 14px; }
       .mood-btn { padding: 4px 12px; font-size: 12px; }
     }
+    .btn-etg { background: var(--orange); border: none; color: #1C1208; font-weight: 700; border-radius: 40px; padding: 8px 24px; transition: 0.2s; }
+    .btn-etg:hover { background: #ff8555; transform: translateY(-2px); }
+    .hero { background: #fef5ed; }
   </style>
 </head>
 <body>
@@ -183,16 +385,25 @@
     <a class="logo" href="index.html">Eat<span>To</span>Go</a>
     <div class="desktop-nav" id="mainNav"></div>
     <div class="right-group">
-      <div id="authArea"></div>
+      <div id="authArea" class="auth-buttons"></div>
     </div>
     <button class="hamburger" id="hamburgerBtn">☰</button>
   </div>
 </nav>
 
-<!-- Mobile sidebar -->
+<!-- ENHANCED MOBILE SIDEBAR with profile + icons + footer actions -->
 <div class="mobile-sidebar" id="mobileSidebar">
-  <button class="close-sidebar" id="closeSidebarBtn">×</button>
-  <div id="mobileNavLinks"></div>
+  <div class="sidebar-header">
+    <div class="sidebar-avatar" id="mobileUserAvatar">🍽️</div>
+    <div class="sidebar-userinfo" id="mobileUserInfo">
+      <div class="user-display-name">Guest</div>
+      <div class="user-display-email">sign in to unlock</div>
+    </div>
+    <button class="close-sidebar" id="closeSidebarBtn">✕</button>
+  </div>
+  <div class="sidebar-divider"></div>
+  <div id="mobileNavLinks" class="sidebar-nav-links"></div>
+  <div class="sidebar-footer" id="mobileSidebarFooter"></div>
 </div>
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
@@ -202,7 +413,6 @@
     <h1 class="mt-4">Dine smarter,<br><span class="highlight">Order faster</span></h1>
     <p class="lead text-muted mt-3">Reserve a table, pre-order your meal, and skip the wait.</p>
     
-    <!-- Search bar -->
     <div class="search-card glass-card p-4">
       <div class="row g-3 justify-content-center">
         <div class="col-md-8 col-lg-9">
@@ -214,12 +424,10 @@
       </div>
     </div>
 
-    <!-- Dynamic cuisine filter buttons (loaded from DB) -->
     <div style="text-align:center; margin-top: 20px;">
       <div class="mood-filter-bar" id="cuisineFilterBar">
         <span class="mood-label">Cuisine:</span>
         <button class="mood-btn active" data-cuisine="" onclick="setCuisine(this)">All Cuisines</button>
-        <!-- buttons will be inserted here dynamically -->
       </div>
     </div>
   </div>
@@ -249,33 +457,174 @@
 
 <script src="assets/js/api.js"></script>
 <script>
-  // Sidebar toggle logic
+  // Sidebar advanced UI controls
   const hamburger = document.getElementById('hamburgerBtn');
   const sidebar = document.getElementById('mobileSidebar');
   const overlay = document.getElementById('sidebarOverlay');
   const closeBtn = document.getElementById('closeSidebarBtn');
-  function openSidebar() { sidebar.classList.add('open'); overlay.classList.add('active'); }
-  function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('active'); }
+
+  function openSidebar() {
+    sidebar.classList.add('open');
+    overlay.classList.add('active');
+    document.body.classList.add('sidebar-open');
+  }
+  function closeSidebar() {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('active');
+    document.body.classList.remove('sidebar-open');
+  }
   if (hamburger) hamburger.addEventListener('click', openSidebar);
   if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
   if (overlay) overlay.addEventListener('click', closeSidebar);
 
+  // Close sidebar when any nav link inside sidebar is clicked (auto-close after navigation)
+  document.addEventListener('click', (e) => {
+    if (sidebar && sidebar.classList.contains('open')) {
+      if (e.target.closest('#mobileNavLinks a') || e.target.closest('.sidebar-action-btn')) {
+        setTimeout(() => closeSidebar(), 80);
+      }
+    }
+  });
+
+  // global variables
   let allRestaurants = [];
   let currentSearchTerm = '';
   let currentCuisine = '';
 
   function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
 
-  // Populate dynamic cuisine buttons
-  function populateCuisineButtons(cuisines) {
-    const container = document.getElementById('cuisineFilterBar');
-    // Keep the "All Cuisines" button and remove any other dynamic ones (except the first)
-    const allBtn = container.querySelector('.mood-btn.active');
-    if (!allBtn || allBtn.getAttribute('data-cuisine') !== '') {
-      // Rebuild from scratch safely
-      container.innerHTML = `<span class="mood-label">Cuisine:</span>
-        <button class="mood-btn active" data-cuisine="" onclick="setCuisine(this)">All Cuisines</button>`;
+  // ======================== TOP-RIGHT AUTH AREA (older version style) ==================
+  async function updateAuthAreaOldStyle() {
+    const authDiv = document.getElementById('authArea');
+    if (!authDiv) return;
+    const sessionData = await checkSession();
+    const user = sessionData.loggedIn ? sessionData.user : null;
+    if (!user) {
+      // Older style: simple sign in and register buttons
+      authDiv.innerHTML = `
+        <a href="login.html" class="btn btn-outline-etg">Sign in</a>
+        <a href="signup.html" class="btn btn-etg">Register</a>
+      `;
+    } else {
+      // Older style: show user name and a logout link inline (no dropdown)
+      const displayName = user.name || user.email.split('@')[0];
+      authDiv.innerHTML = `
+        <div class="user-greeting">
+          <span>👋 ${escapeHtml(displayName)}</span>
+          <a class="logout-link" id="topLogoutBtn">Logout</a>
+        </div>
+      `;
+      const logoutBtn = document.getElementById('topLogoutBtn');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          await apiCall('/logout.php', { method: 'POST' });
+          window.location.href = 'index.html';
+        });
+      }
     }
+  }
+
+  // ======================== ENHANCED SIDEBAR: User profile + dynamic footer ==================
+  async function updateMobileSidebarUI() {
+    const sessionData = await checkSession();
+    const user = sessionData.loggedIn ? sessionData.user : null;
+    const avatarDiv = document.getElementById('mobileUserAvatar');
+    const userInfoDiv = document.getElementById('mobileUserInfo');
+    const footerContainer = document.getElementById('mobileSidebarFooter');
+    
+    if (user) {
+      // Logged in user avatar and info
+      const firstLetter = (user.name && user.name.charAt(0)) || (user.email && user.email.charAt(0).toUpperCase()) || 'U';
+      avatarDiv.innerHTML = `<span style="font-size:28px;">${escapeHtml(firstLetter)}</span>`;
+      avatarDiv.style.background = "#ff6b3522";
+      userInfoDiv.innerHTML = `
+        <div class="user-display-name">${escapeHtml(user.name || user.email.split('@')[0])}</div>
+        <div class="user-display-email">${escapeHtml(user.email)}</div>
+      `;
+      // footer dynamic: based on role show dashboard shortcuts but also logout
+      let footerHtml = '';
+      if (user.role === 'customer') {
+        footerHtml = `<a href="booking-history.html" class="sidebar-action-btn"><i class="bi bi-journal-bookmark-fill"></i> My Bookings</a>
+                      <a href="order-status.html" class="sidebar-action-btn"><i class="bi bi-truck"></i> Order Status</a>
+                      <button id="mobileLogoutBtn" class="sidebar-action-btn logout-btn"><i class="bi bi-box-arrow-right"></i> Sign Out</button>`;
+      } else if (user.role === 'staff') {
+        footerHtml = `<a href="staff-dashboard.html" class="sidebar-action-btn primary-action"><i class="bi bi-person-badge"></i> Staff Dashboard</a>
+                      <button id="mobileLogoutBtn" class="sidebar-action-btn logout-btn"><i class="bi bi-box-arrow-right"></i> Sign Out</button>`;
+      } else if (user.role === 'owner') {
+        footerHtml = `<a href="owner-dashboard.html" class="sidebar-action-btn primary-action"><i class="bi bi-building"></i> Owner Dashboard</a>
+                      <button id="mobileLogoutBtn" class="sidebar-action-btn logout-btn"><i class="bi bi-box-arrow-right"></i> Sign Out</button>`;
+      } else if (user.role === 'admin') {
+        footerHtml = `<a href="admin.html" class="sidebar-action-btn primary-action"><i class="bi bi-shield-lock"></i> Admin Panel</a>
+                      <button id="mobileLogoutBtn" class="sidebar-action-btn logout-btn"><i class="bi bi-box-arrow-right"></i> Sign Out</button>`;
+      } else {
+        footerHtml = `<button id="mobileLogoutBtn" class="sidebar-action-btn logout-btn"><i class="bi bi-box-arrow-right"></i> Sign Out</button>`;
+      }
+      footerContainer.innerHTML = footerHtml;
+      const logoutBtn = document.getElementById('mobileLogoutBtn');
+      if (logoutBtn) logoutBtn.addEventListener('click', async () => {
+        await apiCall('/logout.php', { method: 'POST' });
+        window.location.href = 'index.html';
+      });
+    } else {
+      // Guest state
+      avatarDiv.innerHTML = `👤`;
+      avatarDiv.style.background = "rgba(255,107,53,0.2)";
+      userInfoDiv.innerHTML = `
+        <div class="user-display-name">Guest User</div>
+        <div class="guest-label">Not signed in</div>
+      `;
+      footerContainer.innerHTML = `
+        <a href="login.html" class="sidebar-action-btn primary-action"><i class="bi bi-box-arrow-in-right"></i> Log In</a>
+        <a href="signup.html" class="sidebar-action-btn"><i class="bi bi-person-plus"></i> Create Account</a>
+        <a href="signup.html?role=owner" class="sidebar-action-btn"><i class="bi bi-shop"></i> Partner with Us</a>
+      `;
+    }
+  }
+
+  // generate navigation links with icons (for both desktop & mobile)
+  async function setupEnhancedNav() {
+    const sessionData = await checkSession();
+    const user = sessionData.loggedIn ? sessionData.user : null;
+    const desktopNav = document.getElementById('mainNav');
+    const mobileNavContainer = document.getElementById('mobileNavLinks');
+    if (!desktopNav) return;
+    
+    let navItems = [];
+    if (!user || user.role === 'customer') {
+      navItems = [
+        { href: "index.html", icon: "bi bi-shop", label: "Restaurants" },
+        { href: "booking-history.html", icon: "bi bi-calendar-check", label: "My Bookings" },
+        { href: "order-status.html", icon: "bi bi-clock-history", label: "Order Status" }
+      ];
+    } else if (user.role === 'staff') {
+      navItems = [{ href: "staff-dashboard.html", icon: "bi bi-person-badge", label: "Staff Dashboard" }];
+    } else if (user.role === 'owner') {
+      navItems = [{ href: "owner-dashboard.html", icon: "bi bi-building", label: "Owner Dashboard" }];
+    } else if (user.role === 'admin') {
+      navItems = [{ href: "admin.html", icon: "bi bi-shield-lock", label: "Admin Dashboard" }];
+    }
+    
+    const buildLinks = (items) => items.map(item => `<a class="nav-link" href="${item.href}"><i class="${item.icon}"></i> ${item.label}</a>`).join('');
+    const desktopHtml = buildLinks(navItems);
+    desktopNav.innerHTML = desktopHtml;
+    // Mobile links (enhanced with icons and active tracking)
+    if (mobileNavContainer) {
+      mobileNavContainer.innerHTML = navItems.map(item => `<a href="${item.href}"><i class="${item.icon}"></i> ${item.label}</a>`).join('');
+      // highlight current page
+      const currentPath = window.location.pathname.split('/').pop() || 'index.html';
+      mobileNavContainer.querySelectorAll('a').forEach(link => {
+        if (link.getAttribute('href') === currentPath) link.classList.add('active');
+      });
+    }
+  }
+
+  // ==== restaurant logic ====
+  async function populateCuisineButtons(cuisines) {
+    const container = document.getElementById('cuisineFilterBar');
+    if (!container) return;
+    container.innerHTML = `<span class="mood-label">Cuisine:</span>
+        <button class="mood-btn active" data-cuisine="" onclick="setCuisine(this)">All Cuisines</button>`;
     for (let c of cuisines) {
       const btn = document.createElement('button');
       btn.className = 'mood-btn';
@@ -290,24 +639,18 @@
     const container = document.getElementById('restaurantList');
     try {
       allRestaurants = await apiCall('/restaurants.php');
-      // Extract unique cuisines
       const cuisineSet = new Set();
       allRestaurants.forEach(r => { if (r.category) cuisineSet.add(r.category); });
       const uniqueCuisines = Array.from(cuisineSet).sort();
-      populateCuisineButtons(uniqueCuisines);
+      await populateCuisineButtons(uniqueCuisines);
       applyFilter();
     } catch (err) {
       container.innerHTML = '<div class="col-12 text-center text-danger">Failed to load restaurants.</div>';
     }
   }
 
-  function setCuisine(btn) {
-    // Toggle active state
-    if (btn.classList.contains('active') && btn.getAttribute('data-cuisine') === '') {
-      // Already "All" active – do nothing
-      return;
-    }
-    // Remove active from all
+  window.setCuisine = function(btn) {
+    if (btn.classList.contains('active') && btn.getAttribute('data-cuisine') === '') return;
     document.querySelectorAll('#cuisineFilterBar .mood-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     currentCuisine = btn.getAttribute('data-cuisine');
@@ -320,10 +663,7 @@
     const term = currentSearchTerm.trim().toLowerCase();
     let filtered = allRestaurants;
     if (term) {
-      filtered = filtered.filter(r => 
-        r.name.toLowerCase().includes(term) || 
-        (r.category && r.category.toLowerCase().includes(term))
-      );
+      filtered = filtered.filter(r => r.name.toLowerCase().includes(term) || (r.category && r.category.toLowerCase().includes(term)));
     }
     if (currentCuisine) {
       filtered = filtered.filter(r => r.category === currentCuisine);
@@ -353,43 +693,39 @@
     applyFilter();
   }
 
-  async function setupNav() {
-    const s = await checkSession();
-    const desktopNav = document.getElementById('mainNav');
-    const mobileNav = document.getElementById('mobileNavLinks');
-    if (!desktopNav) return;
-    const u = s.loggedIn ? s.user : null;
-    let navHtml = '';
-    if (!u || u.role === 'customer') {
-      navHtml = `<a class="nav-link" href="index.html">Restaurants</a>
-                 <a class="nav-link" href="booking-history.html">My Bookings</a>
-                 <a class="nav-link" href="order-status.html">Order Status</a>`;
-    } else if (u.role === 'staff') {
-      navHtml = `<a class="nav-link fw-bold" href="staff-dashboard.html">↗ Staff Dashboard</a>`;
-    } else if (u.role === 'owner') {
-      navHtml = `<a class="nav-link fw-bold" href="owner-dashboard.html">↗ Owner Dashboard</a>`;
-    } else if (u.role === 'admin') {
-      navHtml = `<a class="nav-link fw-bold" href="admin.html">↗ Admin Dashboard</a>`;
-    }
-    desktopNav.innerHTML = navHtml;
-    if (mobileNav) mobileNav.innerHTML = navHtml;
-  }
-
-  window.addEventListener('DOMContentLoaded', async () => {
-    await nav();
-    await setupNav();
-    await renderRestaurants();
-    const searchInput = document.getElementById('searchInput');
-    const searchButton = document.getElementById('searchButton');
-    searchInput.addEventListener('input', updateFilters);
-    searchButton.addEventListener('click', updateFilters);
-    // Optional: auto-redirect for admin/staff/owner – same as old index
+  // redirect logic for staff/admin/owner
+  async function checkAutoRedirect() {
     const session = (await checkSession()).loggedIn ? (await checkSession()).user : null;
     if (session && (session.role === 'admin' || session.role === 'staff' || session.role === 'owner')) {
       if (session.role === 'admin') location.href = 'admin.html';
       else if (session.role === 'staff') location.href = 'staff-dashboard.html';
       else if (session.role === 'owner') location.href = 'owner-dashboard.html';
+      return true;
     }
+    return false;
+  }
+
+  window.addEventListener('DOMContentLoaded', async () => {
+    await updateAuthAreaOldStyle();
+    await setupEnhancedNav();
+    await updateMobileSidebarUI();
+    await renderRestaurants();
+    const searchInput = document.getElementById('searchInput');
+    const searchButton = document.getElementById('searchButton');
+    if (searchInput) searchInput.addEventListener('input', updateFilters);
+    if (searchButton) searchButton.addEventListener('click', updateFilters);
+    const willRedirect = await checkAutoRedirect();
+    if (!willRedirect) {
+      await updateMobileSidebarUI();
+      await setupEnhancedNav();
+      await updateAuthAreaOldStyle();
+    }
+  });
+
+  window.addEventListener('pageshow', () => { 
+    updateMobileSidebarUI(); 
+    setupEnhancedNav(); 
+    updateAuthAreaOldStyle();
   });
 </script>
 </body>
