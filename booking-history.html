@@ -2,22 +2,59 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Booking History – EatToGo</title>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="assets/css/style.css">
   <style>
-    /* Navbar styles (same as before) */
-    .navbar-etg .container {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
+    /* Enhanced Mobile Sidebar & Auth (same as index) */
+    :root {
+      --orange: #ff6b35;
+      --dark-wood: #1C1208;
+      --sidebar-width: 280px;
     }
+    .mobile-sidebar {
+      position: fixed; top: 0; left: 0; width: var(--sidebar-width); height: 100%;
+      background: linear-gradient(145deg, #1a130b 0%, #0e0a05 100%);
+      z-index: 1200; transform: translateX(-100%); transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+      box-shadow: 8px 0 32px rgba(0,0,0,0.5); display: flex; flex-direction: column;
+      border-right: 1px solid rgba(255,107,53,0.2);
+    }
+    .mobile-sidebar.open { transform: translateX(0); }
+    .sidebar-header { padding: 28px 20px 20px 20px; display: flex; align-items: center; gap: 14px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .sidebar-avatar { width: 52px; height: 52px; background: rgba(255,107,53,0.2); border-radius: 32px; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 600; color: var(--orange); border: 1.5px solid rgba(255,107,53,0.4); }
+    .sidebar-userinfo { flex: 1; }
+    .sidebar-userinfo .user-display-name { font-weight: 800; font-size: 1.1rem; color: white; }
+    .sidebar-userinfo .user-display-email { font-size: 0.7rem; color: rgba(255,255,255,0.6); }
+    .sidebar-userinfo .guest-label { font-size: 0.75rem; color: rgba(255,255,255,0.7); background: rgba(255,107,53,0.2); display: inline-block; padding: 2px 10px; border-radius: 20px; }
+    .close-sidebar { background: rgba(255,255,255,0.1); border: none; width: 36px; height: 36px; border-radius: 30px; font-size: 24px; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
+    .close-sidebar:hover { background: var(--orange); color: #1C1208; transform: rotate(90deg); }
+    .sidebar-nav-links { flex: 1; padding: 24px 16px; display: flex; flex-direction: column; gap: 8px; }
+    .sidebar-nav-links a { display: flex; align-items: center; gap: 14px; padding: 12px 18px; border-radius: 16px; color: rgba(255,255,255,0.85); text-decoration: none; font-weight: 600; transition: 0.2s; }
+    .sidebar-nav-links a i { font-size: 1.3rem; width: 28px; color: var(--orange); }
+    .sidebar-nav-links a:hover, .sidebar-nav-links a.active { background: rgba(255,107,53,0.25); color: var(--orange); }
+    .sidebar-footer { padding: 20px 16px 30px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; gap: 10px; }
+    .sidebar-action-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 40px; padding: 10px 16px; font-weight: 600; color: white; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .sidebar-action-btn.primary-action { background: var(--orange); color: #1C1208; }
+    .sidebar-action-btn.logout-btn { background: rgba(255,70,70,0.15); color: #ffb4a2; }
+    .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(6px); z-index: 1150; display: none; }
+    .sidebar-overlay.active { display: block; }
+    body.sidebar-open { overflow: hidden; }
+    .sidebar-divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(255,107,53,0.3), transparent); margin: 6px 16px; }
+
+    /* Top-right auth (older style) */
+    .auth-buttons { display: flex; gap: 10px; align-items: center; }
+    .auth-buttons .btn-outline-etg { border: 2px solid var(--orange); background: transparent; color: var(--orange); border-radius: 40px; padding: 6px 18px; font-weight: 700; }
+    .auth-buttons .btn-etg { background: var(--orange); border: none; color: #1C1208; font-weight: 700; border-radius: 40px; padding: 6px 18px; }
+    .user-greeting { display: inline-flex; align-items: center; gap: 12px; background: #fef2e8; padding: 4px 12px 4px 18px; border-radius: 50px; font-weight: 600; }
+    .user-greeting .logout-link { color: var(--orange); cursor: pointer; font-weight: 700; }
+
+    /* Navbar layout */
+    .navbar-etg .container { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; }
     .desktop-nav { display: flex; gap: 1rem; }
-    .hamburger { display: none; background: none; border: none; font-size: 28px; color: var(--orange); cursor: pointer; padding: 0; }
+    .hamburger { display: none; background: none; border: none; font-size: 28px; color: var(--orange); cursor: pointer; }
     @media (max-width: 768px) {
       .navbar-etg .container { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; }
       .logo { grid-column: 1; grid-row: 1; justify-self: start; }
@@ -25,145 +62,183 @@
       .hamburger { display: block; grid-column: 1; grid-row: 2; justify-self: start; margin-top: 4px; }
       .desktop-nav { display: none; }
     }
-    @media (min-width: 769px) { .hamburger, .mobile-sidebar, .sidebar-overlay, .close-sidebar { display: none; } }
-    .mobile-sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100%; background: #1C1208; z-index: 1100; transform: translateX(-100%); transition: transform 0.3s ease; padding: 60px 20px 20px; }
-    .mobile-sidebar.open { transform: translateX(0); }
-    .mobile-sidebar a { display: block; color: rgba(255,255,255,.8); text-decoration: none; padding: 12px 16px; font-weight: 700; border-radius: 12px; margin: 8px 0; }
-    .mobile-sidebar a:hover, .mobile-sidebar a.active { background: rgba(255,107,53,.2); color: var(--orange); }
-    .close-sidebar { position: absolute; top: 15px; right: 20px; font-size: 28px; color: white; background: none; border: none; cursor: pointer; }
-    .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1050; display: none; }
-    .sidebar-overlay.active { display: block; }
-    .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    @media (max-width: 576px) {
-      .table td, .table th { white-space: nowrap; }
-    }
+    @media (min-width: 769px) { .hamburger, .mobile-sidebar, .sidebar-overlay { display: none; } }
+    
+    .table-responsive { overflow-x: auto; }
+    @media (max-width: 576px) { .table td, .table th { white-space: nowrap; } }
+    .status { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+    .status.confirmed { background: #d4edda; color: #155724; }
+    .status.pending { background: #fff3cd; color: #856404; }
+    .status.rejected { background: #f8d7da; color: #721c24; }
+    .booked-on { font-size: 0.85rem; color: #6c757d; white-space: nowrap; }
   </style>
 </head>
 <body>
-
 <nav class="navbar-etg">
   <div class="container">
     <a class="logo" href="index.html">Eat<span>To</span>Go</a>
     <div class="desktop-nav" id="mainNav"></div>
-    <div class="right-group">
-      <div id="authArea"></div>
-    </div>
+    <div class="right-group"><div id="authArea" class="auth-buttons"></div></div>
     <button class="hamburger" id="hamburgerBtn">☰</button>
   </div>
 </nav>
 
 <div class="mobile-sidebar" id="mobileSidebar">
-  <button class="close-sidebar" id="closeSidebarBtn">×</button>
-  <div id="mobileNavLinks"></div>
+  <div class="sidebar-header">
+    <div class="sidebar-avatar" id="mobileUserAvatar">🍽️</div>
+    <div class="sidebar-userinfo" id="mobileUserInfo"><div class="user-display-name">Guest</div><div class="user-display-email">sign in</div></div>
+    <button class="close-sidebar" id="closeSidebarBtn">✕</button>
+  </div>
+  <div class="sidebar-divider"></div>
+  <div id="mobileNavLinks" class="sidebar-nav-links"></div>
+  <div class="sidebar-footer" id="mobileSidebarFooter"></div>
 </div>
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-<section class="page-head">
-  <div class="container">
-    <h1>My Bookings</h1>
-  </div>
-</section>
-
+<section class="page-head"><div class="container"><h1>My Bookings</h1></div></section>
 <section class="section">
   <div class="container">
     <div class="card-etg p-4">
       <div class="table-responsive">
         <table class="table">
           <thead>
-            <tr><th>#</th><th>Restaurant</th><th>Date & Time</th><th>Guests</th><th>Status</th><th>Arrival</th><th>Actions</th></tr>
+            <tr>
+              <th>#</th>
+              <th>Restaurant</th>
+              <th>Date & Time</th>
+              <th>Guests</th>
+              <th>Booked On</th>
+              <th>Status</th>
+              <th>Arrival</th>
+              <th>Actions</th>
+            </tr>
           </thead>
           <tbody id="myBookingRows"></tbody>
         </table>
       </div>
-      <div>
-        <a href="index.html" class="btn btn-etg">+ New Reservation</a>
-        <a href="order-status.html" class="btn btn-outline-etg ms-2">Track Order</a>
-      </div>
+      <div><a href="index.html" class="btn btn-etg">+ New Reservation</a><a href="order-status.html" class="btn btn-outline-etg ms-2">Track Order</a></div>
     </div>
   </div>
 </section>
-
-<footer class="minimal-footer">
-  <div class="container d-flex justify-content-between flex-wrap gap-5">
-    <div class="footer-brand"><h2>Eat<span>To</span>Go</h2><p>Final Year Project – Restaurant and Food Reservation System.</p></div>
-    <div class="footer-members"><h4>Project Team</h4><ul class="list-unstyled"><li>Navin Ramu</li><li>Muhamamd Nazim</li><li>Hadif</li><li>Ng Yue Yang</li></ul></div>
-  </div>
-  <div class="footer-bottom">© 2026 EatToGo • Universiti Teknologi Malaysia (UTM)</div>
-</footer>
+<footer class="minimal-footer"><div class="container d-flex justify-content-between flex-wrap gap-5"><div class="footer-brand"><h2>Eat<span>To</span>Go</h2><p>Final Year Project – Restaurant and Food Reservation System.</p></div><div class="footer-members"><h4>Project Team</h4><ul class="list-unstyled"><li>Navin Ramu</li><li>Muhamamd Nazim</li><li>Hadif</li><li>Ng Yue Yang</li></ul></div></div><div class="footer-bottom">© 2026 EatToGo • Universiti Teknologi Malaysia (UTM)</div></footer>
 
 <script src="assets/js/api.js"></script>
 <script>
-  // Sidebar toggle
+  // Sidebar logic
   const hamburger = document.getElementById('hamburgerBtn');
   const sidebar = document.getElementById('mobileSidebar');
   const overlay = document.getElementById('sidebarOverlay');
   const closeBtn = document.getElementById('closeSidebarBtn');
-  function openSidebar() { sidebar.classList.add('open'); overlay.classList.add('active'); }
-  function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('active'); }
-  if (hamburger) hamburger.addEventListener('click', openSidebar);
-  if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
-  if (overlay) overlay.addEventListener('click', closeSidebar);
+  function openSidebar() { sidebar.classList.add('open'); overlay.classList.add('active'); document.body.classList.add('sidebar-open'); }
+  function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('active'); document.body.classList.remove('sidebar-open'); }
+  hamburger?.addEventListener('click', openSidebar);
+  closeBtn?.addEventListener('click', closeSidebar);
+  overlay?.addEventListener('click', closeSidebar);
+  document.addEventListener('click', (e) => { if(sidebar?.classList.contains('open') && (e.target.closest('#mobileNavLinks a') || e.target.closest('.sidebar-action-btn'))) setTimeout(closeSidebar, 80); });
 
+  function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m=>m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
+
+  // Helper: convert ISO date to relative time (e.g., "2 days ago", "yesterday", "just now")
+  function getRelativeTime(dateString) {
+    if (!dateString) return 'unknown date';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'invalid date';
+    const now = new Date();
+    const diffMs = now - date;
+    const diffSec = Math.floor(diffMs / 1000);
+    const diffMin = Math.floor(diffSec / 60);
+    const diffHour = Math.floor(diffMin / 60);
+    const diffDay = Math.floor(diffHour / 24);
+
+    if (diffSec < 60) return 'just now';
+    if (diffMin < 60) return `${diffMin} minute${diffMin === 1 ? '' : 's'} ago`;
+    if (diffHour < 24) return `${diffHour} hour${diffHour === 1 ? '' : 's'} ago`;
+    if (diffDay === 1) return 'yesterday';
+    if (diffDay < 7) return `${diffDay} days ago`;
+    if (diffDay < 30) return `${Math.floor(diffDay / 7)} week${Math.floor(diffDay / 7) === 1 ? '' : 's'} ago`;
+    // fallback to formatted date
+    return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+
+  // Top-right auth (older style)
+  async function updateAuthAreaOldStyle() {
+    const authDiv = document.getElementById('authArea'); if(!authDiv) return;
+    const s = await checkSession();
+    const user = s.loggedIn ? s.user : null;
+    if(!user) { authDiv.innerHTML = `<a href="login.html" class="btn btn-outline-etg">Sign in</a><a href="signup.html" class="btn btn-etg">Register</a>`; }
+    else { authDiv.innerHTML = `<div class="user-greeting"><span>👋 ${escapeHtml(user.name || user.email.split('@')[0])}</span><a class="logout-link" id="topLogoutBtn">Logout</a></div>`; document.getElementById('topLogoutBtn')?.addEventListener('click', async()=>{ await apiCall('/logout.php',{method:'POST'}); location.href='index.html'; }); }
+  }
+
+  // Enhanced mobile sidebar
+  async function updateMobileSidebarUI() {
+    const s = await checkSession();
+    const user = s.loggedIn ? s.user : null;
+    const avatarDiv = document.getElementById('mobileUserAvatar');
+    const userInfoDiv = document.getElementById('mobileUserInfo');
+    const footerContainer = document.getElementById('mobileSidebarFooter');
+    if(user) {
+      const letter = (user.name?.charAt(0) || user.email.charAt(0).toUpperCase() || 'U');
+      avatarDiv.innerHTML = `<span style="font-size:28px;">${escapeHtml(letter)}</span>`;
+      userInfoDiv.innerHTML = `<div class="user-display-name">${escapeHtml(user.name || user.email.split('@')[0])}</div><div class="user-display-email">${escapeHtml(user.email)}</div>`;
+      let footerHtml = '';
+      if(user.role === 'customer') footerHtml = `<a href="booking-history.html" class="sidebar-action-btn"><i class="bi bi-journal-bookmark-fill"></i> My Bookings</a><a href="order-status.html" class="sidebar-action-btn"><i class="bi bi-truck"></i> Order Status</a><button id="mobileLogoutBtn" class="sidebar-action-btn logout-btn"><i class="bi bi-box-arrow-right"></i> Sign Out</button>`;
+      else if(user.role === 'staff') footerHtml = `<a href="staff-dashboard.html" class="sidebar-action-btn primary-action"><i class="bi bi-person-badge"></i> Staff Dashboard</a><button id="mobileLogoutBtn" class="sidebar-action-btn logout-btn">Sign Out</button>`;
+      else if(user.role === 'owner') footerHtml = `<a href="owner-dashboard.html" class="sidebar-action-btn primary-action"><i class="bi bi-building"></i> Owner Dashboard</a><button id="mobileLogoutBtn" class="sidebar-action-btn logout-btn">Sign Out</button>`;
+      else if(user.role === 'admin') footerHtml = `<a href="admin.html" class="sidebar-action-btn primary-action"><i class="bi bi-shield-lock"></i> Admin Panel</a><button id="mobileLogoutBtn" class="sidebar-action-btn logout-btn">Sign Out</button>`;
+      else footerHtml = `<button id="mobileLogoutBtn" class="sidebar-action-btn logout-btn">Sign Out</button>`;
+      footerContainer.innerHTML = footerHtml;
+      document.getElementById('mobileLogoutBtn')?.addEventListener('click', async()=>{ await apiCall('/logout.php',{method:'POST'}); location.href='index.html'; });
+    } else {
+      avatarDiv.innerHTML = `👤`;
+      userInfoDiv.innerHTML = `<div class="user-display-name">Guest User</div><div class="guest-label">Not signed in</div>`;
+      footerContainer.innerHTML = `<a href="login.html" class="sidebar-action-btn primary-action"><i class="bi bi-box-arrow-in-right"></i> Log In</a><a href="signup.html" class="sidebar-action-btn"><i class="bi bi-person-plus"></i> Create Account</a><a href="signup.html?role=owner" class="sidebar-action-btn"><i class="bi bi-shop"></i> Partner with Us</a>`;
+    }
+  }
+
+  async function setupEnhancedNav() {
+    const s = await checkSession();
+    const user = s.loggedIn ? s.user : null;
+    const desktopNav = document.getElementById('mainNav');
+    const mobileNav = document.getElementById('mobileNavLinks');
+    let navItems = [];
+    if(!user || user.role === 'customer') navItems = [{href:"index.html", icon:"bi bi-shop", label:"Restaurants"},{href:"booking-history.html", icon:"bi bi-calendar-check", label:"My Bookings"},{href:"order-status.html", icon:"bi bi-clock-history", label:"Order Status"}];
+    else if(user.role === 'staff') navItems = [{href:"staff-dashboard.html", icon:"bi bi-person-badge", label:"Staff Dashboard"}];
+    else if(user.role === 'owner') navItems = [{href:"owner-dashboard.html", icon:"bi bi-building", label:"Owner Dashboard"}];
+    else if(user.role === 'admin') navItems = [{href:"admin.html", icon:"bi bi-shield-lock", label:"Admin Dashboard"}];
+    const render = (items) => items.map(i => `<a class="nav-link" href="${i.href}"><i class="${i.icon}"></i> ${i.label}</a>`).join('');
+    desktopNav.innerHTML = render(navItems);
+    if(mobileNav) mobileNav.innerHTML = render(navItems);
+  }
+
+  // Booking table with relative time for created_at
   async function renderMyBookings() {
     const tbody = document.getElementById('myBookingRows');
     try {
       const session = await checkSession();
-      if (!session.loggedIn) { tbody.innerHTML = '<tr><td colspan="7">Please login. </div>'; return; }
+      if(!session.loggedIn) { tbody.innerHTML = '<tr><td colspan="8">Please login to view bookings.</td></tr>'; return; }
       let bookings = await apiCall('/user-reservations.php');
-      if (!bookings.length) { tbody.innerHTML = '<tr><td colspan="7">No bookings yet. </div>'; return; }
-      
-      // Sort by created_at descending (newest first) – fallback to id if created_at missing
-      bookings.sort((a, b) => {
-        const dateA = a.created_at ? new Date(a.created_at) : 0;
-        const dateB = b.created_at ? new Date(b.created_at) : 0;
-        return dateB - dateA;
-      });
-      bookings.forEach((b, idx) => b.displayNumber = idx + 1);
-      
-      tbody.innerHTML = bookings.map(b => `
+      if(!bookings.length) { tbody.innerHTML = '<tr><td colspan="8">No bookings yet.</td></tr>'; return; }
+      bookings.sort((a,b)=> new Date(b.created_at||0) - new Date(a.created_at||0));
+      tbody.innerHTML = bookings.map((b,idx)=>`
         <tr>
-          <td><b>#${b.displayNumber}</b></td>
-          <td>${escapeHtml(b.restaurant_name)}</div>
-          <td>${b.reservation_date} ${b.reservation_time}</div>
-          <td>${b.num_people}</div>
-          <td><span class="status ${b.status}">${b.status}</span></div>
-          <td>${b.arrival_confirmed ? '<span class="status confirmed">Arrived</span>' : 'Not arrived'}</div>
-          <td class="d-flex gap-1 flex-wrap">
-            ${b.arrival_confirmed ? `<a href="feedback.html?reservation_id=${b.id}" class="btn btn-sm btn-outline-etg">Feedback</a>` : ''}
-            <a href="order-status.html?reservation_id=${b.id}" class="btn btn-sm btn-outline-secondary">Track</a>
-           </div>
+          <td><b>#${idx+1}</b></td>
+          <td>${escapeHtml(b.restaurant_name)}</td>
+          <td>${b.reservation_date} ${b.reservation_time}</td>
+          <td>${b.num_people}</td>
+          <td class="booked-on" title="${b.created_at ? new Date(b.created_at).toLocaleString() : ''}">${getRelativeTime(b.created_at)}</td>
+          <td><span class="status ${b.status}">${b.status}</span></td>
+          <td>${b.arrival_confirmed ? '<span class="status confirmed">Arrived</span>' : 'Not arrived'}</td>
+          <td class="d-flex gap-1 flex-wrap">${b.arrival_confirmed ? `<a href="feedback.html?reservation_id=${b.id}" class="btn btn-sm btn-outline-etg">Feedback</a>` : ''}<a href="order-status.html?reservation_id=${b.id}" class="btn btn-sm btn-outline-secondary">Track</a></td>
         </tr>
       `).join('');
-    } catch(err) { tbody.innerHTML = '<tr><td colspan="7">Error loading bookings. </div>'; }
-  }
-
-  function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m=>m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
-
-  async function setupNav() {
-    const s = await checkSession();
-    const desktopNav = document.getElementById('mainNav');
-    const mobileNav = document.getElementById('mobileNavLinks');
-    if (!desktopNav) return;
-    const u = s.loggedIn ? s.user : null;
-    let navHtml = '';
-    if (!u || u.role === 'customer') {
-      navHtml = `<a class="nav-link" href="index.html">Restaurants</a>
-                 <a class="nav-link" href="booking-history.html">My Bookings</a>
-                 <a class="nav-link" href="order-status.html">Order Status</a>`;
-    } else if (u.role === 'staff') {
-      navHtml = `<a class="nav-link fw-bold" href="staff-dashboard.html">↗ Staff Dashboard</a>`;
-    } else if (u.role === 'owner') {
-      navHtml = `<a class="nav-link fw-bold" href="owner-dashboard.html">↗ Owner Dashboard</a>`;
-    } else if (u.role === 'admin') {
-      navHtml = `<a class="nav-link fw-bold" href="admin.html">↗ Admin Dashboard</a>`;
-    }
-    desktopNav.innerHTML = navHtml;
-    if (mobileNav) mobileNav.innerHTML = navHtml;
+    } catch(err) { tbody.innerHTML = '<tr><td colspan="8">Error loading bookings.</td></tr>'; }
   }
 
   window.addEventListener('DOMContentLoaded', async () => {
     await nav();
-    await setupNav();
+    await setupEnhancedNav();
+    await updateAuthAreaOldStyle();
+    await updateMobileSidebarUI();
     await renderMyBookings();
   });
 </script>
