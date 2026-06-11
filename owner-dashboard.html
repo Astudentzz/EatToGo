@@ -16,6 +16,8 @@
     @media (min-width: 769px) {
       .sidebar { position: fixed; width: 260px; min-height: 100vh; }
       .owner-main { margin-left: 260px; }
+      .sidebar.collapsed { transform: translateX(-100%); }
+      .owner-main.full { margin-left: 0; }
     }
     .topbar {
       background: white;
@@ -264,6 +266,32 @@
 <script>
   let currentRestaurantId = null;
   let allRestaurants = [];
+  const sidebar = document.getElementById('sidebar');
+  const ownerMain = document.getElementById('ownerMain');
+  const toggleBtn = document.getElementById('toggleSidebarBtn');
+  let sidebarOpen = false;
+
+  function toggleSidebar() {
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    if (isMobile) {
+      if (sidebarOpen) {
+        sidebar.classList.remove('show');
+      } else {
+        sidebar.classList.add('show');
+      }
+    } else {
+      if (sidebarOpen) {
+        sidebar.classList.remove('collapsed');
+        ownerMain.classList.remove('full');
+      } else {
+        sidebar.classList.add('collapsed');
+        ownerMain.classList.add('full');
+      }
+    }
+    sidebarOpen = !sidebarOpen;
+  }
+
+  if (toggleBtn) toggleBtn.addEventListener('click', toggleSidebar);
 
   async function loadOwnerData() {
     const session = await checkSession();

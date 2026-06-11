@@ -1,4 +1,7 @@
-const API_BASE = 'http://localhost/EatToGo/api';
+const APP_ROOT = window.location.protocol === 'file:'
+    ? 'http://localhost/EatToGo'
+    : new URL('.', window.location.href).href.replace(/\/$/, '');
+const API_BASE = `${APP_ROOT}/api`;
 
 async function apiCall(endpoint, options = {}) {
     const response = await fetch(`${API_BASE}${endpoint}`, {
