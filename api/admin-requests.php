@@ -1,7 +1,7 @@
 <?php
 header('Content-Type: application/json');
-session_start();
 require_once 'config/database.php';
+startSecureSession();
 $pdo = getDB();
 
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
@@ -18,9 +18,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     ");
     echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
 } elseif ($_SERVER['REQUEST_METHOD'] === 'PUT') {
-    $data = json_decode(file_get_contents('php://input'), true);
-    $id = $data['id'] ?? 0;
+    requireCsrfToken();
+    $data = readJsonBody();
+    $id = (int)($data['id'] ?? 0);
     $action = $data['action'] ?? '';
+    if (!$id || !in_array($action, ['approve', 'reject'], true)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Invalid request action']);
+        exit;
+    }
     $newStatus = $action === 'approve' ? 'approved' : 'rejected';
     $stmt = $pdo->prepare("UPDATE restaurants SET status = ? WHERE id = ?");
     $stmt->execute([$newStatus, $id]);

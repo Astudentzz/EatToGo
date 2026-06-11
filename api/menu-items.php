@@ -1,7 +1,7 @@
 <?php
 header('Content-Type: application/json; charset=utf-8');
-session_start();
 require_once 'config/database.php';
+startSecureSession();
 $pdo = getDB();
 
 // Only staff can manage menu items
@@ -26,6 +26,7 @@ if ($method === 'GET') {
     echo json_encode($menu);
 }
 elseif ($method === 'POST') {
+    requireCsrfToken();
     // Check if this is an update (FormData with _method=PUT or with an 'id' field)
     $isUpdate = false;
     $id = null;
@@ -49,15 +50,18 @@ elseif ($method === 'POST') {
         // Handle image upload (replace old one)
         $imagePath = null;
         if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-            $uploadDir = __DIR__ . '/../uploads/menu_items/';
-            if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
-            $ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
-            $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-            if (in_array($ext, $allowed)) {
-                $filename = uniqid() . '.' . $ext;
-                if (move_uploaded_file($_FILES['image']['tmp_name'], $uploadDir . $filename)) {
-                    $imagePath = '/uploads/menu_items/' . $filename;
-                }
+            try {
+                $imagePath = saveUploadedFile(
+                    $_FILES['image'],
+                    __DIR__ . '/../uploads/menu_items/',
+                    '/uploads/menu_items',
+                    ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+                    ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+                );
+            } catch (RuntimeException $e) {
+                http_response_code(400);
+                echo json_encode(['error' => $e->getMessage()]);
+                exit;
             }
         }
 
@@ -81,15 +85,18 @@ elseif ($method === 'POST') {
         $imagePath = null;
 
         if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-            $uploadDir = __DIR__ . '/../uploads/menu_items/';
-            if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
-            $ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
-            $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-            if (in_array($ext, $allowed)) {
-                $filename = uniqid() . '.' . $ext;
-                if (move_uploaded_file($_FILES['image']['tmp_name'], $uploadDir . $filename)) {
-                    $imagePath = '/uploads/menu_items/' . $filename;
-                }
+            try {
+                $imagePath = saveUploadedFile(
+                    $_FILES['image'],
+                    __DIR__ . '/../uploads/menu_items/',
+                    '/uploads/menu_items',
+                    ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+                    ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+                );
+            } catch (RuntimeException $e) {
+                http_response_code(400);
+                echo json_encode(['error' => $e->getMessage()]);
+                exit;
             }
         }
 
@@ -99,7 +106,8 @@ elseif ($method === 'POST') {
     }
 }
 elseif ($method === 'DELETE') {
-    $id = $_GET['id'] ?? 0;
+    requireCsrfToken();
+    $id = (int)($_GET['id'] ?? 0);
     if (!$id) {
         http_response_code(400);
         echo json_encode(['error' => 'Missing item ID']);

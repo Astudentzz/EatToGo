@@ -1,7 +1,7 @@
 <?php
 header('Content-Type: application/json');
-session_start();
 require_once 'config/database.php';
+startSecureSession();
 $pdo = getDB();
 
 if (!isset($_SESSION['user'])) {
@@ -47,7 +47,8 @@ if ($method === 'GET') {
     echo json_encode($data);
 }
 elseif ($method === 'PUT') {
-    $input = json_decode(file_get_contents('php://input'), true);
+    requireCsrfToken();
+    $input = readJsonBody();
     $new_name = trim($input['name'] ?? '');
     $new_password = trim($input['password'] ?? '');
 
@@ -63,8 +64,13 @@ elseif ($method === 'PUT') {
     $params[] = $new_name;
 
     if (!empty($new_password)) {
+        if (strlen($new_password) < 8) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Password must be at least 8 characters']);
+            exit;
+        }
         $updateFields[] = "password = ?";
-        $params[] = md5($new_password);
+        $params[] = hashPassword($new_password);
     }
 
     $params[] = $user_id;
@@ -74,9 +80,7 @@ elseif ($method === 'PUT') {
 
     // Update session data
     $_SESSION['user']['name'] = $new_name;
-    if (!empty($new_password)) {
-        $_SESSION['user']['password'] = md5($new_password);
-    }
+    unset($_SESSION['user']['password']);
 
     echo json_encode(['success' => true]);
 }

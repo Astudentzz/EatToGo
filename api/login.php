@@ -1,7 +1,7 @@
 <?php
 header('Content-Type: application/json');
-session_start();
 require_once 'config/database.php';
+startSecureSession();
 $pdo = getDB();
 
 // Include SMTP configuration (same as forgot-password.php)
@@ -10,7 +10,9 @@ if (!file_exists($smtpConfigPath)) {
     // Fallback – log error but do not break login
     error_log('SMTP config missing for login email');
 }
-require_once $smtpConfigPath;
+if (file_exists($smtpConfigPath)) {
+    require_once $smtpConfigPath;
+}
 
 // Include PHPMailer (same as forgot-password.php)
 require_once __DIR__ . '/../lib/PHPMailer/src/PHPMailer.php';
@@ -20,10 +22,11 @@ require_once __DIR__ . '/../lib/PHPMailer/src/Exception.php';
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-$data = json_decode(file_get_contents('php://input'), true);
+$data = readJsonBody();
 $email = $data['email'] ?? '';
 $password = $data['password'] ?? '';
 $role = $data['role'] ?? 'customer';
+rateLimit('login_' . strtolower($email), 8, 300);
 
 $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
 $stmt->execute([$email]);
@@ -43,8 +46,10 @@ if (!$user['email_verified']) {
 }
 // -----------------------------------------
 
-if (md5($password) === $user['password'] && $user['role'] === $role) {
-    $_SESSION['user'] = $user;
+if (verifyPasswordAndUpgrade($pdo, $user, $password) && $user['role'] === $role) {
+    session_regenerate_id(true);
+    $safeUser = publicUser($user);
+    $_SESSION['user'] = $safeUser;
 
     // --- Send login notification email (optional) ---
     if (defined('SMTP_HOST') && SMTP_HOST !== '') {
@@ -62,8 +67,9 @@ if (md5($password) === $user['password'] && $user['role'] === $role) {
             $mail->addAddress($user['email'], $user['name']);
             $mail->isHTML(true);
             $mail->Subject = 'New login to your EatToGo account';
+            $safeName = htmlspecialchars($user['name'], ENT_QUOTES, 'UTF-8');
             $mail->Body    = "
-                <p>Hello {$user['name']},</p>
+                <p>Hello {$safeName},</p>
                 <p>Your account was just used to log in at " . date('Y-m-d H:i:s') . ".</p>
                 <p>If this was you, you can ignore this message. If you did not log in, please contact support.</p>
                 <p>— EatToGo Team</p>
@@ -76,7 +82,7 @@ if (md5($password) === $user['password'] && $user['role'] === $role) {
         }
     }
 
-    echo json_encode(['success' => true, 'user' => $user]);
+    echo json_encode(['success' => true, 'user' => $safeUser]);
 } else {
     http_response_code(401);
     echo json_encode(['error' => 'Invalid credentials or role mismatch']);

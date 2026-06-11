@@ -3,14 +3,21 @@ header('Content-Type: application/json');
 require_once 'config/database.php';
 $pdo = getDB();
 
-$data = json_decode(file_get_contents('php://input'), true);
+$data = readJsonBody();
 $token = $data['token'] ?? '';
 $email = $data['email'] ?? '';
 $password = $data['password'] ?? '';
+rateLimit('reset_' . strtolower($email), 5, 600);
 
 if (!$token || !$email || !$password) {
     http_response_code(400);
     echo json_encode(['error' => 'Missing parameters']);
+    exit;
+}
+
+if (strlen($password) < 8) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Password must be at least 8 characters']);
     exit;
 }
 
@@ -23,7 +30,7 @@ if (!$user) {
     exit;
 }
 
-$hashed = md5($password);
+$hashed = hashPassword($password);
 $stmt = $pdo->prepare("UPDATE users SET password = ?, reset_token = NULL, token_expiry = NULL WHERE id = ?");
 $stmt->execute([$hashed, $user['id']]);
 

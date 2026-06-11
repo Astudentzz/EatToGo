@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/security.php';
+
 function getDB() {
     $host = 'localhost';
     $dbname = 'eattogo_db';   // use your local database name
@@ -10,7 +12,8 @@ function getDB() {
         return $pdo;
     } catch(PDOException $e) {
         http_response_code(500);
-        echo json_encode(['error' => 'DB connection failed: ' . $e->getMessage()]);
+        error_log('DB connection failed: ' . $e->getMessage());
+        echo json_encode(['error' => 'Database connection failed']);
         exit;
     }
 }

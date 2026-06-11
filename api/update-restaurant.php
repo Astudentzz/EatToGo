@@ -1,7 +1,7 @@
 <?php
 header('Content-Type: application/json');
-session_start();
 require_once 'config/database.php';
+startSecureSession();
 $pdo = getDB();
 
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'owner') {
@@ -11,8 +11,9 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'owner') {
 }
 
 $owner_id = $_SESSION['user']['id'];
-$data = json_decode(file_get_contents('php://input'), true);
-$restaurant_id = $data['id'] ?? 0;
+requireCsrfToken();
+$data = readJsonBody();
+$restaurant_id = (int)($data['id'] ?? 0);
 $name = $data['name'] ?? '';
 $location = $data['location'] ?? '';
 $category = $data['category'] ?? '';
@@ -26,6 +27,11 @@ $slot_duration = (int)($data['slot_duration'] ?? 60);
 if (!$restaurant_id || !$name || !$location) {
     http_response_code(400);
     echo json_encode(['error' => 'Missing required fields']);
+    exit;
+}
+if ($total_seats < 1 || $slot_duration < 15 || $slot_duration > 240) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Invalid seat count or slot duration']);
     exit;
 }
 

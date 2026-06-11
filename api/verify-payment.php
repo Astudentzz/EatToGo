@@ -1,7 +1,7 @@
 <?php
 header('Content-Type: application/json');
-session_start();
 require_once 'config/database.php';
+startSecureSession();
 $pdo = getDB();
 
 // Include SMTP configuration
@@ -26,9 +26,10 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'staff') {
     echo json_encode(['error' => 'Unauthorized']);
     exit;
 }
+requireCsrfToken();
 
-$data = json_decode(file_get_contents('php://input'), true);
-$reservation_id = $data['reservation_id'] ?? 0;
+$data = readJsonBody();
+$reservation_id = (int)($data['reservation_id'] ?? 0);
 if (!$reservation_id) {
     echo json_encode(['error' => 'Missing reservation ID']);
     exit;
@@ -53,9 +54,9 @@ if (!$reservation) {
 $stmt = $pdo->prepare("
     UPDATE reservations 
     SET payment_verified = 1, status = 'confirmed' 
-    WHERE id = ?
+    WHERE id = ? AND restaurant_id = ?
 ");
-$stmt->execute([$reservation_id]);
+$stmt->execute([$reservation_id, $staff_restaurant_id]);
 
 // Send email to customer
 try {
@@ -73,11 +74,13 @@ try {
     $mail->isHTML(true);
     $mail->Subject = 'Payment verified – Your reservation is confirmed! – EatToGo';
 
+    $safeCustomerName = htmlspecialchars($reservation['customer_name'], ENT_QUOTES, 'UTF-8');
+    $safeRestaurantName = htmlspecialchars($reservation['restaurant_name'], ENT_QUOTES, 'UTF-8');
     $mail->Body = "
         <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
             <h2 style='color: #28a745;'>Payment Verified ✅</h2>
-            <p>Dear {$reservation['customer_name']},</p>
-            <p>Your payment for the reservation at <strong>{$reservation['restaurant_name']}</strong> has been <strong>verified</strong>.</p>
+            <p>Dear {$safeCustomerName},</p>
+            <p>Your payment for the reservation at <strong>{$safeRestaurantName}</strong> has been <strong>verified</strong>.</p>
             <p>Your booking is now <strong style='color: #28a745;'>fully confirmed</strong>. We look forward to serving you!</p>
             <p>If you have any questions, please contact the restaurant directly.</p>
             <p>— EatToGo Team</p>

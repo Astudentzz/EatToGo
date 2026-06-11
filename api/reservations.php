@@ -1,7 +1,7 @@
 <?php
 header('Content-Type: application/json');
-session_start();
 require_once 'config/database.php';
+startSecureSession();
 $pdo = getDB();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -15,16 +15,33 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'customer') {
     echo json_encode(['error' => 'Please login as customer']);
     exit;
 }
+requireCsrfToken();
 
-$data = json_decode(file_get_contents('php://input'), true);
-$restaurant_id = $data['restaurant_id'] ?? 0;
+$data = readJsonBody();
+$restaurant_id = (int)($data['restaurant_id'] ?? 0);
 $date = $data['date'] ?? '';
 $time = $data['time'] ?? '';
-$guests = $data['guests'] ?? 1;
+$guests = (int)($data['guests'] ?? 1);
 
 if (!$restaurant_id || !$date || !$time || !$guests) {
     http_response_code(400);
     echo json_encode(['error' => 'Missing required fields']);
+    exit;
+}
+if ($guests < 1 || $guests > 50) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Invalid guest count']);
+    exit;
+}
+$reservationDate = DateTime::createFromFormat('Y-m-d', $date);
+if (!$reservationDate || $reservationDate->format('Y-m-d') !== $date || $date < date('Y-m-d')) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Invalid reservation date']);
+    exit;
+}
+if (!preg_match('/^\d{2}:\d{2}(:\d{2})?$/', $time)) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Invalid reservation time']);
     exit;
 }
 
@@ -44,7 +61,7 @@ if ($stmt->fetch()) {
 }
 
 // 2. Get total seats of the restaurant
-$stmt = $pdo->prepare("SELECT total_seats FROM restaurants WHERE id = ?");
+$stmt = $pdo->prepare("SELECT total_seats FROM restaurants WHERE id = ? AND status = 'approved'");
 $stmt->execute([$restaurant_id]);
 $totalSeats = $stmt->fetchColumn();
 if ($totalSeats === false) {

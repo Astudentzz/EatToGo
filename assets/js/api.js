@@ -2,11 +2,40 @@ const APP_ROOT = window.location.protocol === 'file:'
     ? 'http://localhost/EatToGo'
     : new URL('.', window.location.href).href.replace(/\/$/, '');
 const API_BASE = `${APP_ROOT}/api`;
+const nativeFetch = window.fetch.bind(window);
+let csrfToken = null;
+
+async function getCsrfToken() {
+    if (csrfToken) return csrfToken;
+    try {
+        const response = await nativeFetch(`${API_BASE}/session.php`, { credentials: 'same-origin' });
+        const data = await response.json();
+        csrfToken = data.csrfToken || null;
+    } catch (e) {}
+    return csrfToken;
+}
+
+window.fetch = async function securedFetch(resource, options = {}) {
+    const url = typeof resource === 'string' ? resource : resource?.url;
+    const method = (options.method || 'GET').toUpperCase();
+    const isApiRequest = url && String(url).startsWith(API_BASE);
+    if (isApiRequest && !['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+        const token = await getCsrfToken();
+        options = {
+            ...options,
+            credentials: options.credentials || 'same-origin',
+            headers: { ...(options.headers || {}), ...(token ? { 'X-CSRF-Token': token } : {}) }
+        };
+    }
+    return nativeFetch(resource, options);
+};
 
 async function apiCall(endpoint, options = {}) {
+    const method = (options.method || 'GET').toUpperCase();
+    const token = ['GET', 'HEAD', 'OPTIONS'].includes(method) ? null : await getCsrfToken();
     const response = await fetch(`${API_BASE}${endpoint}`, {
         ...options,
-        headers: { 'Content-Type': 'application/json', ...options.headers },
+        headers: { 'Content-Type': 'application/json', ...(token ? { 'X-CSRF-Token': token } : {}), ...options.headers },
         credentials: 'same-origin'
     });
     if (!response.ok) {

@@ -1,7 +1,7 @@
 <?php
 header('Content-Type: application/json');
-session_start();
 require_once 'config/database.php';
+startSecureSession();
 $pdo = getDB();
 
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'owner') {
@@ -11,6 +11,7 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'owner') {
 }
 
 $owner_id = $_SESSION['user']['id'];
+requireCsrfToken();
 $restaurant_name = $_POST['restaurant_name'] ?? '';
 $location = $_POST['location'] ?? '';
 $cuisine = $_POST['cuisine'] ?? '';
@@ -44,37 +45,40 @@ if (!isset($_FILES['qr_code']) || $_FILES['qr_code']['error'] !== UPLOAD_ERR_OK)
 
 $imagePath = null;
 if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-    $uploadDir = '../uploads/restaurants/';
-    if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
-    $ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
-    $allowed = ['jpg', 'jpeg', 'png', 'gif'];
-    if (in_array($ext, $allowed)) {
-        $filename = uniqid() . '.' . $ext;
-        $destination = $uploadDir . $filename;
-        if (move_uploaded_file($_FILES['image']['tmp_name'], $destination)) {
-            $imagePath = 'uploads/restaurants/' . $filename;
-        }
+    try {
+        $imagePath = ltrim(saveUploadedFile(
+            $_FILES['image'],
+            __DIR__ . '/../uploads/restaurants/',
+            '/uploads/restaurants',
+            ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+            ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+        ), '/');
+    } catch (RuntimeException $e) {
+        http_response_code(400);
+        echo json_encode(['error' => $e->getMessage()]);
+        exit;
     }
+}
+if ($total_seats < 1 || $slot_duration < 15 || $slot_duration > 240) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Invalid seat count or slot duration']);
+    exit;
 }
 
 // Handle QR code upload (required)
-$uploadQrDir = '../uploads/qrcodes/';
-if (!is_dir($uploadQrDir)) mkdir($uploadQrDir, 0777, true);
-$ext = strtolower(pathinfo($_FILES['qr_code']['name'], PATHINFO_EXTENSION));
-$allowed = ['jpg', 'jpeg', 'png', 'gif'];
-if (!in_array($ext, $allowed)) {
+try {
+    $qrCodePath = ltrim(saveUploadedFile(
+        $_FILES['qr_code'],
+        __DIR__ . '/../uploads/qrcodes/',
+        '/uploads/qrcodes',
+        ['jpg', 'jpeg', 'png', 'gif'],
+        ['image/jpeg', 'image/png', 'image/gif']
+    ), '/');
+} catch (RuntimeException $e) {
     http_response_code(400);
-    echo json_encode(['error' => 'Invalid QR code image format']);
+    echo json_encode(['error' => $e->getMessage()]);
     exit;
 }
-$filename = uniqid() . '.' . $ext;
-$destination = $uploadQrDir . $filename;
-if (!move_uploaded_file($_FILES['qr_code']['tmp_name'], $destination)) {
-    http_response_code(500);
-    echo json_encode(['error' => 'Failed to save QR code']);
-    exit;
-}
-$qrCodePath = 'uploads/qrcodes/' . $filename;
 
 $stmt = $pdo->prepare("INSERT INTO restaurants (name, location, category, description, price_range, hours, deal, total_seats, slot_duration, status, owner_id, image, qr_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?)");
 $stmt->execute([$restaurant_name, $location, $cuisine, $description, $price_range, $hours, $deal, $total_seats, $slot_duration, $owner_id, $imagePath, $qrCodePath]);

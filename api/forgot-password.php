@@ -20,8 +20,9 @@ require_once __DIR__ . '/../lib/PHPMailer/src/Exception.php';
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-$data = json_decode(file_get_contents('php://input'), true);
+$data = readJsonBody();
 $email = trim($data['email'] ?? '');
+rateLimit('forgot_' . strtolower($email), 5, 600);
 
 if (!$email) {
     http_response_code(400);

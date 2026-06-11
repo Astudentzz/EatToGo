@@ -1,7 +1,7 @@
 <?php
 header('Content-Type: application/json');
-session_start();
 require_once 'config/database.php';
+startSecureSession();
 $pdo = getDB();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'PUT') {
@@ -12,10 +12,28 @@ if (!isset($_SESSION['user']) || ($_SESSION['user']['role'] !== 'staff' && $_SES
     http_response_code(403);
     exit;
 }
-$data = json_decode(file_get_contents('php://input'), true);
-$order_id = $data['order_id'] ?? 0;
-$status = $data['status'] ?? ''; // preparing, ready, served
-$stmt = $pdo->prepare("UPDATE orders SET status = ? WHERE id = ?");
-$stmt->execute([$status, $order_id]);
+requireCsrfToken();
+$data = readJsonBody();
+$order_id = (int)($data['order_id'] ?? 0);
+$status = $data['status'] ?? '';
+$allowedStatuses = ['pending', 'preparing', 'ready', 'served', 'cancelled'];
+if (!$order_id || !in_array($status, $allowedStatuses, true)) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Invalid order status']);
+    exit;
+}
+
+if ($_SESSION['user']['role'] === 'staff') {
+    $stmt = $pdo->prepare("
+        UPDATE orders o
+        JOIN reservations r ON o.reservation_id = r.id
+        SET o.status = ?
+        WHERE o.id = ? AND r.restaurant_id = ?
+    ");
+    $stmt->execute([$status, $order_id, $_SESSION['user']['restaurant_id'] ?? 0]);
+} else {
+    $stmt = $pdo->prepare("UPDATE orders SET status = ? WHERE id = ?");
+    $stmt->execute([$status, $order_id]);
+}
 echo json_encode(['success' => true]);
 ?>

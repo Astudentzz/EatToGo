@@ -20,16 +20,35 @@ require_once __DIR__ . '/../lib/PHPMailer/src/Exception.php';
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-$data = json_decode(file_get_contents('php://input'), true);
+$data = readJsonBody();
 $name = trim($data['name'] ?? '');
 $email = trim($data['email'] ?? '');
 $phone = trim($data['phone'] ?? '');
 $password = $data['password'] ?? '';
 $role = $data['role'] ?? 'customer';
+rateLimit('register_' . strtolower($email), 5, 600);
 
 if (!$name || !$email || !$phone || !$password) {
     http_response_code(400);
     echo json_encode(['error' => 'Missing fields']);
+    exit;
+}
+
+if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Invalid email address']);
+    exit;
+}
+
+if (strlen($password) < 8) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Password must be at least 8 characters']);
+    exit;
+}
+
+if (!in_array($role, ['customer', 'owner'], true)) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Invalid role']);
     exit;
 }
 
@@ -46,7 +65,7 @@ if ($stmt->fetch()) {
 $token = bin2hex(random_bytes(32));
 $expiry = date('Y-m-d H:i:s', strtotime('+24 hours'));
 
-$hashed = md5($password);
+$hashed = hashPassword($password);
 $stmt = $pdo->prepare("INSERT INTO users (name, email, phone, password, role, verification_token, token_expiry, email_verified) VALUES (?, ?, ?, ?, ?, ?, ?, 0)");
 $stmt->execute([$name, $email, $phone, $hashed, $role, $token, $expiry]);
 
@@ -71,8 +90,10 @@ try {
     $mail->addAddress($email, $name);
     $mail->isHTML(true);
     $mail->Subject = 'Verify your email – EatToGo';
-    $mail->Body    = "Hello $name,<br><br>Please verify your email by clicking the link below:<br><br>
-                      <a href='$verificationLink'>$verificationLink</a><br><br>
+$safeName = htmlspecialchars($name, ENT_QUOTES, 'UTF-8');
+$safeLink = htmlspecialchars($verificationLink, ENT_QUOTES, 'UTF-8');
+$mail->Body    = "Hello $safeName,<br><br>Please verify your email by clicking the link below:<br><br>
+                      <a href='$safeLink'>$safeLink</a><br><br>
                       This link expires in 24 hours.<br><br>
                       If you did not create an account, please ignore this email.";
     $mail->AltBody = "Hello $name,\n\nPlease verify your email by visiting this link:\n$verificationLink\n\nThis link expires in 24 hours.";

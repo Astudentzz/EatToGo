@@ -1,7 +1,7 @@
 <?php
 header('Content-Type: application/json');
-session_start();
 require_once 'config/database.php';
+startSecureSession();
 $pdo = getDB();
 
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'staff') {
@@ -9,9 +9,10 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'staff') {
     echo json_encode(['error' => 'Unauthorized']);
     exit;
 }
+requireCsrfToken();
 
-$data = json_decode(file_get_contents('php://input'), true);
-$reservation_id = $data['reservation_id'] ?? 0;
+$data = readJsonBody();
+$reservation_id = (int)($data['reservation_id'] ?? 0);
 if (!$reservation_id) {
     echo json_encode(['error' => 'Missing reservation ID']);
     exit;
@@ -31,8 +32,8 @@ if (!$stmt->fetch()) {
 }
 
 // Update arrival_confirmed to 1
-$stmt = $pdo->prepare("UPDATE reservations SET arrival_confirmed = 1 WHERE id = ?");
-$stmt->execute([$reservation_id]);
+$stmt = $pdo->prepare("UPDATE reservations SET arrival_confirmed = 1 WHERE id = ? AND restaurant_id = ?");
+$stmt->execute([$reservation_id, $staff_restaurant_id]);
 
 echo json_encode(['success' => true]);
 ?>

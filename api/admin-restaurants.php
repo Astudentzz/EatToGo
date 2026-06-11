@@ -1,7 +1,7 @@
 <?php
 header('Content-Type: application/json');
-session_start();
 require_once 'config/database.php';
+startSecureSession();
 $pdo = getDB();
 
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
@@ -23,7 +23,8 @@ if ($method === 'GET') {
     echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
 }
 elseif ($method === 'POST') {
-    $data = json_decode(file_get_contents('php://input'), true);
+    requireCsrfToken();
+    $data = readJsonBody();
     $hours = $data['hours'] ?? '';
     if (!empty($hours) && !preg_match($hoursPattern, $hours)) {
         http_response_code(400);
@@ -47,14 +48,20 @@ elseif ($method === 'POST') {
     echo json_encode(['success' => true]);
 }
 elseif ($method === 'PUT') {
-    $data = json_decode(file_get_contents('php://input'), true);
+    requireCsrfToken();
+    $data = readJsonBody();
     $hours = $data['hours'] ?? '';
     if (!empty($hours) && !preg_match($hoursPattern, $hours)) {
         http_response_code(400);
         echo json_encode(['error' => 'Operating hours format invalid. Use "10:00 AM - 10:00 PM".']);
         exit;
     }
-    $id = $data['id'] ?? 0;
+    $id = (int)($data['id'] ?? 0);
+    if (!$id) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Missing restaurant ID']);
+        exit;
+    }
     $fields = [];
     $params = [];
     $allowed = ['name', 'category', 'location', 'price_range', 'description', 'hours', 'deal', 'image', 'total_seats', 'slot_duration', 'qr_code'];
@@ -76,7 +83,13 @@ elseif ($method === 'PUT') {
     echo json_encode(['success' => true]);
 }
 elseif ($method === 'DELETE') {
-    $id = $_GET['id'] ?? 0;
+    requireCsrfToken();
+    $id = (int)($_GET['id'] ?? 0);
+    if (!$id) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Missing restaurant ID']);
+        exit;
+    }
     $stmt = $pdo->prepare("DELETE FROM restaurants WHERE id = ?");
     $stmt->execute([$id]);
     echo json_encode(['success' => true]);

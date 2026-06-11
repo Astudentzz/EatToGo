@@ -1,7 +1,7 @@
 <?php
 header('Content-Type: application/json');
-session_start();
 require_once 'config/database.php';
+startSecureSession();
 $pdo = getDB();
 
 // Include SMTP configuration (assuming same as register.php)
@@ -48,6 +48,12 @@ if (!$restaurant_id) {
 
 $method = $_SERVER['REQUEST_METHOD'];
 
+function verifyOwnership($pdo, $owner_id, $restaurant_id) {
+    $stmt = $pdo->prepare("SELECT id FROM restaurants WHERE id = ? AND owner_id = ?");
+    $stmt->execute([$restaurant_id, $owner_id]);
+    return (bool)$stmt->fetch();
+}
+
 if ($method === 'GET') {
     // Fetch staff members for this restaurant
     $stmt = $pdo->prepare("SELECT id, name, email, role, created_at FROM users WHERE restaurant_id = ? AND role = 'staff'");
@@ -56,14 +62,25 @@ if ($method === 'GET') {
     echo json_encode($staff);
 }
 elseif ($method === 'POST') {
+    requireCsrfToken();
     // Create new staff account
-    $data = json_decode(file_get_contents('php://input'), true);
-    $name = $data['name'] ?? '';
-    $email = $data['email'] ?? '';
+    $data = readJsonBody();
+    $name = trim($data['name'] ?? '');
+    $email = trim($data['email'] ?? '');
     $password = $data['password'] ?? '';
     if (!$name || !$email || !$password) {
         http_response_code(400);
         echo json_encode(['error' => 'Name, email and password required']);
+        exit;
+    }
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Invalid email address']);
+        exit;
+    }
+    if (strlen($password) < 8) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Password must be at least 8 characters']);
         exit;
     }
     if (!verifyOwnership($pdo, $owner_id, $restaurant_id)) {
@@ -83,14 +100,15 @@ elseif ($method === 'POST') {
     // Generate verification token (expires in 24 hours)
     $token = bin2hex(random_bytes(32));
     $expiry = date('Y-m-d H:i:s', strtotime('+24 hours'));
-    $hashed = md5($password);
-    $stmt = $pdo->prepare("INSERT INTO users (name, email, password, role, restaurant_id) VALUES (?, ?, ?, 'staff', ?)");
+    $hashed = hashPassword($password);
+    $stmt = $pdo->prepare("INSERT INTO users (name, email, password, role, restaurant_id, email_verified) VALUES (?, ?, ?, 'staff', ?, 1)");
     $stmt->execute([$name, $email, $hashed, $restaurant_id]);
     echo json_encode(['success' => true]);
 }
 elseif ($method === 'DELETE') {
+    requireCsrfToken();
     // Remove staff account
-    $staff_id = $_GET['id'] ?? 0;
+    $staff_id = (int)($_GET['id'] ?? 0);
     // Ensure this staff belongs to owner's restaurant
     $stmt = $pdo->prepare("SELECT id FROM users WHERE id = ? AND restaurant_id = ? AND role = 'staff'");
     $stmt->execute([$staff_id, $restaurant_id]);

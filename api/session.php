@@ -1,9 +1,10 @@
 <?php
 header('Content-Type: application/json');
-session_start();
+require_once 'config/security.php';
+startSecureSession();
 if (isset($_SESSION['user'])) {
-    echo json_encode(['loggedIn' => true, 'user' => $_SESSION['user']]);
+    echo json_encode(['loggedIn' => true, 'user' => publicUser($_SESSION['user']), 'csrfToken' => csrfToken()]);
 } else {
-    echo json_encode(['loggedIn' => false]);
+    echo json_encode(['loggedIn' => false, 'csrfToken' => csrfToken()]);
 }
 ?>

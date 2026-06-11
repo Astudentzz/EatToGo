@@ -26,10 +26,10 @@ $stmt = $pdo->prepare("UPDATE users SET email_verified = 1, verification_token =
 $stmt->execute([$user['id']]);
 
 // Optionally auto-login or redirect to login page
-session_start();
+startSecureSession();
 $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
 $stmt->execute([$user['id']]);
-$_SESSION['user'] = $stmt->fetch(PDO::FETCH_ASSOC);
+$_SESSION['user'] = publicUser($stmt->fetch(PDO::FETCH_ASSOC));
 
 header('Location: ../staff-dashboard.html'); // or login page
 exit;

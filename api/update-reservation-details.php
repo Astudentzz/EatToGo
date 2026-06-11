@@ -1,7 +1,7 @@
 <?php
 header('Content-Type: application/json');
-session_start();
 require_once 'config/database.php';
+startSecureSession();
 $pdo = getDB();
 
 if (!isset($_SESSION['user'])) {
@@ -9,8 +9,9 @@ if (!isset($_SESSION['user'])) {
     echo json_encode(['error' => 'Unauthorized']);
     exit;
 }
-$data = json_decode(file_get_contents('php://input'), true);
-$reservation_id = $data['reservation_id'] ?? 0;
+requireCsrfToken();
+$data = readJsonBody();
+$reservation_id = (int)($data['reservation_id'] ?? 0);
 $customer_name = $data['customer_name'] ?? '';
 $customer_phone = $data['customer_phone'] ?? '';
 $customer_email = $data['customer_email'] ?? '';

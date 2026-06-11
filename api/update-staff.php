@@ -1,7 +1,7 @@
 <?php
 header('Content-Type: application/json');
-session_start();
 require_once 'config/database.php';
+startSecureSession();
 $pdo = getDB();
 
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'owner') {
@@ -11,9 +11,10 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'owner') {
 }
 
 $owner_id = $_SESSION['user']['id'];
-$data = json_decode(file_get_contents('php://input'), true);
-$staff_id = $data['id'] ?? 0;
-$restaurant_id = $data['restaurant_id'] ?? 0;
+requireCsrfToken();
+$data = readJsonBody();
+$staff_id = (int)($data['id'] ?? 0);
+$restaurant_id = (int)($data['restaurant_id'] ?? 0);
 $name = trim($data['name'] ?? '');
 $password = trim($data['password'] ?? '');
 
@@ -36,8 +37,13 @@ if (!$stmt->fetch()) {
 $updateFields = ["name = ?"];
 $params = [$name];
 if (!empty($password)) {
+    if (strlen($password) < 8) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Password must be at least 8 characters']);
+        exit;
+    }
     $updateFields[] = "password = ?";
-    $params[] = md5($password);
+    $params[] = hashPassword($password);
 }
 $params[] = $staff_id;
 $sql = "UPDATE users SET " . implode(', ', $updateFields) . " WHERE id = ? AND role = 'staff' AND restaurant_id = ?";

@@ -19,10 +19,10 @@ $stmt = $pdo->prepare("UPDATE users SET email_verified = 1, verification_token =
 $stmt->execute([$user['id']]);
 
 // Auto-login the user
-session_start();
+startSecureSession();
 $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
 $stmt->execute([$user['id']]);
-$_SESSION['user'] = $stmt->fetch(PDO::FETCH_ASSOC);
+$_SESSION['user'] = publicUser($stmt->fetch(PDO::FETCH_ASSOC));
 
 // Redirect to success page
 header('Location: ../verify-success.html');

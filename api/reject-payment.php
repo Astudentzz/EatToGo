@@ -1,7 +1,7 @@
 <?php
 header('Content-Type: application/json');
-session_start();
 require_once 'config/database.php';
+startSecureSession();
 $pdo = getDB();
 
 // SMTP and PHPMailer setup
@@ -25,9 +25,10 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'staff') {
     echo json_encode(['error' => 'Unauthorized']);
     exit;
 }
+requireCsrfToken();
 
-$data = json_decode(file_get_contents('php://input'), true);
-$reservation_id = $data['reservation_id'] ?? 0;
+$data = readJsonBody();
+$reservation_id = (int)($data['reservation_id'] ?? 0);
 $reason = $data['reason'] ?? 'Payment proof could not be verified.';
 
 if (!$reservation_id) {
@@ -54,9 +55,9 @@ if (!$reservation) {
 $stmt = $pdo->prepare("
     UPDATE reservations 
     SET payment_verified = 0, status = 'rejected', payment_proof = NULL
-    WHERE id = ?
+    WHERE id = ? AND restaurant_id = ?
 ");
-$stmt->execute([$reservation_id]);
+$stmt->execute([$reservation_id, $staff_restaurant_id]);
 
 // Send rejection email to customer
 try {
