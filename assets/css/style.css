@@ -693,3 +693,83 @@ h1, h2, h3, .logo {
   color: var(--orange);
   transform: rotate(90deg);
 }
+
+/* ===== Consistency and interaction fixes ===== */
+a,
+button,
+.btn,
+.nav-link,
+.sidebar a,
+.mobile-sidebar a,
+.restaurant-card,
+.food-card,
+.dash-card,
+.rest-card,
+.card-etg,
+.glass-card,
+.form-control,
+.form-select,
+.mood-btn,
+.filter-chip,
+.table tbody tr {
+  transition: color .2s ease, background-color .2s ease, border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+
+a:hover,
+.nav-link:hover {
+  color: var(--primary) !important;
+}
+
+.btn:active,
+.mood-btn:active,
+.filter-chip:active {
+  transform: translateY(0);
+}
+
+.btn:focus-visible,
+.nav-link:focus-visible,
+.sidebar a:focus-visible,
+.mobile-sidebar a:focus-visible,
+.form-control:focus-visible,
+.form-select:focus-visible,
+.mood-btn:focus-visible,
+.filter-chip:focus-visible {
+  outline: 3px solid rgba(255,107,53,.28);
+  outline-offset: 2px;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 .2rem rgba(255,107,53,.16);
+}
+
+.table tbody tr:hover {
+  background: rgba(255,107,53,.06);
+}
+
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.status.approved {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status.cancelled {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

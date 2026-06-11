@@ -122,7 +122,7 @@
   </style>
 </head>
 <body>
-<aside class="sidebar">
+<aside class="sidebar" id="sidebar">
   <a class="logo" href="index.html">Eat<span>To</span>Go</a>
   <hr>
   <a class="active" href="admin.html">📊 Dashboard</a>
@@ -392,12 +392,12 @@
     let r = await apiCall('/admin-restaurants.php');
     document.getElementById('restaurantRows').innerHTML = r.map(r=>`
       <tr>
-        <td>${escapeHtml(r.name)}</div>
-        <td>${escapeHtml(r.category)}</div>
-        <td>${escapeHtml(r.location)}</div>
-        <td>${escapeHtml(r.price_range)}</div>
-        <td>${escapeHtml(r.owner_name || 'N/A')}</div>
-        <td><button class="btn btn-sm btn-warning" onclick="openEditRestaurantModal(${r.id})">Edit</button> <button class="btn btn-sm btn-danger" onclick="deleteRestaurant(${r.id})">Delete</button></div>
+        <td>${escapeHtml(r.name)}</td>
+        <td>${escapeHtml(r.category)}</td>
+        <td>${escapeHtml(r.location)}</td>
+        <td>${escapeHtml(r.price_range)}</td>
+        <td>${escapeHtml(r.owner_name || 'N/A')}</td>
+        <td><button class="btn btn-sm btn-warning" onclick="openEditRestaurantModal(${r.id})">Edit</button> <button class="btn btn-sm btn-danger" onclick="deleteRestaurant(${r.id})">Delete</button></td>
       </tr>`).join('');
   }
 
@@ -534,10 +534,10 @@
   async function renderAccounts() {
     let u = await apiCall('/admin-users.php');
     document.getElementById('accountRows').innerHTML = u.map(u=>`<tr>
-        <td>${escapeHtml(u.name)}</div>
-        <td>${escapeHtml(u.email)}</div>
-        <td>${u.role}</div>
-        <td><button class="btn btn-sm btn-danger" onclick="deleteUser(${u.id})">Delete</button></div>
+        <td>${escapeHtml(u.name)}</td>
+        <td>${escapeHtml(u.email)}</td>
+        <td>${u.role}</td>
+        <td><button class="btn btn-sm btn-danger" onclick="deleteUser(${u.id})">Delete</button></td>
       </tr>`).join('');
   }
 
@@ -550,9 +550,9 @@
     document.getElementById('requestRows').innerHTML = req.map(r => `
       <tr>
         <td>${r.id}</td>
-        <td>${escapeHtml(r.owner_name)}</div>
-        <td>${escapeHtml(r.name)}</div>
-        <td><span class="status pending">${r.status}</span></div>
+        <td>${escapeHtml(r.owner_name)}</td>
+        <td>${escapeHtml(r.name)}</td>
+        <td><span class="status pending">${r.status}</span></td>
         <td>
           <button class="btn btn-sm btn-success" onclick="approveRequest(${r.id})">Approve</button>
           <button class="btn btn-sm btn-danger" onclick="rejectRequest(${r.id})">Reject</button>

@@ -70,7 +70,7 @@
     </style>
 </head>
 <body>
-<aside class="sidebar">
+<aside class="sidebar" id="sidebar">
   <a class="logo" href="index.html">Eat<span>To</span>Go</a>
   <hr>
   <a class="active" href="staff-dashboard.html">📋 Dashboard</a>
@@ -255,7 +255,7 @@
         }
         staffRestaurantId = session.user.restaurant_id;
         if (!staffRestaurantId) {
-            document.getElementById('bookingRows').innerHTML = '<tr><td colspan="7">You are not assigned to any restaurant.</div>';
+            document.getElementById('bookingRows').innerHTML = '<tr><td colspan="7">You are not assigned to any restaurant.</td></tr>';
             return;
         }
         await renderStats();
@@ -292,7 +292,7 @@
             bookings.sort((a, b) => b.id - a.id);
             const tbody = document.getElementById('bookingRows');
             if (!bookings.length) {
-                tbody.innerHTML = '<tr><td colspan="7">No active reservations found.</div>';
+                tbody.innerHTML = '<tr><td colspan="7">No active reservations found.</td></tr>';
                 return;
             }
             tbody.innerHTML = bookings.map(b => {
@@ -311,12 +311,12 @@
                 return `
                     <tr>
                         <td>${b.id}</td>
-                        <td>${escapeHtml(b.customer_name)}</div>
-                        <td>${b.reservation_date} ${b.reservation_time}</div>
-                        <td>${b.num_people}</div>
-                        <td><span class="status ${b.status}">${b.status}</span></div>
-                        <td>${b.arrival_confirmed ? 'Arrived' : 'Not arrived'}</div>
-                        <td>${actionHtml}</div>
+                        <td>${escapeHtml(b.customer_name)}</td>
+                        <td>${b.reservation_date} ${b.reservation_time}</td>
+                        <td>${b.num_people}</td>
+                        <td><span class="status ${b.status}">${b.status}</span></td>
+                        <td>${b.arrival_confirmed ? 'Arrived' : 'Not arrived'}</td>
+                        <td>${actionHtml}</td>
                     </tr>
                 `;
             }).join('');
@@ -354,7 +354,7 @@
             activeOrders.sort((a, b) => b.id - a.id);
             const tbody = document.getElementById('staffOrders');
             if (!activeOrders.length) {
-                tbody.innerHTML = '<tr><td colspan="5">No pre-orders for confirmed reservations.</div>';
+                tbody.innerHTML = '<tr><td colspan="5">No pre-orders for confirmed reservations.</td></tr>';
                 return;
             }
             tbody.innerHTML = activeOrders.map(o => {
@@ -392,7 +392,7 @@
             const verifications = await apiCall('/staff-payment-verifications.php');
             const tbody = document.getElementById('paymentVerificationRows');
             if (!verifications.length) {
-                tbody.innerHTML = '<tr><td colspan="7">No pending payment verifications.</div>';
+                tbody.innerHTML = '<tr><td colspan="7">No pending payment verifications.</td></tr>';
                 return;
             }
             // Sort by submission date descending (newest first)
@@ -400,18 +400,18 @@
             tbody.innerHTML = verifications.map(v => `
                 <tr>
                     <td>${v.reservation_id}</td>
-                    <td>${escapeHtml(v.customer_name)}</div>
-                    <td>${escapeHtml(v.restaurant_name)}</div>
-                    <td>RM ${parseFloat(v.total_amount).toFixed(2)}</div>
-                    <td><button class="btn btn-sm btn-primary" onclick="viewProof('${v.payment_proof}', ${v.reservation_id})">View Proof</button></div>
-                    <td>${new Date(v.payment_submitted_at).toLocaleString()}</div>
+                    <td>${escapeHtml(v.customer_name)}</td>
+                    <td>${escapeHtml(v.restaurant_name)}</td>
+                    <td>RM ${parseFloat(v.total_amount).toFixed(2)}</td>
+                    <td><button class="btn btn-sm btn-primary" onclick="viewProof('${v.payment_proof}', ${v.reservation_id})">View Proof</button></td>
+                    <td>${new Date(v.payment_submitted_at).toLocaleString()}</td>
                     <td>
                         <button class="btn btn-sm btn-success me-1" onclick="verifyPayment(${v.reservation_id})">Approve</button>
                         <button class="btn btn-sm btn-danger" onclick="rejectPayment(${v.reservation_id})">Reject</button>
-                     </div>
+                     </td>
                 </tr>
             `).join('');
-        } catch(e) { console.error(e); tbody.innerHTML = '<tr><td colspan="7">Error loading verifications.</div>'; }
+        } catch(e) { console.error(e); tbody.innerHTML = '<tr><td colspan="7">Error loading verifications.</td></tr>'; }
     }
 
     let currentReservationForProof = null;
@@ -471,20 +471,20 @@
             const menu = await apiCall('/menu-items.php');
             const tbody = document.getElementById('menuRows');
             if (!menu.length) {
-                tbody.innerHTML = '<tr><td colspan="6">No menu items. Click "Add Menu Item".</div>';
+                tbody.innerHTML = '<tr><td colspan="6">No menu items. Click "Add Menu Item".</td></tr>';
                 return;
             }
             tbody.innerHTML = menu.map(m => `
                 <tr>
                     <td><img src="${m.image || defaultSvg}" class="menu-thumb" onerror="this.src='${defaultSvg}'"> </td>
-                    <td>${m.emoji || '🍽️'} ${escapeHtml(m.name)}</div>
-                    <td>${escapeHtml(m.category)}</div>
-                    <td>RM ${parseFloat(m.price).toFixed(2)}</div>
-                    <td>${escapeHtml(m.description || '-')}</div>
+                    <td>${m.emoji || '🍽️'} ${escapeHtml(m.name)}</td>
+                    <td>${escapeHtml(m.category)}</td>
+                    <td>RM ${parseFloat(m.price).toFixed(2)}</td>
+                    <td>${escapeHtml(m.description || '-')}</td>
                     <td>
                         <button class="btn btn-sm btn-warning me-1" onclick="openEditMenuModal(${m.id})">✏️ Edit</button>
                         <button class="btn btn-sm btn-danger" onclick="removeMenuItem(${m.id})">🗑️ Remove</button>
-                     </div>
+                     </td>
                 </tr>
             `).join('');
         } catch(e) { console.error(e); }

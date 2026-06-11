@@ -101,7 +101,7 @@
   </style>
 </head>
 <body>
-<aside class="sidebar">
+<aside class="sidebar" id="sidebar">
   <a class="logo" href="index.html">Eat<span>To</span>Go</a>
   <hr>
   <a class="active" href="owner-dashboard.html">📊 Overview</a>
@@ -162,7 +162,7 @@
         <div class="col-md-12"><label class="form-label fw-bold">Payment QR Code (optional)</label><input type="file" id="qrCode" class="form-control" accept="image/*"><small class="text-muted">Upload a QR code for customers to scan (e.g., Touch 'n Go, DuitNow).</small></div>
         <div class="col-md-12"><button type="submit" class="btn btn-etg w-100">Submit Listing Request</button></div>
       </form>
-      <div class="mt-4"><h5>Request History</h5><div class="table-responsive"><table class="table"><thead><tr><th>Restaurant</th><th>Status</th><th>Admin Response</th></tr></thead><tbody id="ownerRequests"></tbody><table></div></div>
+      <div class="mt-4"><h5>Request History</h5><div class="table-responsive"><table class="table"><thead><tr><th>Restaurant</th><th>Status</th><th>Admin Response</th></tr></thead><tbody id="ownerRequests"></tbody></table></div></div>
     </section>
   </div>
 </main>
@@ -316,18 +316,18 @@
     try {
       const staff = await apiCall(`/owner-staff.php?restaurant_id=${restaurantId}`);
       const tbody = document.getElementById('staffList');
-      if (!staff.length) { tbody.innerHTML = '<tr><td colspan="3">No staff yet. Add staff above. </div>'; return; }
+      if (!staff.length) { tbody.innerHTML = '<tr><td colspan="3">No staff yet. Add staff above.</td></tr>'; return; }
       tbody.innerHTML = staff.map(s => `
         <tr>
-          <td>${escapeHtml(s.name)}</div>
-          <td>${escapeHtml(s.email)}</div>
+          <td>${escapeHtml(s.name)}</td>
+          <td>${escapeHtml(s.email)}</td>
           <td class="d-flex gap-1">
             <button class="btn btn-sm btn-warning" onclick="openEditStaffModal(${s.id}, '${escapeHtml(s.name)}', ${restaurantId})">✏️ Edit</button>
             <button class="btn btn-sm btn-danger" onclick="deleteStaff(${s.id}, ${restaurantId})">🗑️ Remove</button>
           </td>
         </tr>
       `).join('');
-    } catch(e) { console.error(e); tbody.innerHTML = '<tr><td colspan="3">Error loading staff.</div>'; }
+    } catch(e) { console.error(e); tbody.innerHTML = '<tr><td colspan="3">Error loading staff.</td></tr>'; }
   }
 
   let currentEditStaffId = null, currentEditRestaurantId = null;
@@ -492,15 +492,15 @@
       // Sort by ID descending (newest first)
       r.sort((a, b) => b.id - a.id);
       document.getElementById('reservationCards').innerHTML = r.map(r=>`<tr>
-        <td>${r.id}</div>
-        <td>${escapeHtml(r.customer_name)}</div>
-        <td>${r.reservation_date} ${r.reservation_time}</div>
-        <td>${r.num_people}</div>
-        <td><span class="status ${r.status}">${r.status}</span></div>
-        <td>${r.arrival_confirmed?'Arrived':'Not arrived'}</div>
-        <td>${r.order?r.order.status:'-'}</div>
+        <td>${r.id}</td>
+        <td>${escapeHtml(r.customer_name)}</td>
+        <td>${r.reservation_date} ${r.reservation_time}</td>
+        <td>${r.num_people}</td>
+        <td><span class="status ${r.status}">${r.status}</span></td>
+        <td>${r.arrival_confirmed?'Arrived':'Not arrived'}</td>
+        <td>${r.order?r.order.status:'-'}</td>
       </tr>`).join('');
-    } catch(e) { document.getElementById('reservationCards').innerHTML='</td><td colspan="7">Error loading bookings</div>'; }
+    } catch(e) { document.getElementById('reservationCards').innerHTML='<tr><td colspan="7">Error loading bookings</td></tr>'; }
   }
 
   async function renderOwnerRequests() {
@@ -508,14 +508,14 @@
       const req = await apiCall('/owner-requests.php');
       const tbody = document.getElementById('ownerRequests');
       if (!req.length) {
-        tbody.innerHTML = '<tr><td colspan="3" class="text-muted">No requests yet.</div>';
+        tbody.innerHTML = '<tr><td colspan="3" class="text-muted">No requests yet.</td></tr>';
         return;
       }
       tbody.innerHTML = req.map(r => `
         <tr>
-        <td>${escapeHtml(r.name)}</div>
-        <td><span class="status ${r.status}">${r.status}</span></div>
-        <td>${r.status==='approved'?'Approved':r.status==='rejected'?'Rejected':'Pending'}</div>
+        <td>${escapeHtml(r.name)}</td>
+        <td><span class="status ${r.status}">${r.status}</span></td>
+        <td>${r.status==='approved'?'Approved':r.status==='rejected'?'Rejected':'Pending'}</td>
       </tr>`).join('');
     } catch(e) { console.error(e); }
   }
@@ -526,6 +526,11 @@
     const location = document.getElementById('location').value.trim();
     const cuisine = document.getElementById('cuisine').value.trim();
     const description = document.getElementById('description').value.trim();
+    const priceRange = document.getElementById('price_range').value.trim();
+    const hours = document.getElementById('hours').value.trim();
+    const deal = document.getElementById('deal').value.trim();
+    const totalSeats = document.getElementById('total_seats').value;
+    const slotDuration = document.getElementById('slot_duration').value;
     const imageFile = document.getElementById('restImage').files[0];
     const qrFile = document.getElementById('qrCode').files[0];
     if (!restName || !location) { alert('Restaurant name and location required'); return; }
@@ -539,6 +544,11 @@
     formData.append('location', location);
     formData.append('cuisine', cuisine);
     formData.append('description', description);
+    formData.append('price_range', priceRange);
+    formData.append('hours', hours);
+    formData.append('deal', deal);
+    formData.append('total_seats', totalSeats);
+    formData.append('slot_duration', slotDuration);
     if (imageFile) formData.append('image', imageFile);
     if (qrFile) formData.append('qr_code', qrFile);
     try {
