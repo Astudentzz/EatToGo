@@ -31,9 +31,14 @@ async function logout() {
 }
 
 async function nav() {
-    const sessionData = await checkSession();
     const authArea = document.getElementById('authArea');
     if (!authArea) return;
+    const guestAuthHtml = `
+            <a href="login.html" class="btn btn-sm btn-outline-etg">Sign In</a>
+            <a href="signup.html" class="btn btn-sm btn-etg ms-2">Sign Up</a>
+        `;
+    authArea.innerHTML = guestAuthHtml;
+    const sessionData = await checkSession();
     if (sessionData.loggedIn) {
         const user = sessionData.user;
         authArea.innerHTML = `
@@ -43,10 +48,7 @@ async function nav() {
             </div>
         `;
     } else {
-        authArea.innerHTML = `
-            <a href="login.html" class="btn btn-sm btn-outline-etg">Sign In</a>
-            <a href="signup.html" class="btn btn-sm btn-etg ms-2">Sign Up</a>
-        `;
+        authArea.innerHTML = guestAuthHtml;
     }
 }
 

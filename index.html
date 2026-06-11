@@ -396,17 +396,21 @@ function setMood(btn) {
     applyFilter();
   }
 
-  async function setupNav() {
-    const s = await checkSession();
+  function setupNav() {
     const desktopNav = document.getElementById('mainNav');
     const mobileNav = document.getElementById('mobileNavLinks');
     if (!desktopNav) return;
-    const u = s.loggedIn ? s.user : null;
-    let navHtml = '';
-    if (!u || u.role === 'customer') {
-      navHtml = `<a class="nav-link" href="index.html">Restaurants</a>
+    const defaultNavHtml = `<a class="nav-link" href="index.html">Restaurants</a>
                  <a class="nav-link" href="booking-history.html">My Bookings</a>
                  <a class="nav-link" href="order-status.html">Order Status</a>`;
+    desktopNav.innerHTML = defaultNavHtml;
+    if (mobileNav) mobileNav.innerHTML = defaultNavHtml;
+
+    checkSession().then(s => {
+    const u = s.loggedIn ? s.user : null;
+    let navHtml = defaultNavHtml;
+    if (!u || u.role === 'customer') {
+      navHtml = defaultNavHtml;
     } else if (u.role === 'staff') {
       navHtml = `<a class="nav-link fw-bold" href="staff-dashboard.html">↗ Staff Dashboard</a>`;
     } else if (u.role === 'owner') {
@@ -416,48 +420,25 @@ function setMood(btn) {
     }
     desktopNav.innerHTML = navHtml;
     if (mobileNav) mobileNav.innerHTML = navHtml;
+    }).catch(() => {});
   }
 
   window.addEventListener('DOMContentLoaded', async () => {
-    await nav();
-    await setupNav();
-    await renderRestaurants();
-    const searchInput = document.getElementById('searchInput');
-    const searchButton = document.getElementById('searchButton');
-    searchInput.addEventListener('input', updateFilters);
-    searchButton.addEventListener('click', updateFilters);
-    // Optional: auto-redirect for admin/staff/owner – same as old index
-    const session = (await checkSession()).loggedIn ? (await checkSession()).user : null;
-    if (session && (session.role === 'admin' || session.role === 'staff' || session.role === 'owner')) {
-      if (session.role === 'admin') location.href = 'admin.html';
-      else if (session.role === 'staff') location.href = 'staff-dashboard.html';
-      else if (session.role === 'owner') location.href = 'owner-dashboard.html';
-      return true;
-    }
-    return false;
-  }
-
-  window.addEventListener('DOMContentLoaded', async () => {
-    await updateAuthAreaOldStyle();
-    await setupEnhancedNav();
-    await updateMobileSidebarUI();
+    setupNav();
+    nav();
     await renderRestaurants();
     const searchInput = document.getElementById('searchInput');
     const searchButton = document.getElementById('searchButton');
     if (searchInput) searchInput.addEventListener('input', updateFilters);
     if (searchButton) searchButton.addEventListener('click', updateFilters);
-    const willRedirect = await checkAutoRedirect();
-    if (!willRedirect) {
-      await updateMobileSidebarUI();
-      await setupEnhancedNav();
-      await updateAuthAreaOldStyle();
+    // Optional: auto-redirect for admin/staff/owner – same as old index
+    const sessionData = await checkSession();
+    const session = sessionData.loggedIn ? sessionData.user : null;
+    if (session && (session.role === 'admin' || session.role === 'staff' || session.role === 'owner')) {
+      if (session.role === 'admin') location.href = 'admin.html';
+      else if (session.role === 'staff') location.href = 'staff-dashboard.html';
+      else if (session.role === 'owner') location.href = 'owner-dashboard.html';
     }
-  });
-
-  window.addEventListener('pageshow', () => { 
-    updateMobileSidebarUI(); 
-    setupEnhancedNav(); 
-    updateAuthAreaOldStyle();
   });
 </script>
 </body>
