@@ -138,10 +138,10 @@
 
   function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m=>m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
 
-  // Helper: convert ISO date to relative time (e.g., "2 days ago", "yesterday", "just now")
-  function getRelativeTime(dateString) {
-    if (!dateString) return 'unknown date';
-    const date = new Date(dateString);
+  // Helper: convert Unix timestamp (milliseconds) to relative time – works in any timezone
+  function getRelativeTime(unixTimestamp) {
+    if (!unixTimestamp) return 'unknown date';
+    const date = new Date(unixTimestamp);
     if (isNaN(date.getTime())) return 'invalid date';
     const now = new Date();
     const diffMs = now - date;
@@ -156,7 +156,6 @@
     if (diffDay === 1) return 'yesterday';
     if (diffDay < 7) return `${diffDay} days ago`;
     if (diffDay < 30) return `${Math.floor(diffDay / 7)} week${Math.floor(diffDay / 7) === 1 ? '' : 's'} ago`;
-    // fallback to formatted date
     return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
   }
 
@@ -210,28 +209,28 @@
     if(mobileNav) mobileNav.innerHTML = render(navItems);
   }
 
-  // Booking table with relative time for created_at
+  // Booking table using the Unix timestamp from the API
   async function renderMyBookings() {
     const tbody = document.getElementById('myBookingRows');
     try {
       const session = await checkSession();
-      if(!session.loggedIn) { tbody.innerHTML = '<tr><td colspan="8">Please login to view bookings.</td></tr>'; return; }
+      if(!session.loggedIn) { tbody.innerHTML = '<tr><td colspan="8">Please login to view bookings. </div>'; return; }
       let bookings = await apiCall('/user-reservations.php');
-      if(!bookings.length) { tbody.innerHTML = '<tr><td colspan="8">No bookings yet.</td></tr>'; return; }
-      bookings.sort((a,b)=> new Date(b.created_at||0) - new Date(a.created_at||0));
+      if(!bookings.length) { tbody.innerHTML = '<tr><td colspan="8">No bookings yet. </div>'; return; }
+      bookings.sort((a,b)=> b.created_at_unix - a.created_at_unix);
       tbody.innerHTML = bookings.map((b,idx)=>`
         <tr>
           <td><b>#${idx+1}</b></td>
-          <td>${escapeHtml(b.restaurant_name)}</td>
-          <td>${b.reservation_date} ${b.reservation_time}</td>
-          <td>${b.num_people}</td>
-          <td class="booked-on" title="${b.created_at ? new Date(b.created_at).toLocaleString() : ''}">${getRelativeTime(b.created_at)}</td>
-          <td><span class="status ${b.status}">${b.status}</span></td>
-          <td>${b.arrival_confirmed ? '<span class="status confirmed">Arrived</span>' : 'Not arrived'}</td>
-          <td class="d-flex gap-1 flex-wrap">${b.arrival_confirmed ? `<a href="feedback.html?reservation_id=${b.id}" class="btn btn-sm btn-outline-etg">Feedback</a>` : ''}<a href="order-status.html?reservation_id=${b.id}" class="btn btn-sm btn-outline-secondary">Track</a></td>
+          <td>${escapeHtml(b.restaurant_name)}</div>
+          <td>${b.reservation_date} ${b.reservation_time}</div>
+          <td>${b.num_people}</div>
+          <td class="booked-on" title="${new Date(b.created_at_unix).toLocaleString()}">${getRelativeTime(b.created_at_unix)}</div>
+          <td><span class="status ${b.status}">${b.status}</span></div>
+          <td>${b.arrival_confirmed ? '<span class="status confirmed">Arrived</span>' : 'Not arrived'}</div>
+          <td class="d-flex gap-1 flex-wrap">${b.arrival_confirmed ? `<a href="feedback.html?reservation_id=${b.id}" class="btn btn-sm btn-outline-etg">Feedback</a>` : ''}<a href="order-status.html?reservation_id=${b.id}" class="btn btn-sm btn-outline-secondary">Track</a></div>
         </tr>
       `).join('');
-    } catch(err) { tbody.innerHTML = '<tr><td colspan="8">Error loading bookings.</td></tr>'; }
+    } catch(err) { tbody.innerHTML = '<tr><td colspan="8">Error loading bookings. </div>'; }
   }
 
   window.addEventListener('DOMContentLoaded', async () => {

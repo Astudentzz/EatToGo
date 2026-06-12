@@ -12,23 +12,17 @@
         .qr-container img { max-width: 200px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,.1); }
         .payment-instruction { background: #fff8f0; border-left: 4px solid var(--orange); padding: 16px; border-radius: 12px; }
         .navbar-etg .container { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; }
-        .desktop-nav { display: flex; gap: 1rem; }
-        .hamburger { display: none; background: none; border: none; font-size: 28px; color: var(--orange); cursor: pointer; padding: 0; }
-        @media (max-width: 768px) {
-            .navbar-etg .container { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; }
-            .logo { grid-column: 1; grid-row: 1; justify-self: start; }
-            .right-group { grid-column: 2; grid-row: 1; justify-self: end; display: flex; align-items: center; gap: 10px; }
-            .hamburger { display: block; grid-column: 1; grid-row: 2; justify-self: start; margin-top: 4px; }
-            .desktop-nav { display: none; }
-        }
-        @media (min-width: 769px) { .hamburger, .mobile-sidebar, .sidebar-overlay, .close-sidebar { display: none; } }
-        .mobile-sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100%; background: #1C1208; z-index: 1100; transform: translateX(-100%); transition: transform 0.3s ease; padding: 60px 20px 20px; }
-        .mobile-sidebar.open { transform: translateX(0); }
-        .mobile-sidebar a { display: block; color: rgba(255,255,255,.8); text-decoration: none; padding: 12px 16px; font-weight: 700; border-radius: 12px; margin: 8px 0; }
-        .mobile-sidebar a:hover, .mobile-sidebar a.active { background: rgba(255,107,53,.2); color: var(--orange); }
-        .close-sidebar { position: absolute; top: 15px; right: 20px; font-size: 28px; color: white; background: none; border: none; cursor: pointer; }
-        .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1050; display: none; }
-        .sidebar-overlay.active { display: block; }
+        .logo { font-size: 30px; color: var(--orange); text-decoration: none; font-family: 'Fraunces', serif; font-weight: 900; }
+        .logo span { color: var(--green); }
+        .right-group { display: flex; align-items: center; gap: 10px; }
+        .auth-buttons { display: flex; gap: 10px; align-items: center; }
+        .auth-buttons .btn-outline-etg { border: 2px solid var(--orange); background: transparent; color: var(--orange); border-radius: 40px; padding: 6px 18px; font-weight: 700; }
+        .auth-buttons .btn-outline-etg:hover { background: var(--orange); color: #1C1208; }
+        .auth-buttons .btn-etg { background: var(--orange); border: none; color: #1C1208; font-weight: 700; border-radius: 40px; padding: 6px 18px; }
+        .user-greeting { display: inline-flex; align-items: center; gap: 12px; background: #fef2e8; padding: 4px 12px 4px 18px; border-radius: 50px; font-weight: 600; }
+        .user-greeting .logout-link { color: var(--orange); cursor: pointer; font-weight: 700; text-decoration: none; }
+        .user-greeting .logout-link:hover { background: rgba(255,107,53,0.1); border-radius: 30px; padding: 6px 10px; }
+
         .timeline { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 20px; }
         .timeline span { background: white; border: 2px solid var(--cream-dark); padding: 6px 12px; border-radius: 999px; font-weight: 800; color: var(--gray); font-size: 12px; }
         .timeline span.active { background: var(--orange); color: white; border-color: var(--orange); }
@@ -38,13 +32,9 @@
 <nav class="navbar-etg">
     <div class="container">
         <a class="logo" href="index.html">Eat<span>To</span>Go</a>
-        <div class="desktop-nav" id="mainNav"></div>
         <div class="right-group"><div id="authArea"></div></div>
-        <button class="hamburger" id="hamburgerBtn">☰</button>
     </div>
 </nav>
-<div class="mobile-sidebar" id="mobileSidebar"><button class="close-sidebar" id="closeSidebarBtn">×</button><div id="mobileNavLinks"></div></div>
-<div class="sidebar-overlay" id="sidebarOverlay"></div>
 
 <section class="page-head">
     <div class="container">
@@ -92,15 +82,22 @@
 
 <script src="assets/js/api.js"></script>
 <script>
-    const hamburger = document.getElementById('hamburgerBtn');
-    const sidebar = document.getElementById('mobileSidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-    const closeBtn = document.getElementById('closeSidebarBtn');
-    function openSidebar() { sidebar.classList.add('open'); overlay.classList.add('active'); }
-    function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('active'); }
-    if (hamburger) hamburger.addEventListener('click', openSidebar);
-    if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
-    if (overlay) overlay.addEventListener('click', closeSidebar);
+    function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
+
+    async function updateAuthArea() {
+        const authDiv = document.getElementById('authArea');
+        if (!authDiv) return;
+        const sessionData = await checkSession();
+        const user = sessionData.loggedIn ? sessionData.user : null;
+        if (!user) {
+            authDiv.innerHTML = `<div class="auth-buttons"><a href="login.html" class="btn btn-outline-etg">Sign in</a><a href="signup.html" class="btn btn-etg">Register</a></div>`;
+        } else {
+            const displayName = user.name || user.email.split('@')[0];
+            authDiv.innerHTML = `<div class="user-greeting"><span>👋 ${escapeHtml(displayName)}</span><a class="logout-link" id="topLogoutBtn">Logout</a></div>`;
+            const logoutBtn = document.getElementById('topLogoutBtn');
+            if (logoutBtn) logoutBtn.addEventListener('click', async (e) => { e.preventDefault(); await apiCall('/logout.php',{method:'POST'}); window.location.href='login.html'; });
+        }
+    }
 
     const urlParams = new URLSearchParams(window.location.search);
     const reservationId = urlParams.get('reservation_id');
@@ -125,27 +122,14 @@
         } catch (err) { qrDiv.innerHTML = '<p class="text-danger">Failed to load payment details.</p>'; console.error(err); }
     }
 
-    function confirmPayment() {
-        window.location.href = `upload-payment-proof.html?reservation_id=${reservationId}`;
-    }
-
-    async function setupNav() {
-        const s = await checkSession();
-        const desktopNav = document.getElementById('mainNav');
-        const mobileNav = document.getElementById('mobileNavLinks');
-        if (!desktopNav) return;
-        const u = s.loggedIn ? s.user : null;
-        let navHtml = '';
-        if (!u || u.role === 'customer') navHtml = `<a class="nav-link" href="index.html">Restaurants</a><a class="nav-link" href="booking-history.html">My Bookings</a><a class="nav-link" href="order-status.html">Order Status</a>`;
-        else if (u.role === 'staff') navHtml = `<a class="nav-link fw-bold" href="staff-dashboard.html">↗ Staff Dashboard</a>`;
-        else if (u.role === 'owner') navHtml = `<a class="nav-link fw-bold" href="owner-dashboard.html">↗ Owner Dashboard</a>`;
-        else if (u.role === 'admin') navHtml = `<a class="nav-link fw-bold" href="admin.html">↗ Admin Dashboard</a>`;
-        desktopNav.innerHTML = navHtml;
-        if (mobileNav) mobileNav.innerHTML = navHtml;
-    }
+    function confirmPayment() { window.location.href = `upload-payment-proof.html?reservation_id=${reservationId}`; }
 
     document.getElementById('confirmPaymentBtn').addEventListener('click', confirmPayment);
-    window.addEventListener('DOMContentLoaded', async () => { await nav(); await setupNav(); await loadPaymentDetails(); });
+    window.addEventListener('DOMContentLoaded', async () => {
+        await nav(); // from api.js
+        await updateAuthArea();
+        await loadPaymentDetails();
+    });
 </script>
 </body>
 </html>

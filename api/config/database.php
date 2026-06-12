@@ -2,10 +2,10 @@
 require_once __DIR__ . '/security.php';
 
 function getDB() {
-    $host = 'localhost';
-    $dbname = 'eattogo_db';   // use your local database name
-    $user = 'root';                         // default XAMPP username
-    $pass = '';                             // default XAMPP password is empty
+    $host = 'sql210.infinityfree.com';
+    $dbname = 'if0_42158944_eattogo';   // use your local database name
+    $user = 'if0_42158944';                         // default XAMPP username
+    $pass = 'L87vr063xhvL';                             // default XAMPP password is empty
     try {
         $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $user, $pass);
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);

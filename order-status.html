@@ -74,6 +74,36 @@
     .booking-selector label { font-weight: 800; margin: 0; color: #1C1208; }
     .booking-selector select { flex: 1; min-width: 200px; padding: 10px 15px; border-radius: 40px; border: 1px solid #e2d4c8; background: white; font-weight: 500; }
     @media (max-width: 576px) { .tracker-step { gap: 12px; } .step-dot { width: 32px; height: 32px; font-size: 14px; } }
+
+    /* Print styles – hide everything except the certificate */
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      .print-certificate-container, .print-certificate-container * {
+        visibility: visible;
+      }
+      .print-certificate-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        padding: 20px;
+        background: white;
+      }
+      .no-print, .navbar-etg, .mobile-sidebar, .sidebar-overlay, .minimal-footer, .page-head, .booking-selector, .card-etg>h3, .order-tracker, .btn, .btn-etg, .btn-outline-etg {
+        display: none !important;
+      }
+      .receipt-card {
+        box-shadow: none;
+        border: 1px solid #ccc;
+        margin: 0;
+        padding: 15px;
+      }
+      .receipt-card .btn {
+        display: none;
+      }
+    }
   </style>
 </head>
 <body>
@@ -248,6 +278,32 @@
     return null;
   }
 
+  function printCertificate() {
+    // Add a temporary class to the receipt card for print isolation
+    const receiptCard = document.querySelector('#receiptBox .receipt-card');
+    if (!receiptCard) return;
+    const originalContainer = receiptCard.parentNode;
+    // Create a print wrapper
+    let printDiv = document.querySelector('.print-certificate-container');
+    if (!printDiv) {
+      printDiv = document.createElement('div');
+      printDiv.className = 'print-certificate-container';
+      document.body.appendChild(printDiv);
+    }
+    // Clone the receipt card content and any necessary parent structure
+    const clone = receiptCard.cloneNode(true);
+    // Remove any buttons from the clone (like print button itself)
+    const buttons = clone.querySelectorAll('.btn, button');
+    buttons.forEach(btn => btn.remove());
+    printDiv.innerHTML = '';
+    printDiv.appendChild(clone);
+    window.print();
+    // Clean up after print (optional)
+    setTimeout(() => {
+      printDiv.innerHTML = '';
+    }, 100);
+  }
+
   function renderTrackerAndReceipt() {
     const trackerDiv = document.getElementById('trackerContainer');
     const receiptDiv = document.getElementById('receiptBox');
@@ -308,6 +364,7 @@
       receiptHtml += `<div class="order-item fw-bold mt-2"><span>Total</span><span>RM ${total.toFixed(2)}</span></div>`;
     } else if(currentOrder?.total_amount) receiptHtml += `<hr><div class="order-item"><b>Total:</b> RM ${parseFloat(currentOrder.total_amount).toFixed(2)}</div>`;
     else receiptHtml += `<hr><p class="text-muted">No pre‑order placed.</p>`;
+    receiptHtml += `<hr><button onclick="printCertificate()" class="btn btn-outline-etg w-100 mt-2"><i class="bi bi-printer"></i> Print Booking Certificate</button>`;
     receiptHtml += `</div>`;
     receiptDiv.innerHTML = receiptHtml;
   }
@@ -327,6 +384,9 @@
       document.getElementById('receiptBox').innerHTML = '';
     }
   }
+
+  // Make printCertificate globally accessible for inline onclick
+  window.printCertificate = printCertificate;
 
   window.addEventListener('DOMContentLoaded', async () => {
     await nav();

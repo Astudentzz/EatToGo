@@ -39,13 +39,26 @@ if (!$reservationDate || $reservationDate->format('Y-m-d') !== $date || $date < 
     echo json_encode(['error' => 'Invalid reservation date']);
     exit;
 }
+
+// --- Convert time from 12‑hour (e.g., "8:00 AM") to 24‑hour (e.g., "08:00:00") ---
+if (preg_match('/^\d{1,2}:\d{2}\s?(?:AM|PM)$/i', $time)) {
+    $dt = DateTime::createFromFormat('g:i A', $time);
+    if ($dt) {
+        $time = $dt->format('H:i:s');
+    } else {
+        http_response_code(400);
+        echo json_encode(['error' => 'Invalid time format']);
+        exit;
+    }
+}
+// Now validate the 24‑hour format
 if (!preg_match('/^\d{2}:\d{2}(:\d{2})?$/', $time)) {
     http_response_code(400);
     echo json_encode(['error' => 'Invalid reservation time']);
     exit;
 }
 
-// 1. Check for duplicate reservation (same user, same restaurant, same date, same time)
+// 1. Check for duplicate reservation
 $stmt = $pdo->prepare("
     SELECT id FROM reservations 
     WHERE user_id = ? 
@@ -55,12 +68,12 @@ $stmt = $pdo->prepare("
 ");
 $stmt->execute([$_SESSION['user']['id'], $restaurant_id, $date, $time]);
 if ($stmt->fetch()) {
-    http_response_code(409); // Conflict
+    http_response_code(409);
     echo json_encode(['error' => 'You already have a reservation at this restaurant for the same date and time. Please choose a different time or date.']);
     exit;
 }
 
-// 2. Get total seats of the restaurant
+// 2. Get total seats
 $stmt = $pdo->prepare("SELECT total_seats FROM restaurants WHERE id = ? AND status = 'approved'");
 $stmt->execute([$restaurant_id]);
 $totalSeats = $stmt->fetchColumn();
@@ -70,7 +83,7 @@ if ($totalSeats === false) {
     exit;
 }
 
-// 3. Sum already confirmed guests for the same date & time slot
+// 3. Sum already confirmed guests for the same slot
 $stmt = $pdo->prepare("
     SELECT COALESCE(SUM(num_people), 0) as booked 
     FROM reservations 
@@ -89,7 +102,7 @@ if ($guests > $remaining) {
     exit;
 }
 
-// 4. Insert the new reservation (pending status)
+// 4. Insert new reservation
 $stmt = $pdo->prepare("INSERT INTO reservations (user_id, restaurant_id, reservation_date, reservation_time, num_people, status) VALUES (?, ?, ?, ?, ?, 'pending')");
 $stmt->execute([$_SESSION['user']['id'], $restaurant_id, $date, $time, $guests]);
 $reservation_id = $pdo->lastInsertId();

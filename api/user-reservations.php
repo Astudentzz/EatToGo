@@ -10,7 +10,15 @@ if (!isset($_SESSION['user'])) {
     exit;
 }
 
-$stmt = $pdo->prepare("SELECT r.*, res.name as restaurant_name FROM reservations r JOIN restaurants res ON r.restaurant_id = res.id WHERE r.user_id = ? ORDER BY r.reservation_date DESC, r.reservation_time DESC");
+// Use UNIX_TIMESTAMP to get a UTC-based Unix timestamp (milliseconds)
+$stmt = $pdo->prepare("
+    SELECT r.*, res.name as restaurant_name, 
+           UNIX_TIMESTAMP(r.created_at) * 1000 as created_at_unix
+    FROM reservations r 
+    JOIN restaurants res ON r.restaurant_id = res.id 
+    WHERE r.user_id = ? 
+    ORDER BY r.reservation_date DESC, r.reservation_time DESC
+");
 $stmt->execute([$_SESSION['user']['id']]);
 $reservations = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -21,7 +29,6 @@ foreach ($reservations as &$res) {
     $order = $orderStmt->fetch(PDO::FETCH_ASSOC);
     
     if ($order) {
-        // Fetch all order items with menu details
         $itemStmt = $pdo->prepare("
             SELECT oi.*, mi.name, mi.emoji, mi.price as menu_price
             FROM order_items oi
@@ -31,13 +38,12 @@ foreach ($reservations as &$res) {
         $itemStmt->execute([$order['id']]);
         $items = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
         
-        // Build items_summary (string) for backward compatibility
         $itemsSummary = [];
         foreach ($items as $it) {
             $itemsSummary[] = ($it['emoji'] ?? '🍽️') . ' ' . $it['name'] . ' (x' . $it['quantity'] . ')';
         }
         $order['items_summary'] = implode(', ', $itemsSummary);
-        $order['items'] = $items;   // detailed array for frontend
+        $order['items'] = $items;
         $order['total_amount'] = array_sum(array_map(function($i) {
             return $i['quantity'] * $i['price'];
         }, $items));

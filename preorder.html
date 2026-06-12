@@ -9,25 +9,18 @@
   <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
   <link rel="stylesheet" href="assets/css/style.css">
   <style>
-    /* (all existing styles remain unchanged) */
     .navbar-etg .container { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; }
-    .desktop-nav { display: flex; gap: 1rem; }
-    .hamburger { display: none; background: none; border: none; font-size: 28px; color: var(--orange); cursor: pointer; padding: 0; }
-    @media (max-width: 768px) {
-      .navbar-etg .container { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; }
-      .logo { grid-column: 1; grid-row: 1; justify-self: start; }
-      .right-group { grid-column: 2; grid-row: 1; justify-self: end; display: flex; align-items: center; gap: 10px; }
-      .hamburger { display: block; grid-column: 1; grid-row: 2; justify-self: start; margin-top: 4px; }
-      .desktop-nav { display: none; }
-    }
-    @media (min-width: 769px) { .hamburger, .mobile-sidebar, .sidebar-overlay, .close-sidebar { display: none; } }
-    .mobile-sidebar { position: fixed; top: 0; left: 0; width: 260px; height: 100%; background: #1C1208; z-index: 1100; transform: translateX(-100%); transition: transform 0.3s ease; padding: 60px 20px 20px; }
-    .mobile-sidebar.open { transform: translateX(0); }
-    .mobile-sidebar a { display: block; color: rgba(255,255,255,.8); text-decoration: none; padding: 12px 16px; font-weight: 700; border-radius: 12px; margin: 8px 0; }
-    .mobile-sidebar a:hover, .mobile-sidebar a.active { background: rgba(255,107,53,.2); color: var(--orange); }
-    .close-sidebar { position: absolute; top: 15px; right: 20px; font-size: 28px; color: white; background: none; border: none; cursor: pointer; }
-    .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1050; display: none; }
-    .sidebar-overlay.active { display: block; }
+    .logo { font-size: 30px; color: var(--orange); text-decoration: none; font-family: 'Fraunces', serif; font-weight: 900; }
+    .logo span { color: var(--green); }
+    .right-group { display: flex; align-items: center; gap: 10px; }
+    .auth-buttons { display: flex; gap: 10px; align-items: center; }
+    .auth-buttons .btn-outline-etg { border: 2px solid var(--orange); background: transparent; color: var(--orange); border-radius: 40px; padding: 6px 18px; font-weight: 700; }
+    .auth-buttons .btn-outline-etg:hover { background: var(--orange); color: #1C1208; }
+    .auth-buttons .btn-etg { background: var(--orange); border: none; color: #1C1208; font-weight: 700; border-radius: 40px; padding: 6px 18px; }
+    .user-greeting { display: inline-flex; align-items: center; gap: 12px; background: #fef2e8; padding: 4px 12px 4px 18px; border-radius: 50px; font-weight: 600; }
+    .user-greeting .logout-link { color: var(--orange); cursor: pointer; font-weight: 700; text-decoration: none; }
+    .user-greeting .logout-link:hover { background: rgba(255,107,53,0.1); border-radius: 30px; padding: 6px 10px; }
+
     .menu-item-card { border-radius: 18px; background: #fff; box-shadow: var(--shadow); border: 2.5px solid transparent; transition: all .2s ease; cursor: default; overflow: hidden; }
     .menu-item-card.in-cart { border-color: var(--orange); background: #fff8f2; box-shadow: 0 6px 24px rgba(255,107,53,.22); }
     .menu-image { width: 100%; height: 110px; object-fit: cover; border-radius: 18px 18px 0 0; }
@@ -50,6 +43,9 @@
       .timeline span { font-size: 10px; padding: 4px 8px; }
       .filter-bar .row > div { margin-bottom: 10px; }
     }
+
+    /* Custom Modal styles */
+    .modal-content { border-radius: 20px; }
   </style>
 </head>
 <body>
@@ -57,19 +53,11 @@
 <nav class="navbar-etg">
   <div class="container">
     <a class="logo" href="index.html">Eat<span>To</span>Go</a>
-    <div class="desktop-nav" id="mainNav"></div>
     <div class="right-group">
       <div id="authArea"></div>
     </div>
-    <button class="hamburger" id="hamburgerBtn">☰</button>
   </div>
 </nav>
-
-<div class="mobile-sidebar" id="mobileSidebar">
-  <button class="close-sidebar" id="closeSidebarBtn">×</button>
-  <div id="mobileNavLinks"></div>
-</div>
-<div class="sidebar-overlay" id="sidebarOverlay"></div>
 
 <section class="page-head">
   <div class="container">
@@ -94,7 +82,6 @@
           <h4 class="mb-0">Choose Your Items</h4>
           <span class="badge-etg" id="selectedCount">0 items selected</span>
         </div>
-        <!-- FILTER BAR -->
         <div class="filter-bar">
           <div class="row g-2 align-items-end">
             <div class="col-md-5">
@@ -138,19 +125,49 @@
   <div class="footer-bottom">© 2026 EatToGo • Universiti Teknologi Malaysia (UTM)</div>
 </footer>
 
+<!-- Custom Alert Modal -->
+<div class="modal fade" id="customAlertModal" tabindex="-1">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-warning text-dark"><h5 class="modal-title">Notice</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body" id="alertMessage"></div>
+      <div class="modal-footer"><button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button></div>
+    </div>
+  </div>
+</div>
+
 <script src="assets/js/api.js"></script>
 <script>
-  // Sidebar toggle
-  const hamburger = document.getElementById('hamburgerBtn');
-  const sidebar = document.getElementById('mobileSidebar');
-  const overlay = document.getElementById('sidebarOverlay');
-  const closeBtn = document.getElementById('closeSidebarBtn');
-  function openSidebar() { sidebar.classList.add('open'); overlay.classList.add('active'); }
-  function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('active'); }
-  if (hamburger) hamburger.addEventListener('click', openSidebar);
-  if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
-  if (overlay) overlay.addEventListener('click', closeSidebar);
+  function showAlert(message, callback = null) {
+    const alertModal = new bootstrap.Modal(document.getElementById('customAlertModal'));
+    document.getElementById('alertMessage').innerHTML = message;
+    alertModal.show();
+    const handleHide = () => {
+      if (callback) callback();
+      document.getElementById('customAlertModal').removeEventListener('hidden.bs.modal', handleHide);
+    };
+    document.getElementById('customAlertModal').addEventListener('hidden.bs.modal', handleHide);
+  }
 
+  // ==================== AUTH & SIMPLE NAV ====================
+  function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
+
+  async function updateAuthArea() {
+    const authDiv = document.getElementById('authArea');
+    if (!authDiv) return;
+    const sessionData = await checkSession();
+    const user = sessionData.loggedIn ? sessionData.user : null;
+    if (!user) {
+      authDiv.innerHTML = `<div class="auth-buttons"><a href="login.html" class="btn btn-outline-etg">Sign in</a><a href="signup.html" class="btn btn-etg">Register</a></div>`;
+    } else {
+      const displayName = user.name || user.email.split('@')[0];
+      authDiv.innerHTML = `<div class="user-greeting"><span>👋 ${escapeHtml(displayName)}</span><a class="logout-link" id="topLogoutBtn">Logout</a></div>`;
+      const logoutBtn = document.getElementById('topLogoutBtn');
+      if (logoutBtn) logoutBtn.addEventListener('click', async (e) => { e.preventDefault(); await apiCall('/logout.php',{method:'POST'}); window.location.href='login.html'; });
+    }
+  }
+
+  // ==================== PRE‑ORDER LOGIC ====================
   const urlParams = new URLSearchParams(window.location.search);
   const reservationId = urlParams.get('reservation_id');
   const restaurantId = urlParams.get('restaurant_id');
@@ -162,11 +179,10 @@
   const defaultMenuSvg = "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23ddd%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2255%22%20font-size%3D%2212%22%20text-anchor%3D%22middle%22%20fill%3D%22%23666%22%3ENo%20Img%3C%2Ftext%3E%3C%2Fsvg%3E";
 
   async function loadMenu() {
-    if (!restaurantId) { alert('Restaurant ID missing.'); window.location.href = 'search-results.html'; return; }
+    if (!restaurantId) { showAlert('Restaurant ID missing.', () => window.location.href = 'search-results.html'); return; }
     try {
       menuItems = await apiCall(`/restaurant-menu.php?restaurant_id=${restaurantId}`);
       if (!menuItems.length) document.getElementById('menuList').innerHTML = '<div class="col-12 text-center">No menu items available.</div>';
-      // Populate category dropdown
       const categories = [...new Set(menuItems.map(item => item.category).filter(c => c))];
       const catSelect = document.getElementById('categoryFilter');
       catSelect.innerHTML = '<option value="">All Categories</option>' + categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
@@ -178,14 +194,9 @@
     let filtered = [...menuItems];
     if (currentSearch) {
       const searchLower = currentSearch.toLowerCase();
-      filtered = filtered.filter(item => 
-        item.name.toLowerCase().includes(searchLower) || 
-        (item.emoji && item.emoji.toLowerCase().includes(searchLower))
-      );
+      filtered = filtered.filter(item => item.name.toLowerCase().includes(searchLower) || (item.emoji && item.emoji.toLowerCase().includes(searchLower)));
     }
-    if (currentCategory) {
-      filtered = filtered.filter(item => item.category === currentCategory);
-    }
+    if (currentCategory) filtered = filtered.filter(item => item.category === currentCategory);
     filteredMenuItems = filtered;
     renderMenu();
   }
@@ -229,7 +240,7 @@
     const newQty = (cart[itemId] || 0) + delta;
     if (newQty <= 0) delete cart[itemId];
     else cart[itemId] = newQty;
-    applyFilters(); // re-render filtered menu
+    applyFilters();
   }
 
   function renderCart() {
@@ -262,15 +273,8 @@
     if (el) el.textContent = totalQty > 0 ? `${totalQty} item${totalQty > 1 ? 's' : ''} selected` : '0 items selected';
   }
 
-  // Filter event listeners
-  document.getElementById('searchInput').addEventListener('input', (e) => {
-    currentSearch = e.target.value;
-    applyFilters();
-  });
-  document.getElementById('categoryFilter').addEventListener('change', (e) => {
-    currentCategory = e.target.value;
-    applyFilters();
-  });
+  document.getElementById('searchInput').addEventListener('input', (e) => { currentSearch = e.target.value; applyFilters(); });
+  document.getElementById('categoryFilter').addEventListener('change', (e) => { currentCategory = e.target.value; applyFilters(); });
   function clearFilters() {
     document.getElementById('searchInput').value = '';
     document.getElementById('categoryFilter').value = '';
@@ -282,65 +286,23 @@
   async function checkout() {
     const session = await checkSession();
     if (!session.loggedIn || session.user.role !== 'customer') {
-      alert('Please login as customer.');
-      window.location.href = 'login.html';
+      showAlert('Please login as customer.', () => window.location.href = 'login.html');
       return;
     }
-    if (!reservationId) {
-      alert('No reservation found.');
-      window.location.href = 'search-results.html';
-      return;
-    }
+    if (!reservationId) { showAlert('No reservation found.', () => window.location.href = 'search-results.html'); return; }
     const items = Object.entries(cart).map(([id, quantity]) => ({ id: parseInt(id), quantity }));
-    if (items.length === 0) {
-      window.location.href = `checkout.html?reservation_id=${reservationId}`;
-      return;
-    }
+    if (items.length === 0) { window.location.href = `checkout.html?reservation_id=${reservationId}`; return; }
     try {
-      await apiCall('/orders.php', {
-        method: 'POST',
-        body: JSON.stringify({ reservation_id: parseInt(reservationId), items })
-      });
+      await apiCall('/orders.php', { method: 'POST', body: JSON.stringify({ reservation_id: parseInt(reservationId), items }) });
       window.location.href = `checkout.html?reservation_id=${reservationId}`;
-    } catch(err) {
-      alert('Error placing order: ' + err.message);
-    }
+    } catch(err) { showAlert('Error placing order: ' + err.message); }
   }
 
-  function skipPreorder() {
-    window.location.href = `checkout.html?reservation_id=${reservationId}`;
-  }
-
-  function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
-  }
-
-  async function setupNav() {
-    const s = await checkSession();
-    const desktopNav = document.getElementById('mainNav');
-    const mobileNav = document.getElementById('mobileNavLinks');
-    if (!desktopNav) return;
-    const u = s.loggedIn ? s.user : null;
-    let navHtml = '';
-    if (!u || u.role === 'customer') {
-      navHtml = `<a class="nav-link" href="index.html">Restaurants</a>
-                 <a class="nav-link" href="booking-history.html">My Bookings</a>
-                 <a class="nav-link" href="order-status.html">Order Status</a>`;
-    } else if (u.role === 'staff') {
-      navHtml = `<a class="nav-link fw-bold" href="staff-dashboard.html">↗ Staff Dashboard</a>`;
-    } else if (u.role === 'owner') {
-      navHtml = `<a class="nav-link fw-bold" href="owner-dashboard.html">↗ Owner Dashboard</a>`;
-    } else if (u.role === 'admin') {
-      navHtml = `<a class="nav-link fw-bold" href="admin.html">↗ Admin Dashboard</a>`;
-    }
-    desktopNav.innerHTML = navHtml;
-    if (mobileNav) mobileNav.innerHTML = navHtml;
-  }
+  function skipPreorder() { window.location.href = `checkout.html?reservation_id=${reservationId}`; }
 
   window.addEventListener('DOMContentLoaded', async () => {
-    await nav();
-    await setupNav();
+    await nav(); // from api.js
+    await updateAuthArea();
     await loadMenu();
   });
 </script>

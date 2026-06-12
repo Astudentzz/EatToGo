@@ -2,68 +2,332 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Owner Dashboard – EatToGo</title>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="assets/css/style.css">
   <style>
-    @media (max-width: 768px) {
-      .sidebar { position: fixed; transform: translateX(-100%); transition: transform 0.3s ease; width: 260px; z-index: 1050; height: 100%; overflow-y: auto; background: #1C1208; }
-      .sidebar.show { transform: translateX(0); }
-      .owner-main { margin-left: 0 !important; }
+    /* ----- Slide-out sidebar (same as staff dashboard) ----- */
+    :root {
+      --orange: #ff6b35;
+      --dark-wood: #1C1208;
+      --sidebar-width: 280px;
     }
-    @media (min-width: 769px) {
-      .sidebar { position: fixed; width: 260px; min-height: 100vh; }
-      .owner-main { margin-left: 260px; }
-      .sidebar.collapsed { transform: translateX(-100%); }
-      .owner-main.full { margin-left: 0; }
-    }
-    .topbar {
-      background: white;
-      padding: 12px 20px;
-      box-shadow: 0 2px 10px rgba(0,0,0,.06);
+
+    .mobile-sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--sidebar-width);
+      height: 100%;
+      background: linear-gradient(145deg, #1a130b 0%, #0e0a05 100%);
+      z-index: 1200;
+      transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+      transform: translateX(-100%);
+      box-shadow: 8px 0 32px rgba(0, 0, 0, 0.5);
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 10px;
+      flex-direction: column;
+      border-right: 1px solid rgba(255, 107, 53, 0.2);
     }
-    .toggle-sidebar-btn {
-      background: none;
+
+    .mobile-sidebar.open { transform: translateX(0); }
+
+    .sidebar-header {
+      padding: 28px 20px 20px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .sidebar-avatar {
+      width: 52px;
+      height: 52px;
+      background: rgba(255,107,53,0.2);
+      border-radius: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--orange);
+      border: 1.5px solid rgba(255,107,53,0.4);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    .sidebar-userinfo {
+      flex: 1;
+    }
+
+    .sidebar-userinfo .user-display-name {
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: white;
+      letter-spacing: -0.2px;
+      margin-bottom: 4px;
+    }
+
+    .sidebar-userinfo .user-display-email {
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.6);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 140px;
+    }
+
+    .sidebar-userinfo .guest-label {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.7);
+      font-weight: 500;
+      background: rgba(255,107,53,0.2);
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 20px;
+    }
+
+    .close-sidebar {
+      background: rgba(255,255,255,0.1);
       border: none;
+      width: 36px;
+      height: 36px;
+      border-radius: 30px;
       font-size: 24px;
+      font-weight: 500;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: 0.2s;
+      cursor: pointer;
+    }
+
+    .close-sidebar:hover {
+      background: var(--orange);
+      color: #1C1208;
+      transform: rotate(90deg);
+    }
+
+    .sidebar-nav-links {
+      flex: 1;
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .sidebar-nav-links a {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 18px;
+      border-radius: 16px;
+      color: rgba(255,255,255,0.85);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1rem;
+      transition: all 0.2s ease;
+      background: transparent;
+    }
+
+    .sidebar-nav-links a i {
+      font-size: 1.3rem;
+      width: 28px;
+      color: var(--orange);
+    }
+
+    .sidebar-nav-links a:hover {
+      background: rgba(255,107,53,0.18);
+      color: white;
+      transform: translateX(4px);
+    }
+
+    .sidebar-nav-links a.active {
+      background: rgba(255,107,53,0.25);
+      color: var(--orange);
+      border-left: 3px solid var(--orange);
+    }
+
+    .sidebar-footer {
+      display: none;
+    }
+
+    .sidebar-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(6px);
+      z-index: 1150;
+      display: none;
+    }
+
+    .sidebar-overlay.active {
+      display: block;
+    }
+
+    body.sidebar-open {
+      overflow: hidden;
+    }
+
+    .sidebar-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,107,53,0.3), transparent);
+      margin: 6px 16px;
+    }
+
+    /* Hamburger button always visible */
+    .hamburger {
+      background: rgba(0,0,0,0.05);
+      border-radius: 50px;
+      width: 44px;
+      height: 44px;
+      transition: 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      font-size: 28px;
       color: var(--orange);
       cursor: pointer;
-      padding: 0;
-      margin-right: 5px;
     }
-    .left-group {
+
+    .hamburger:hover {
+      background: rgba(255,107,53,0.1);
+      transform: scale(1.02);
+    }
+
+    /* Navbar layout */
+    .navbar-etg .container {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
-      gap: 10px;
-      flex-wrap: nowrap;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 0.5rem 1rem;
     }
-    .left-group span {
-      font-size: 1.2rem;
-      font-weight: 700;
-      white-space: nowrap;
+
+    /* Desktop: hamburger left, logo next, auth right */
+    .hamburger {
+      order: 1;
+    }
+    .logo {
+      order: 2;
+      margin-right: auto;
     }
     .right-group {
-      display: flex;
-      align-items: center;
-      gap: 15px;
+      order: 3;
     }
-    #authArea {
-      white-space: nowrap;
+
+    /* Hide desktop nav completely */
+    .desktop-nav {
+      display: none !important;
     }
-    @media (max-width: 480px) {
-      .left-group span {
-        font-size: 1rem;
+
+    /* Mobile layout: grid */
+    @media (max-width: 768px) {
+      .navbar-etg .container {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+        padding: 0.75rem 1rem;
+      }
+      .hamburger, .logo, .right-group {
+        order: unset;
+      }
+      .hamburger {
+        grid-column: 1;
+        grid-row: 2;
+        justify-self: start;
+      }
+      .logo {
+        grid-column: 1;
+        grid-row: 1;
+        justify-self: start;
+      }
+      .right-group {
+        grid-column: 2;
+        grid-row: 1;
+        justify-self: end;
       }
     }
+
+    /* Top-right auth area */
+    .auth-buttons {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .auth-buttons .btn-outline-etg {
+      border: 2px solid var(--orange);
+      background: transparent;
+      color: var(--orange);
+      border-radius: 40px;
+      padding: 6px 18px;
+      font-weight: 700;
+    }
+    .auth-buttons .btn-outline-etg:hover {
+      background: var(--orange);
+      color: #1C1208;
+    }
+    .auth-buttons .btn-etg {
+      background: var(--orange);
+      border: none;
+      color: #1C1208;
+      font-weight: 700;
+      border-radius: 40px;
+      padding: 6px 18px;
+    }
+    .user-greeting {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: #fef2e8;
+      padding: 4px 12px 4px 18px;
+      border-radius: 50px;
+      font-weight: 600;
+    }
+    .user-greeting .logout-link {
+      color: var(--orange);
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    /* Owner dashboard specific styles */
+    .owner-main {
+      min-height: 100vh;
+      background: #f4eee6;
+      width: 100%;
+      margin-left: 0 !important;
+      transition: none;
+    }
+    .owner-main.shifted {
+      margin-left: 0 !important;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
+
+    .dash-card {
+      background: white;
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,.05);
+    }
+    .card-etg {
+      background: white;
+      border-radius: 1rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,.05);
+      border: 1px solid rgba(255,107,53,.08);
+    }
     .restaurant-card {
-      border: 1px solid var(--cream-dark);
+      border: 1px solid #f0e8de;
       border-radius: 16px;
       padding: 16px;
       margin-bottom: 16px;
@@ -78,53 +342,53 @@
       object-fit: cover;
       border-radius: 12px;
     }
-    .modal-content {
+    .status {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
       border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
     }
-    .dash-card {
-      background: white;
-      border-radius: 18px;
-      padding: 20px;
-      box-shadow: 0 4px 12px rgba(0,0,0,.05);
-    }
-    .card-etg {
-      background: white;
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      border: 1px solid rgba(255,107,53,.08);
-    }
-    .image-preview {
-      max-width: 150px;
-      max-height: 150px;
-      margin-top: 8px;
-      border-radius: 8px;
-      border: 1px solid #ddd;
+    .status.confirmed, .status.approved { background: #d4edda; color: #155724; }
+    .status.pending { background: #fff3cd; color: #856404; }
+    .status.rejected { background: #f8d7da; color: #721c24; }
+    .image-preview { max-width: 150px; max-height: 150px; margin-top: 8px; border-radius: 8px; border: 1px solid #ddd; }
+    .modal-content { border-radius: 20px; }
+    .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    @media (max-width: 768px) {
+      .restaurant-card { flex-direction: column; text-align: center; }
+      .restaurant-card img { margin-top: 10px; }
     }
   </style>
 </head>
 <body>
-<aside class="sidebar" id="sidebar">
-  <a class="logo" href="index.html">Eat<span>To</span>Go</a>
-  <hr>
-  <a class="active" href="owner-dashboard.html">📊 Overview</a>
-  <a href="#reservations">📅 Reservations</a>
-  <a href="#listing">📝 Listing Request</a>
-  <a href="#staff">👥 Manage Staff</a>
-  <a href="owner-profile.html">👤 My Profile</a>
-  <a href="#" onclick="logout(); return false;">🚪 Sign Out</a>
-</aside>
 
-<main class="owner-main" id="ownerMain">
-  <div class="topbar">
-    <div class="left-group">
-      <button class="toggle-sidebar-btn" id="toggleSidebarBtn">☰</button>
-      <span>Owner Dashboard</span>
-    </div>
+<nav class="navbar-etg">
+  <div class="container">
+    <button class="hamburger" id="hamburgerBtn">☰</button>
+    <a class="logo" href="owner-dashboard.html">Eat<span>To</span>Go</a>
     <div class="right-group">
-      <span id="authArea"></span>
+      <div id="authArea" class="auth-buttons"></div>
     </div>
   </div>
+</nav>
 
+<!-- Slide-out sidebar -->
+<div class="mobile-sidebar" id="mobileSidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-avatar" id="mobileUserAvatar">🍽️</div>
+    <div class="sidebar-userinfo" id="mobileUserInfo">
+      <div class="user-display-name">Guest</div>
+      <div class="user-display-email">sign in to unlock</div>
+    </div>
+    <button class="close-sidebar" id="closeSidebarBtn">✕</button>
+  </div>
+  <div class="sidebar-divider"></div>
+  <div id="mobileNavLinks" class="sidebar-nav-links"></div>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<main class="owner-main">
   <div class="p-4">
     <!-- Stats -->
     <div class="row g-3 mb-4">
@@ -134,10 +398,11 @@
       <div class="col-md-3"><div class="dash-card"><b>⏳ Pending</b><h2 id="statPending">—</h2></div></div>
     </div>
 
-      <section id="reservations" class="card-etg p-4 mb-4">
-        <h3>📅 Incoming Reservations</h3>
-        <div class="table-responsive"><table class="table"><thead><tr><th>ID</th><th>Customer</th><th>Date/Time</th><th>Guests</th><th>Status</th><th>Arrival</th><th>Order</th></tr></thead><tbody id="reservationCards"></tbody></table></div>
-      </section>
+    <!-- Reservations -->
+    <section id="reservations" class="card-etg p-4 mb-4">
+      <h3>📅 Incoming Reservations</h3>
+      <div class="table-responsive"><table class="table"><thead><tr><th>ID</th><th>Customer</th><th>Date/Time</th><th>Guests</th><th>Status</th><th>Arrival</th><th>Order</th></tr></thead><tbody id="reservationCards"></tbody></table></div>
+    </section>
 
     <!-- My Restaurants -->
     <section id="my-restaurants" class="card-etg p-4 mb-4">
@@ -149,22 +414,21 @@
     <section id="listing" class="card-etg p-4 mb-4">
       <h3>📝 Apply for Restaurant Listing</h3>
       <form id="listingForm" enctype="multipart/form-data" class="row g-3">
-        <div class="col-md-3"><input id="ownerName" class="form-control" placeholder="Owner name" required></div>
-        <div class="col-md-3"><input id="restName" class="form-control" placeholder="Restaurant name" required></div>
-        <div class="col-md-3"><input id="location" class="form-control" placeholder="Location" required></div>
-        <div class="col-md-2"><select id="cuisine" class="form-select"><option>Japanese</option><option>Indian</option><option>Western</option><option>Malay</option><option>Chinese</option></select></div>
-        <div class="col-md-12"><textarea id="description" class="form-control" rows="2" placeholder="Restaurant description"></textarea></div>
-        <div class="col-md-4"><input id="price_range" class="form-control" placeholder="Price range (e.g., RM10-30)"></div>
-        <div class="col-md-4"><input id="hours" class="form-control" placeholder="Operating hours (e.g., 10:00 AM - 10:00 PM)" required
-               pattern="\d{1,2}:\d{2}\s?(?:AM|PM)\s*-\s*\d{1,2}:\d{2}\s?(?:AM|PM)" title="Format: 10:00 AM - 10:00 PM"></div>
-        <div class="col-md-4"><input id="deal" class="form-control" placeholder="Promotion / Deal (e.g., 10% off)"></div>
-        <div class="col-md-4"><input type="number" id="total_seats" class="form-control" placeholder="Total seats (e.g., 50)" min="0"></div>
-        <div class="col-md-4"><input type="number" id="slot_duration" class="form-control" placeholder="Slot duration (minutes)" value="60" min="15" step="15"></div>
-        <div class="col-md-12"><label class="form-label fw-bold">Restaurant Image</label><input type="file" id="restImage" class="form-control" accept="image/*"></div>
-        <div class="col-md-12"><label class="form-label fw-bold">Payment QR Code (optional)</label><input type="file" id="qrCode" class="form-control" accept="image/*"><small class="text-muted">Upload a QR code for customers to scan (e.g., Touch 'n Go, DuitNow).</small></div>
-        <div class="col-md-12"><button type="submit" class="btn btn-etg w-100">Submit Listing Request</button></div>
+        <div class="col-md-3"><label class="form-label fw-semibold">Owner Name</label><input id="ownerName" class="form-control" placeholder="Owner name" required></div>
+        <div class="col-md-3"><label class="form-label fw-semibold">Restaurant Name</label><input id="restName" class="form-control" placeholder="Restaurant name" required></div>
+        <div class="col-md-3"><label class="form-label fw-semibold">Location</label><input id="location" class="form-control" placeholder="Location" required></div>
+        <div class="col-md-2"><label class="form-label fw-semibold">Cuisine</label><input id="cuisine" class="form-control" placeholder="e.g., Japanese, Italian" required></div>
+        <div class="col-12"><label class="form-label fw-semibold">Description</label><textarea id="description" class="form-control" rows="2"></textarea></div>
+        <div class="col-md-4"><label class="form-label fw-semibold">Price Range</label><input id="price_range" class="form-control" placeholder="e.g., RM10-30"></div>
+        <div class="col-md-4"><label class="form-label fw-semibold">Operating Hours</label><input id="hours" class="form-control" placeholder="10:00 AM - 10:00 PM" required pattern="\d{1,2}:\d{2}\s?(?:AM|PM)\s*-\s*\d{1,2}:\d{2}\s?(?:AM|PM)" title="Format: 10:00 AM - 10:00 PM"></div>
+        <div class="col-md-4"><label class="form-label fw-semibold">Promotion / Deal</label><input id="deal" class="form-control" placeholder="e.g., 10% off"></div>
+        <div class="col-md-4"><label class="form-label fw-semibold">Total Seats</label><input type="number" id="total_seats" class="form-control" placeholder="e.g., 50" min="0"></div>
+        <div class="col-md-4"><label class="form-label fw-semibold">Reserve Duration (minutes)</label><input type="number" id="slot_duration" class="form-control" value="60" min="15" step="15"></div>
+        <div class="col-12"><label class="form-label fw-semibold">Restaurant Image</label><input type="file" id="restImage" class="form-control" accept="image/*"></div>
+        <div class="col-12"><label class="form-label fw-semibold">Payment QR Code</label><input type="file" id="qrCode" class="form-control" accept="image/*"><small class="text-muted">Upload a QR code for customers to scan (e.g., Touch 'n Go).</small></div>
+        <div class="col-12"><button type="submit" class="btn btn-etg w-100">Submit Listing Request</button></div>
       </form>
-      <div class="mt-4"><h5>Request History</h5><div class="table-responsive"><table class="table"><thead><tr><th>Restaurant</th><th>Status</th><th>Admin Response</th></tr></thead><tbody id="ownerRequests"></tbody></table></div></div>
+      <div class="mt-4"><h5>Request History</h5><div class="table-responsive"><table class="table"><thead><th>Restaurant</th><th>Status</th><th>Admin Response</th></thead><tbody id="ownerRequests"></tbody></table></div></div>
     </section>
   </div>
 </main>
@@ -181,14 +445,8 @@
           <div class="col-md-3"><input id="staffPassword" type="password" class="form-control" placeholder="Password" required></div>
           <div class="col-md-2"><button type="submit" class="btn btn-etg w-100">Add</button></div>
         </form>
-        <div class="table-responsive">
-          <table class="table">
-            <thead>
-              <tr><th>Name</th><th>Email</th><th>Actions</th></tr>
-            </thead>
-            <tbody id="staffList"></tbody>
-          </table>
-        </div>
+        <small class="text-muted d-block mb-3">📧 An email will be sent to the staff to verify their account before they can log in.</small>
+        <div class="table-responsive"><table class="table"><thead><tr><th>Name</th><th>Email</th><th>Actions</th></tr></thead><tbody id="staffList"></tbody></table></div>
       </div>
     </div>
   </div>
@@ -196,29 +454,12 @@
 
 <!-- Edit Staff Modal -->
 <div class="modal fade" id="editStaffModal" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Edit Staff Member</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <form id="editStaffForm">
-          <input type="hidden" id="editStaffId">
-          <input type="hidden" id="editStaffRestaurantId">
-          <div class="mb-3"><label class="form-label">Name</label><input id="editStaffName" class="form-control" required></div>
-          <div class="mb-3"><label class="form-label">New Password <span class="text-muted">(leave blank to keep current)</span></label><input type="password" id="editStaffPassword" class="form-control"></div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-etg" id="saveStaffChanges">Save</button>
-      </div>
-    </div>
-  </div>
+  <div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Edit Staff Member</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body"><form id="editStaffForm"><input type="hidden" id="editStaffId"><input type="hidden" id="editStaffRestaurantId"><div class="mb-3"><label class="form-label">Name</label><input id="editStaffName" class="form-control" required></div><div class="mb-3"><label class="form-label">New Password <span class="text-muted">(leave blank to keep current)</span></label><input type="password" id="editStaffPassword" class="form-control"></div></form></div>
+  <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-etg" id="saveStaffChanges">Save</button></div></div></div>
 </div>
 
-<!-- Edit Restaurant Modal (matches admin style) -->
+<!-- Edit Restaurant Modal -->
 <div class="modal fade" id="editRestaurantModal" tabindex="-1">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
@@ -226,18 +467,19 @@
       <div class="modal-body">
         <form id="editRestaurantForm">
           <input type="hidden" id="editRestaurantId">
-          <div class="mb-3"><label class="form-label">Restaurant Name</label><input id="editName" class="form-control" required></div>
-          <div class="mb-3"><label class="form-label">Location</label><input id="editLocation" class="form-control" required></div>
-          <div class="mb-3"><label class="form-label">Cuisine</label><input id="editCategory" class="form-control" required></div>
-          <div class="mb-3"><label class="form-label">Description</label><textarea id="editDescription" class="form-control" rows="2"></textarea></div>
-          <div class="mb-3"><label class="form-label">Price Range</label><input id="editPriceRange" class="form-control" placeholder="RM10-30"></div>
-          <div class="mb-3"><input id="editHours" class="form-control" placeholder="Operating hours (e.g., 10:00 AM - 10:00 PM)" required
-                 pattern="\d{1,2}:\d{2}\s?(?:AM|PM)\s*-\s*\d{1,2}:\d{2}\s?(?:AM|PM)" title="Format: 10:00 AM - 10:00 PM"></div>
-          <div class="mb-3"><input id="editDeal" class="form-control" placeholder="Promotion / Deal"></div>
-          <div class="mb-3"><input type="number" id="editSeats" class="form-control" min="0" placeholder="Total seats"></div>
-          <div class="mb-3"><input type="number" id="editSlotDuration" class="form-control" min="15" step="15" value="60" placeholder="Slot duration (minutes)"></div>
-          <div class="mb-3"><label class="form-label">Restaurant Image</label><input type="file" id="editRestImage" class="form-control" accept="image/*"><small class="text-muted">Leave empty to keep current.</small></div>
-          <div class="mb-3"><label class="form-label">Payment QR Code</label><input type="file" id="editQrCode" class="form-control" accept="image/*"><small class="text-muted">Leave empty to keep current. Upload new to replace.</small><div id="currentQrPreview" class="mt-2" style="max-width: 150px;"></div></div>
+          <div class="row g-3">
+            <div class="col-md-6"><label class="form-label">Restaurant Name</label><input id="editName" class="form-control" required></div>
+            <div class="col-md-6"><label class="form-label">Cuisine</label><input id="editCuisine" class="form-control" required></div>
+            <div class="col-md-6"><label class="form-label">Location</label><input id="editLocation" class="form-control" required></div>
+            <div class="col-md-6"><label class="form-label">Price Range</label><input id="editPriceRange" class="form-control" placeholder="RM10-30"></div>
+            <div class="col-12"><label class="form-label">Description</label><textarea id="editDescription" class="form-control" rows="2"></textarea></div>
+            <div class="col-md-6"><label class="form-label">Operating Hours</label><input id="editHours" class="form-control" placeholder="10:00 AM - 10:00 PM" required pattern="\d{1,2}:\d{2}\s?(?:AM|PM)\s*-\s*\d{1,2}:\d{2}\s?(?:AM|PM)" title="Format: 10:00 AM - 10:00 PM"></div>
+            <div class="col-md-6"><label class="form-label">Promotion / Deal</label><input id="editDeal" class="form-control" placeholder="Special offer"></div>
+            <div class="col-md-6"><label class="form-label">Total Seats</label><input type="number" id="editSeats" class="form-control" min="0"></div>
+            <div class="col-md-6"><label class="form-label">Reserve Duration (minutes)</label><input type="number" id="editSlotDuration" class="form-control" min="15" step="15" value="60"></div>
+            <div class="col-12"><label class="form-label">Restaurant Image</label><input type="file" id="editImageFile" class="form-control" accept="image/*"><div id="editImagePreview" class="mt-2"></div></div>
+            <div class="col-12"><label class="form-label">Payment QR Code Image</label><input type="file" id="editQrImage" class="form-control" accept="image/*"><small class="text-muted">Upload new QR code to replace existing</small><div id="editQrPreview" class="mt-2"></div></div>
+          </div>
         </form>
       </div>
       <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-etg" id="saveRestaurantChanges">Save Changes</button></div>
@@ -245,18 +487,30 @@
   </div>
 </div>
 
+<!-- Custom Modal Templates -->
+<div class="modal fade" id="customAlertModal" tabindex="-1">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-warning text-dark"><h5 class="modal-title">Notice</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body" id="alertMessage"></div>
+      <div class="modal-footer"><button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button></div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="customConfirmModal" tabindex="-1">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-info text-white"><h5 class="modal-title">Confirm Action</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body" id="confirmMessage"></div>
+      <div class="modal-footer"><button type="button" class="btn btn-secondary" id="confirmCancelBtn">Cancel</button><button type="button" class="btn btn-success" id="confirmOkBtn">OK</button></div>
+    </div>
+  </div>
+</div>
+
 <footer class="minimal-footer">
   <div class="container d-flex justify-content-between flex-wrap gap-5">
-    <div class="footer-brand">
-      <h2>Eat<span>To</span>Go</h2>
-      <p>Final Year Project – Restaurant and Food Reservation System.</p>
-    </div>
-    <div class="footer-members">
-      <h4>Project Team</h4>
-      <ul class="list-unstyled">
-        <li>Navin Ramu</li><li>Muhamamd Nazim</li><li>Hadif</li><li>Ng Yue Yang</li>
-      </ul>
-    </div>
+    <div class="footer-brand"><h2>Eat<span>To</span>Go</h2><p>Final Year Project – Restaurant and Food Reservation System.</p></div>
+    <div class="footer-members"><h4>Project Team</h4><ul class="list-unstyled"><li>Navin Ramu</li><li>Muhamamd Nazim</li><li>Hadif</li><li>Ng Yue Yang</li></ul></div>
   </div>
   <div class="footer-bottom">© 2026 EatToGo • Universiti Teknologi Malaysia (UTM)</div>
 </footer>
@@ -264,40 +518,148 @@
 <script src="assets/js/api.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-  let currentRestaurantId = null;
-  let allRestaurants = [];
-  const sidebar = document.getElementById('sidebar');
-  const ownerMain = document.getElementById('ownerMain');
-  const toggleBtn = document.getElementById('toggleSidebarBtn');
-  let sidebarOpen = false;
-
-  function toggleSidebar() {
-    const isMobile = window.matchMedia('(max-width: 768px)').matches;
-    if (isMobile) {
-      if (sidebarOpen) {
-        sidebar.classList.remove('show');
-      } else {
-        sidebar.classList.add('show');
-      }
-    } else {
-      if (sidebarOpen) {
-        sidebar.classList.remove('collapsed');
-        ownerMain.classList.remove('full');
-      } else {
-        sidebar.classList.add('collapsed');
-        ownerMain.classList.add('full');
-      }
-    }
-    sidebarOpen = !sidebarOpen;
+  // ==================== Custom Modal Helpers ====================
+  function showAlert(message, callback = null) {
+    const alertModal = new bootstrap.Modal(document.getElementById('customAlertModal'));
+    document.getElementById('alertMessage').innerHTML = message;
+    alertModal.show();
+    const handleHide = () => {
+      if (callback) callback();
+      document.getElementById('customAlertModal').removeEventListener('hidden.bs.modal', handleHide);
+    };
+    document.getElementById('customAlertModal').addEventListener('hidden.bs.modal', handleHide);
   }
 
-  if (toggleBtn) toggleBtn.addEventListener('click', toggleSidebar);
+  function showConfirm(message, onConfirm, onCancel = null) {
+    const confirmModal = new bootstrap.Modal(document.getElementById('customConfirmModal'));
+    document.getElementById('confirmMessage').innerHTML = message;
+    const okBtn = document.getElementById('confirmOkBtn');
+    const cancelBtn = document.getElementById('confirmCancelBtn');
+    const handleOk = () => {
+      confirmModal.hide();
+      if (onConfirm) onConfirm();
+      cleanup();
+    };
+    const handleCancel = () => {
+      confirmModal.hide();
+      if (onCancel) onCancel();
+      cleanup();
+    };
+    const cleanup = () => {
+      okBtn.removeEventListener('click', handleOk);
+      cancelBtn.removeEventListener('click', handleCancel);
+    };
+    okBtn.addEventListener('click', handleOk);
+    cancelBtn.addEventListener('click', handleCancel);
+    confirmModal.show();
+  }
+
+  // ==================== SIDEBAR TOGGLE ====================
+  const hamburger = document.getElementById('hamburgerBtn');
+  const sidebar = document.getElementById('mobileSidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  const closeBtn = document.getElementById('closeSidebarBtn');
+
+  function openSidebar() {
+    sidebar.classList.add('open');
+    overlay.classList.add('active');
+    document.body.classList.add('sidebar-open');
+  }
+  function closeSidebar() {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('active');
+    document.body.classList.remove('sidebar-open');
+  }
+  if (hamburger) hamburger.addEventListener('click', openSidebar);
+  if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+  if (overlay) overlay.addEventListener('click', closeSidebar);
+
+  document.addEventListener('click', (e) => {
+    if (sidebar && sidebar.classList.contains('open')) {
+      if (e.target.closest('#mobileNavLinks a')) {
+        setTimeout(() => closeSidebar(), 80);
+      }
+    }
+  });
+
+  // ==================== AUTH & SIDEBAR UI ====================
+  function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m=>m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
+
+  async function updateAuthAreaOldStyle() {
+    const authDiv = document.getElementById('authArea');
+    if (!authDiv) return;
+    const sessionData = await checkSession();
+    const user = sessionData.loggedIn ? sessionData.user : null;
+    if (!user) {
+      authDiv.innerHTML = `<a href="login.html" class="btn btn-outline-etg">Sign in</a><a href="signup.html" class="btn btn-etg">Register</a>`;
+    } else {
+      const displayName = user.name || user.email.split('@')[0];
+      authDiv.innerHTML = `<div class="user-greeting"><span>👋 ${escapeHtml(displayName)}</span><a class="logout-link" id="topLogoutBtn">Logout</a></div>`;
+      const logoutBtn = document.getElementById('topLogoutBtn');
+      if (logoutBtn) logoutBtn.addEventListener('click', async (e) => { e.preventDefault(); await apiCall('/logout.php',{method:'POST'}); window.location.href='login.html'; });
+    }
+  }
+
+  async function updateMobileSidebarUI() {
+    const sessionData = await checkSession();
+    const user = sessionData.loggedIn ? sessionData.user : null;
+    const avatarDiv = document.getElementById('mobileUserAvatar');
+    const userInfoDiv = document.getElementById('mobileUserInfo');
+    if (user) {
+      const firstLetter = (user.name && user.name.charAt(0)) || (user.email && user.email.charAt(0).toUpperCase()) || 'U';
+      avatarDiv.innerHTML = `<span style="font-size:28px;">${escapeHtml(firstLetter)}</span>`;
+      avatarDiv.style.background = "#ff6b3522";
+      userInfoDiv.innerHTML = `<div class="user-display-name">${escapeHtml(user.name || user.email.split('@')[0])}</div><div class="user-display-email">${escapeHtml(user.email)}</div>`;
+    } else {
+      avatarDiv.innerHTML = `👤`;
+      avatarDiv.style.background = "rgba(255,107,53,0.2)";
+      userInfoDiv.innerHTML = `<div class="user-display-name">Guest User</div><div class="guest-label">Not signed in</div>`;
+    }
+  }
+
+  async function setupEnhancedNav() {
+    const sessionData = await checkSession();
+    const user = sessionData.loggedIn ? sessionData.user : null;
+    const mobileNavContainer = document.getElementById('mobileNavLinks');
+    if (!mobileNavContainer) return;
+    
+    let navItems = [];
+    if (!user || user.role === 'customer') {
+      navItems = [
+        { href: "index.html", icon: "bi bi-shop", label: "Restaurants" },
+        { href: "booking-history.html", icon: "bi bi-calendar-check", label: "My Bookings" },
+        { href: "order-status.html", icon: "bi bi-clock-history", label: "Order Status" }
+      ];
+    } else if (user.role === 'owner') {
+      navItems = [
+        { href: "owner-dashboard.html", icon: "bi bi-grid-1x2", label: "Overview" },
+        { href: "#reservations", icon: "bi bi-calendar-check", label: "Reservations" },
+        { href: "#my-restaurants", icon: "bi bi-building", label: "My Restaurant" },
+        { href: "#listing", icon: "bi bi-pencil-square", label: "Listing Request" },
+        { href: "owner-profile.html", icon: "bi bi-person-circle", label: "My Profile" }
+      ];
+    } else if (user.role === 'staff') {
+      navItems = [{ href: "staff-dashboard.html", icon: "bi bi-person-badge", label: "Staff Dashboard" }];
+    } else if (user.role === 'admin') {
+      navItems = [{ href: "admin.html", icon: "bi bi-shield-lock", label: "Admin Dashboard" }];
+    }
+    
+    mobileNavContainer.innerHTML = navItems.map(item => `<a href="${item.href}"><i class="${item.icon}"></i> ${item.label}</a>`).join('');
+    const currentPath = window.location.pathname.split('/').pop() || 'owner-dashboard.html';
+    mobileNavContainer.querySelectorAll('a').forEach(link => {
+      if (link.getAttribute('href') === currentPath || (link.getAttribute('href').startsWith('#') && currentPath === 'owner-dashboard.html')) {
+        link.classList.add('active');
+      }
+    });
+  }
+
+  // ==================== OWNER DASHBOARD LOGIC ====================
+  let currentRestaurantId = null;
+  let allRestaurants = [];
 
   async function loadOwnerData() {
     const session = await checkSession();
-    if (!session.loggedIn || session.user.role !== 'owner') {
-      alert('Unauthorized'); window.location.href='login.html'; return;
-    }
+    if (!session.loggedIn || session.user.role !== 'owner') { showAlert('Unauthorized. Please login as owner.', () => window.location.href='login.html'); return; }
     await renderStats();
     await renderOwnerReservations();
     await loadRestaurants();
@@ -322,16 +684,17 @@
         <div>
           <h4>${escapeHtml(r.name)}</h4>
           <p>${escapeHtml(r.location)} • ${escapeHtml(r.category)}</p>
-          <span class="status ${r.status}">${r.status}</span>
-          ${r.status === 'approved' ? `<button class="btn btn-sm btn-outline-etg ms-2" onclick="openStaffModal(${r.id}, '${escapeHtml(r.name)}')">👥 Manage Staff</button>` : ''}
-          ${r.status === 'approved' ? `<button class="btn btn-sm btn-outline-etg ms-2" onclick="openEditModal(${r.id})">✏️ Edit Details</button>` : ''}
+          <span class="status ${r.status}">${r.status}</span><br>
+          ${r.status === 'approved' ? `
+            <button class="btn btn-sm btn-outline-etg ms-2 mt-1" onclick="openStaffModal(${r.id}, '${escapeHtml(r.name)}')">👥 Manage Staff</button>
+            <button class="btn btn-sm btn-outline-etg ms-2 mt-1" onclick="openEditModal(${r.id})">✏️ Edit Details</button>
+          ` : ''}
         </div>
         <img src="${r.image || 'assets/img/default-restaurant.jpg'}" alt="${escapeHtml(r.name)}">
       </div>
     `).join('');
   }
 
-  // Staff management functions
   function openStaffModal(restaurantId, restaurantName) {
     currentRestaurantId = restaurantId;
     document.getElementById('modalRestaurantName').innerText = restaurantName;
@@ -344,18 +707,18 @@
     try {
       const staff = await apiCall(`/owner-staff.php?restaurant_id=${restaurantId}`);
       const tbody = document.getElementById('staffList');
-      if (!staff.length) { tbody.innerHTML = '<tr><td colspan="3">No staff yet. Add staff above.</td></tr>'; return; }
+      if (!staff.length) { tbody.innerHTML = '<tr><td colspan="3">No staff yet. Add staff above. </div>'; return; }
       tbody.innerHTML = staff.map(s => `
         <tr>
-          <td>${escapeHtml(s.name)}</td>
-          <td>${escapeHtml(s.email)}</td>
+          <td>${escapeHtml(s.name)}</div>
+          <td>${escapeHtml(s.email)}</div>
           <td class="d-flex gap-1">
             <button class="btn btn-sm btn-warning" onclick="openEditStaffModal(${s.id}, '${escapeHtml(s.name)}', ${restaurantId})">✏️ Edit</button>
             <button class="btn btn-sm btn-danger" onclick="deleteStaff(${s.id}, ${restaurantId})">🗑️ Remove</button>
-          </td>
+           </div>
         </tr>
       `).join('');
-    } catch(e) { console.error(e); tbody.innerHTML = '<tr><td colspan="3">Error loading staff.</td></tr>'; }
+    } catch(e) { console.error(e); tbody.innerHTML = '<tr><td colspan="3">Error loading staff.</div>'; }
   }
 
   let currentEditStaffId = null, currentEditRestaurantId = null;
@@ -375,16 +738,13 @@
     const restaurantId = document.getElementById('editStaffRestaurantId').value;
     const name = document.getElementById('editStaffName').value.trim();
     const password = document.getElementById('editStaffPassword').value;
-    if (!name) { alert('Name is required'); return; }
+    if (!name) { showAlert('Name is required'); return; }
     try {
-      await apiCall('/update-staff.php', {
-        method: 'PUT',
-        body: JSON.stringify({ id: staffId, restaurant_id: restaurantId, name, password })
-      });
-      alert('Staff updated');
+      await apiCall('/update-staff.php', { method: 'PUT', body: JSON.stringify({ id: staffId, restaurant_id: restaurantId, name, password }) });
+      showAlert('Staff updated');
       bootstrap.Modal.getInstance(document.getElementById('editStaffModal')).hide();
       loadStaffList(restaurantId);
-    } catch(e) { alert('Error: ' + e.message); }
+    } catch(e) { showAlert('Error: ' + e.message); }
   });
 
   async function addStaff(e) {
@@ -392,40 +752,38 @@
     const name = document.getElementById('staffName').value.trim();
     const email = document.getElementById('staffEmail').value.trim();
     const password = document.getElementById('staffPassword').value;
-    if (!name || !email || !password) { alert('All fields required'); return; }
+    if (!name || !email || !password) { showAlert('All fields required'); return; }
     try {
-      await apiCall('/owner-staff.php', {
-        method: 'POST',
-        body: JSON.stringify({ name, email, password, restaurant_id: currentRestaurantId })
-      });
-      alert('Staff added');
+      await apiCall('/owner-staff.php', { method: 'POST', body: JSON.stringify({ name, email, password, restaurant_id: currentRestaurantId }) });
+      showAlert('Staff added');
       document.getElementById('addStaffForm').reset();
       loadStaffList(currentRestaurantId);
-    } catch(e) { alert(e.message); }
+    } catch(e) { showAlert(e.message); }
   }
 
   async function deleteStaff(staffId, restaurantId) {
-    if (!confirm('Remove this staff member?')) return;
-    try {
-      await apiCall(`/owner-staff.php?id=${staffId}&restaurant_id=${restaurantId}`, { method: 'DELETE' });
-      alert('Staff removed');
-      loadStaffList(restaurantId);
-    } catch(e) { alert(e.message); }
+    showConfirm('Remove this staff member?', async () => {
+      try {
+        await apiCall(`/owner-staff.php?id=${staffId}&restaurant_id=${restaurantId}`, { method: 'DELETE' });
+        showAlert('Staff removed');
+        loadStaffList(restaurantId);
+      } catch(e) { showAlert(e.message); }
+    });
   }
+
+  document.getElementById('addStaffForm').addEventListener('submit', addStaff);
 
   async function uploadFile(file, type) {
     const formData = new FormData();
     formData.append(type, file);
-    try {
-      const res = await fetch(`${API_BASE}/upload-qrcode.php`, {
-        method: 'POST',
-        body: formData,
-        credentials: 'same-origin'
-      });
-      const data = await res.json();
-      if (data.success) return data.filePath;
-      else throw new Error(data.error || 'Upload failed');
-    } catch(e) { throw e; }
+    const res = await fetch(`${API_BASE}/upload-qrcode.php`, {
+      method: 'POST',
+      body: formData,
+      credentials: 'same-origin'
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'Upload failed');
+    return data.filePath;
   }
 
   function openEditModal(restaurantId) {
@@ -441,15 +799,12 @@
     document.getElementById('editDeal').value = restaurant.deal || '';
     document.getElementById('editSeats').value = restaurant.total_seats || 0;
     document.getElementById('editSlotDuration').value = restaurant.slot_duration || 60;
-    const currentQr = restaurant.qr_code || '';
-    const previewDiv = document.getElementById('currentQrPreview');
-    if (currentQr) {
-      previewDiv.innerHTML = `<img src="${currentQr}" style="max-width: 100%; border-radius: 8px;">`;
-    } else {
-      previewDiv.innerHTML = '';
-    }
-    document.getElementById('editRestImage').value = '';
-    document.getElementById('editQrCode').value = '';
+    const imagePreviewDiv = document.getElementById('editImagePreview');
+    imagePreviewDiv.innerHTML = restaurant.image ? `<img src="${restaurant.image}" class="image-preview">` : '';
+    const qrPreviewDiv = document.getElementById('editQrPreview');
+    qrPreviewDiv.innerHTML = restaurant.qr_code ? `<img src="${restaurant.qr_code}" class="image-preview">` : '';
+    document.getElementById('editImageFile').value = '';
+    document.getElementById('editQrImage').value = '';
     const modal = new bootstrap.Modal(document.getElementById('editRestaurantModal'));
     modal.show();
   }
@@ -465,42 +820,23 @@
     const deal = document.getElementById('editDeal').value.trim();
     const total_seats = parseInt(document.getElementById('editSeats').value) || 0;
     const slot_duration = parseInt(document.getElementById('editSlotDuration').value) || 60;
+    if (!name || !location || !category) { showAlert('Name, location and cuisine are required'); return; }
     const hoursPattern = /^\d{1,2}:\d{2}\s?(?:AM|PM)\s*-\s*\d{1,2}:\d{2}\s?(?:AM|PM)$/i;
-    if (hours && !hoursPattern.test(hours)) {
-      alert('Operating hours format invalid. Use "10:00 AM - 10:00 PM".');
-      return;
-    }
-    if (!name || !location || !category) {
-      alert('Name, location and cuisine are required');
-      return;
-    }
-
-    let imagePath = null;
-    const imageFile = document.getElementById('editRestImage').files[0];
-    if (imageFile) {
-      try {
-        imagePath = await uploadFile(imageFile, 'image');
-      } catch(e) { alert('Image upload failed: ' + e.message); return; }
-    }
-
-    let qrPath = null;
-    const qrFile = document.getElementById('editQrCode').files[0];
-    if (qrFile) {
-      try {
-        qrPath = await uploadFile(qrFile, 'qr_code');
-      } catch(e) { alert('QR code upload failed: ' + e.message); return; }
-    }
-
+    if (hours && !hoursPattern.test(hours)) { showAlert('Operating hours format invalid. Use "10:00 AM - 10:00 PM".'); return; }
+    let imagePath = null, qrPath = null;
+    const imageFile = document.getElementById('editImageFile').files[0];
+    if (imageFile) { try { imagePath = await uploadFile(imageFile, 'image'); } catch(e) { showAlert('Image upload failed: ' + e.message); return; } }
+    const qrFile = document.getElementById('editQrImage').files[0];
+    if (qrFile) { try { qrPath = await uploadFile(qrFile, 'qr_code'); } catch(e) { showAlert('QR code upload failed: ' + e.message); return; } }
     const updateData = { id, name, location, category, description, price_range, hours, deal, total_seats, slot_duration };
     if (imagePath) updateData.image = imagePath;
     if (qrPath) updateData.qr_code = qrPath;
-
     try {
       await apiCall('/update-restaurant.php', { method: 'PUT', body: JSON.stringify(updateData) });
-      alert('Restaurant details updated');
+      showAlert('Restaurant details updated');
       bootstrap.Modal.getInstance(document.getElementById('editRestaurantModal')).hide();
       await loadRestaurants();
-    } catch(e) { alert('Error: ' + e.message); }
+    } catch(e) { showAlert('Error: ' + e.message); }
   });
 
   async function renderStats() {
@@ -517,34 +853,31 @@
   async function renderOwnerReservations() {
     try {
       let r = await apiCall('/owner-reservations.php');
-      // Sort by ID descending (newest first)
       r.sort((a, b) => b.id - a.id);
       document.getElementById('reservationCards').innerHTML = r.map(r=>`<tr>
-        <td>${r.id}</td>
-        <td>${escapeHtml(r.customer_name)}</td>
-        <td>${r.reservation_date} ${r.reservation_time}</td>
-        <td>${r.num_people}</td>
-        <td><span class="status ${r.status}">${r.status}</span></td>
-        <td>${r.arrival_confirmed?'Arrived':'Not arrived'}</td>
-        <td>${r.order?r.order.status:'-'}</td>
-      </tr>`).join('');
-    } catch(e) { document.getElementById('reservationCards').innerHTML='<tr><td colspan="7">Error loading bookings</td></tr>'; }
+        <td>${r.id}</div>
+        <td>${escapeHtml(r.customer_name)}</div>
+        <td>${r.reservation_date} ${r.reservation_time}</div>
+        <td>${r.num_people}</div>
+        <td><span class="status ${r.status}">${r.status}</span></div>
+        <td>${r.arrival_confirmed?'Arrived':'Not arrived'}</div>
+        <td>${r.order?r.order.status:'-'}</div>
+       </td>`).join('');
+    } catch(e) { document.getElementById('reservationCards').innerHTML='<tr><td colspan="7">Error loading bookings</div>'; }
   }
 
   async function renderOwnerRequests() {
     try {
       const req = await apiCall('/owner-requests.php');
       const tbody = document.getElementById('ownerRequests');
-      if (!req.length) {
-        tbody.innerHTML = '<tr><td colspan="3" class="text-muted">No requests yet.</td></tr>';
-        return;
-      }
+      if (!req.length) { tbody.innerHTML = '<tr><td colspan="3" class="text-muted">No requests yet.</div>'; return; }
       tbody.innerHTML = req.map(r => `
         <tr>
-        <td>${escapeHtml(r.name)}</td>
-        <td><span class="status ${r.status}">${r.status}</span></td>
-        <td>${r.status==='approved'?'Approved':r.status==='rejected'?'Rejected':'Pending'}</td>
-      </tr>`).join('');
+          <td>${escapeHtml(r.name)}</div>
+          <td><span class="status ${r.status}">${r.status}</span></div>
+          <td>${r.status === 'approved' ? '✅ Approved' : (r.status === 'rejected' ? '❌ Rejected' : '⏳ Pending admin review')}</div>
+        </tr>
+      `).join('');
     } catch(e) { console.error(e); }
   }
 
@@ -554,49 +887,48 @@
     const location = document.getElementById('location').value.trim();
     const cuisine = document.getElementById('cuisine').value.trim();
     const description = document.getElementById('description').value.trim();
-    const priceRange = document.getElementById('price_range').value.trim();
+    const price_range = document.getElementById('price_range').value.trim();
     const hours = document.getElementById('hours').value.trim();
     const deal = document.getElementById('deal').value.trim();
-    const totalSeats = document.getElementById('total_seats').value;
-    const slotDuration = document.getElementById('slot_duration').value;
+    const total_seats = document.getElementById('total_seats').value;
+    const slot_duration = document.getElementById('slot_duration').value;
     const imageFile = document.getElementById('restImage').files[0];
     const qrFile = document.getElementById('qrCode').files[0];
-    if (!restName || !location) { alert('Restaurant name and location required'); return; }
+    if (!restName || !location) { showAlert('Restaurant name and location required'); return; }
     const hoursPattern = /^\d{1,2}:\d{2}\s?(?:AM|PM)\s*-\s*\d{1,2}:\d{2}\s?(?:AM|PM)$/i;
-    if (hours && !hoursPattern.test(hours)) {
-      alert('Operating hours must be in format: 10:00 AM - 10:00 PM');
-      return;
-    }
+    if (hours && !hoursPattern.test(hours)) { showAlert('Operating hours format invalid. Use "10:00 AM - 10:00 PM".'); return; }
     const formData = new FormData();
     formData.append('restaurant_name', restName);
     formData.append('location', location);
     formData.append('cuisine', cuisine);
-    formData.append('description', description);
-    formData.append('price_range', priceRange);
-    formData.append('hours', hours);
-    formData.append('deal', deal);
-    formData.append('total_seats', totalSeats);
-    formData.append('slot_duration', slotDuration);
+    if (description) formData.append('description', description);
+    if (price_range) formData.append('price_range', price_range);
+    if (hours) formData.append('hours', hours);
+    if (deal) formData.append('deal', deal);
+    if (total_seats) formData.append('total_seats', total_seats);
+    if (slot_duration) formData.append('slot_duration', slot_duration);
     if (imageFile) formData.append('image', imageFile);
     if (qrFile) formData.append('qr_code', qrFile);
     try {
       const res = await fetch(`${API_BASE}/owner-request.php`, { method: 'POST', body: formData, credentials: 'same-origin' });
       const data = await res.json();
       if (data.success) {
-        alert('Request submitted!');
+        showAlert('Request submitted!');
         document.getElementById('listingForm').reset();
         await loadRestaurants();
         await renderOwnerRequests();
-      } else { alert(data.error || 'Submission failed'); }
-    } catch(err) { alert('Error: ' + err.message); }
+      } else { showAlert(data.error || 'Submission failed'); }
+    } catch(err) { showAlert('Error: ' + err.message); }
   });
-
-  function escapeHtml(s) { if(!s) return ''; return s.replace(/[&<>]/g, m=>m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
 
   window.addEventListener('DOMContentLoaded', async () => {
     await nav();
+    await updateAuthAreaOldStyle();
+    await setupEnhancedNav();
+    await updateMobileSidebarUI();
     await loadOwnerData();
   });
+  window.addEventListener('pageshow', () => { updateMobileSidebarUI(); setupEnhancedNav(); updateAuthAreaOldStyle(); });
 </script>
 </body>
 </html>

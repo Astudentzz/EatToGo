@@ -2,82 +2,318 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Admin Dashboard – EatToGo</title>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="assets/css/style.css">
   <style>
-    /* Sidebar (collapsible) – hidden by default */
-    .sidebar {
+    /* ----- Slide-out sidebar (same as staff/owner dashboards) ----- */
+    :root {
+      --orange: #ff6b35;
+      --dark-wood: #1C1208;
+      --sidebar-width: 280px;
+    }
+
+    .mobile-sidebar {
       position: fixed;
       top: 0;
       left: 0;
-      width: 260px;
+      width: var(--sidebar-width);
       height: 100%;
-      background: #1C1208;
-      color: white;
-      z-index: 1000;
-      transition: transform 0.3s ease;
+      background: linear-gradient(145deg, #1a130b 0%, #0e0a05 100%);
+      z-index: 1200;
+      transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.4, 1.1);
       transform: translateX(-100%);
-      padding: 22px;
-      overflow-y: auto;
+      box-shadow: 8px 0 32px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid rgba(255, 107, 53, 0.2);
     }
-    .sidebar.open {
+
+    .mobile-sidebar.open {
       transform: translateX(0);
     }
-    .admin-main {
-      margin-left: 0;
-      transition: margin-left 0.3s ease;
-      min-height: 100vh;
-      background: #f4eee6;
-    }
-    .admin-main.shifted {
-      margin-left: 260px;
-    }
-    .topbar {
-      background: white;
-      padding: 12px 20px;
-      box-shadow: 0 2px 10px rgba(0,0,0,.06);
+
+    .sidebar-header {
+      padding: 28px 20px 20px 20px;
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      flex-wrap: wrap;
-      gap: 10px;
+      gap: 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
     }
-    .toggle-sidebar-btn {
-      background: none;
+
+    .sidebar-avatar {
+      width: 52px;
+      height: 52px;
+      background: rgba(255,107,53,0.2);
+      border-radius: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--orange);
+      border: 1.5px solid rgba(255,107,53,0.4);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    .sidebar-userinfo {
+      flex: 1;
+    }
+
+    .sidebar-userinfo .user-display-name {
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: white;
+      letter-spacing: -0.2px;
+      margin-bottom: 4px;
+    }
+
+    .sidebar-userinfo .user-display-email {
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.6);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 140px;
+    }
+
+    .sidebar-userinfo .guest-label {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.7);
+      font-weight: 500;
+      background: rgba(255,107,53,0.2);
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 20px;
+    }
+
+    .close-sidebar {
+      background: rgba(255,255,255,0.1);
       border: none;
+      width: 36px;
+      height: 36px;
+      border-radius: 30px;
       font-size: 24px;
+      font-weight: 500;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: 0.2s;
+      cursor: pointer;
+    }
+
+    .close-sidebar:hover {
+      background: var(--orange);
+      color: #1C1208;
+      transform: rotate(90deg);
+    }
+
+    .sidebar-nav-links {
+      flex: 1;
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .sidebar-nav-links a {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 18px;
+      border-radius: 16px;
+      color: rgba(255,255,255,0.85);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1rem;
+      transition: all 0.2s ease;
+      background: transparent;
+    }
+
+    .sidebar-nav-links a i {
+      font-size: 1.3rem;
+      width: 28px;
+      color: var(--orange);
+    }
+
+    .sidebar-nav-links a:hover {
+      background: rgba(255,107,53,0.18);
+      color: white;
+      transform: translateX(4px);
+    }
+
+    .sidebar-nav-links a.active {
+      background: rgba(255,107,53,0.25);
+      color: var(--orange);
+      border-left: 3px solid var(--orange);
+    }
+
+    .sidebar-footer {
+      display: none;
+    }
+
+    .sidebar-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(6px);
+      z-index: 1150;
+      display: none;
+    }
+
+    .sidebar-overlay.active {
+      display: block;
+    }
+
+    body.sidebar-open {
+      overflow: hidden;
+    }
+
+    .sidebar-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,107,53,0.3), transparent);
+      margin: 6px 16px;
+    }
+
+    /* Hamburger button always visible */
+    .hamburger {
+      background: rgba(0,0,0,0.05);
+      border-radius: 50px;
+      width: 44px;
+      height: 44px;
+      transition: 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      font-size: 28px;
       color: var(--orange);
       cursor: pointer;
-      padding: 0;
-      margin-right: 5px;
     }
-    .left-group {
+
+    .hamburger:hover {
+      background: rgba(255,107,53,0.1);
+      transform: scale(1.02);
+    }
+
+    /* Navbar layout */
+    .navbar-etg .container {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
-      gap: 10px;
-      flex-wrap: nowrap;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 0.5rem 1rem;
     }
-    .left-group span {
-      font-size: 1.2rem;
-      font-weight: 700;
-      white-space: nowrap;
+
+    /* Desktop: hamburger left, logo next, auth right */
+    .hamburger {
+      order: 1;
+    }
+    .logo {
+      order: 2;
+      margin-right: auto;
     }
     .right-group {
-      display: flex;
-      align-items: center;
-      gap: 15px;
+      order: 3;
     }
-    #authArea {
-      white-space: nowrap;
+
+    /* Hide desktop nav completely */
+    .desktop-nav {
+      display: none !important;
     }
-    /* On very small screens, reduce title font size to prevent wrapping */
-    @media (max-width: 480px) {
-      .left-group span {
-        font-size: 1rem;
+
+    /* Mobile layout: grid */
+    @media (max-width: 768px) {
+      .navbar-etg .container {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+        padding: 0.75rem 1rem;
       }
+      .hamburger, .logo, .right-group {
+        order: unset;
+      }
+      .hamburger {
+        grid-column: 1;
+        grid-row: 2;
+        justify-self: start;
+      }
+      .logo {
+        grid-column: 1;
+        grid-row: 1;
+        justify-self: start;
+      }
+      .right-group {
+        grid-column: 2;
+        grid-row: 1;
+        justify-self: end;
+      }
+    }
+
+    /* Top-right auth area */
+    .auth-buttons {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .auth-buttons .btn-outline-etg {
+      border: 2px solid var(--orange);
+      background: transparent;
+      color: var(--orange);
+      border-radius: 40px;
+      padding: 6px 18px;
+      font-weight: 700;
+    }
+    .auth-buttons .btn-outline-etg:hover {
+      background: var(--orange);
+      color: #1C1208;
+    }
+    .auth-buttons .btn-etg {
+      background: var(--orange);
+      border: none;
+      color: #1C1208;
+      font-weight: 700;
+      border-radius: 40px;
+      padding: 6px 18px;
+    }
+    .user-greeting {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: #fef2e8;
+      padding: 4px 12px 4px 18px;
+      border-radius: 50px;
+      font-weight: 600;
+    }
+    .user-greeting .logout-link {
+      color: var(--orange);
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    /* Admin dashboard specific styles (unchanged) */
+    .admin-main {
+      min-height: 100vh;
+      background: #f4eee6;
+      width: 100%;
+      margin-left: 0 !important;
+      transition: none;
+    }
+    .admin-main.shifted {
+      margin-left: 0 !important;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
     }
     .section-card {
       margin-bottom: 2rem;
@@ -119,214 +355,99 @@
       border-radius: 8px;
       border: 1px solid #ddd;
     }
+    .certificate-preview-img { max-width: 100%; max-height: 70vh; margin: 0 auto; display: block; }
+    .certificate-preview-iframe { width: 100%; height: 70vh; border: none; }
   </style>
 </head>
 <body>
-<aside class="sidebar" id="sidebar">
-  <a class="logo" href="index.html">Eat<span>To</span>Go</a>
-  <hr>
-  <a class="active" href="admin.html">📊 Dashboard</a>
-  <a href="#restaurants">🏪 Restaurants</a>
-  <a href="#accounts">👥 Accounts</a>
-  <a href="#requests">📝 Restaurant Requests</a>
-</aside>
 
-<main class="admin-main" id="adminMain">
-  <div class="topbar">
-    <div class="left-group">
-      <button class="toggle-sidebar-btn" id="toggleSidebarBtn">☰</button>
-      <span>Admin Dashboard</span>
-    </div>
+<nav class="navbar-etg">
+  <div class="container">
+    <button class="hamburger" id="hamburgerBtn">☰</button>
+    <a class="logo" href="admin.html">Eat<span>To</span>Go</a>
     <div class="right-group">
-      <span id="authArea"></span>
+      <div id="authArea" class="auth-buttons"></div>
     </div>
   </div>
+</nav>
 
+<!-- Slide-out sidebar -->
+<div class="mobile-sidebar" id="mobileSidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-avatar" id="mobileUserAvatar">🍽️</div>
+    <div class="sidebar-userinfo" id="mobileUserInfo">
+      <div class="user-display-name">Guest</div>
+      <div class="user-display-email">sign in to unlock</div>
+    </div>
+    <button class="close-sidebar" id="closeSidebarBtn">✕</button>
+  </div>
+  <div class="sidebar-divider"></div>
+  <div id="mobileNavLinks" class="sidebar-nav-links"></div>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<main class="admin-main">
   <div class="p-4">
     <!-- Stats -->
     <div class="row g-3 mb-4">
-      <div class="col-md-3">
-        <div class="stat-card">
-          <b>Total Bookings</b>
-          <h2 id="statTotal">—</h2>
-        </div>
-      </div>
-
-      <div class="col-md-3">
-        <div class="stat-card">
-          <b>Pending</b>
-          <h2 id="statPending">—</h2>
-        </div>
-      </div>
-
-      <div class="col-md-3">
-        <div class="stat-card">
-          <b>Pre-Orders</b>
-          <h2 id="statOrders">—</h2>
-        </div>
-      </div>
-
-      <div class="col-md-3">
-        <div class="stat-card">
-          <b>Restaurants</b>
-          <h2 id="statRestaurants">—</h2>
-        </div>
-      </div>
+      <div class="col-md-3"><div class="stat-card"><b>Total Bookings</b><h2 id="statTotal">—</h2></div></div>
+      <div class="col-md-3"><div class="stat-card"><b>Pending</b><h2 id="statPending">—</h2></div></div>
+      <div class="col-md-3"><div class="stat-card"><b>Pre-Orders</b><h2 id="statOrders">—</h2></div></div>
+      <div class="col-md-3"><div class="stat-card"><b>Restaurants</b><h2 id="statRestaurants">—</h2></div></div>
     </div>
 
-    <!-- Restaurants -->
+    <!-- Restaurants (no "Add New Restaurant" button) -->
     <div id="restaurants" class="section-card">
-      <div class="section-header d-flex justify-content-between align-items-center">
+      <div class="section-header">
         <h3 class="mb-0">🏪 Restaurant Management</h3>
-        <button class="btn btn-etg btn-sm" onclick="openAddRestaurantModal()">➕ Add New Restaurant</button>
       </div>
-      <div class="section-body">
-        <div class="table-responsive">
-          <table class="table table-hover align-middle">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Cuisine</th>
-                <th>Location</th>
-                <th>Price Range</th>
-                <th>Owner</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="restaurantRows"></tbody>
-          </table>
-        </div>
-      </div>
+      <div class="section-body"><div class="table-responsive"><table class="table table-hover align-middle"><thead><tr><th>Name</th><th>Cuisine</th><th>Location</th><th>Price Range</th><th>Owner</th><th>Actions</th></tr></thead><tbody id="restaurantRows"></tbody></table></div></div>
     </div>
 
     <!-- Accounts -->
     <div id="accounts" class="section-card">
       <div class="section-header"><h3 class="mb-0">👥 Account Management</h3></div>
-      <div class="section-body">
-        <div class="table-responsive">
-          <table class="table table-hover align-middle">
-            <thead>
-              <tr>
-                <th class="text-start">Name</th>
-                <th class="text-start">Email</th>
-                <th class="text-start">Role</th>
-                <th class="text-start">Action</th>
-              </tr>
-            </thead>
-            <tbody id="accountRows"></tbody>
-          </table>
-        </div>
-      </div>
+      <div class="section-body"><div class="table-responsive"><table class="table table-hover align-middle"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Action</th></tr></thead><tbody id="accountRows"></tbody></table></div></div>
     </div>
 
-    <!-- Requests -->
+    <!-- Restaurant Requests -->
     <div id="requests" class="section-card">
       <div class="section-header"><h3 class="mb-0">📝 Restaurant Requests (from Owners)</h3></div>
-      <div class="section-body">
-        <div class="table-responsive">
-          <table class="table table-hover align-middle">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Owner Name</th>
-                <th>Restaurant Name</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="requestRows"></tbody>
-          </table>
-        </div>
-      </div>
+      <div class="section-body"><div class="table-responsive"><table class="table table-hover align-middle"><thead><tr><th>ID</th><th>Owner Name</th><th>Restaurant Name</th><th>Status</th><th>Actions</th></tr></thead><tbody id="requestRows"></tbody></table></div></div>
+    </div>
+
+    <!-- Owner Applications -->
+    <div id="ownerApps" class="section-card">
+      <div class="section-header"><h3 class="mb-0">📄 Owner Applications (Pending)</h3></div>
+      <div class="section-body"><div class="table-responsive"><table class="table table-hover align-middle"><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Certificate</th><th>Submitted</th><th>Actions</th></tr></thead><tbody id="ownerAppRows"></tbody></table></div></div>
     </div>
   </div>
 </main>
 
-<!-- Add Restaurant Modal -->
-<div class="modal fade" id="addRestaurantModal" tabindex="-1">
-  <div class="modal-dialog modal-lg">
+<!-- Modal for Certificate Preview -->
+<div class="modal fade" id="certificateModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Add New Restaurant</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title">Business Certificate</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body">
-        <form id="addRestaurantForm">
-          <div class="row g-3">
-            <div class="col-md-6"><label class="form-label">Restaurant Name</label><input id="addName" class="form-control" required></div>
-            <div class="col-md-6"><label class="form-label">Cuisine</label><input id="addCuisine" class="form-control" required></div>
-            <div class="col-md-6"><label class="form-label">Location</label><input id="addLocation" class="form-control" required></div>
-            <div class="col-md-6"><label class="form-label">Price Range</label><input id="addPriceRange" class="form-control" placeholder="RM10-30"></div>
-            <div class="col-12"><label class="form-label">Description</label><textarea id="addDescription" class="form-control" rows="2"></textarea></div>
-            <div class="col-md-6"><label class="form-label">Operating Hours</label><input id="addHours" class="form-control" placeholder="10:00 AM - 10:00 PM" required
-                   pattern="\d{1,2}:\d{2}\s?(?:AM|PM)\s*-\s*\d{1,2}:\d{2}\s?(?:AM|PM)" title="Format: 10:00 AM - 10:00 PM"></div>
-            <div class="col-md-6"><label class="form-label">Promotion / Deal</label><input id="addDeal" class="form-control" placeholder="Special offer"></div>
-            <div class="col-md-6"><label class="form-label">Total Seats</label><input type="number" id="addSeats" class="form-control" min="0" placeholder="e.g., 50"></div>
-            <div class="col-md-6"><label class="form-label">Slot Duration (minutes)</label><input type="number" id="addSlotDuration" class="form-control" min="15" step="15" value="60"></div>
-            <div class="col-12">
-              <label class="form-label">Restaurant Image</label>
-              <input type="file" id="addImage" class="form-control" accept="image/*">
-              <div id="addImagePreview" class="mt-2"></div>
-            </div>
-            <div class="col-12">
-              <label class="form-label">Payment QR Code Image</label>
-              <input type="file" id="addQrImage" class="form-control" accept="image/*">
-              <small class="text-muted">Upload QR code for cashless payment (optional)</small>
-              <div id="addQrPreview" class="mt-2"></div>
-            </div>
-          </div>
-        </form>
-      </div>
+      <div class="modal-body text-center" id="certificateModalBody"></div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-etg" id="saveAddRestaurant">Add Restaurant</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Edit Restaurant Modal -->
+<!-- Edit Restaurant Modal (unchanged) -->
 <div class="modal fade" id="editRestaurantModal" tabindex="-1">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Edit Restaurant Details</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <form id="editRestaurantForm">
-          <input type="hidden" id="editRestaurantId">
-          <div class="row g-3">
-            <div class="col-md-6"><label class="form-label">Restaurant Name</label><input id="editName" class="form-control" required></div>
-            <div class="col-md-6"><label class="form-label">Cuisine</label><input id="editCuisine" class="form-control" required></div>
-            <div class="col-md-6"><label class="form-label">Location</label><input id="editLocation" class="form-control" required></div>
-            <div class="col-md-6"><label class="form-label">Price Range</label><input id="editPriceRange" class="form-control" placeholder="RM10-30"></div>
-            <div class="col-12"><label class="form-label">Description</label><textarea id="editDescription" class="form-control" rows="2"></textarea></div>
-            <div class="col-md-6"><label class="form-label">Operating Hours</label><input id="editHours" class="form-control" placeholder="10:00 AM - 10:00 PM" required
-                   pattern="\d{1,2}:\d{2}\s?(?:AM|PM)\s*-\s*\d{1,2}:\d{2}\s?(?:AM|PM)" title="Format: 10:00 AM - 10:00 PM"></div>
-            <div class="col-md-6"><label class="form-label">Promotion / Deal</label><input id="editDeal" class="form-control" placeholder="Special offer"></div>
-            <div class="col-md-6"><label class="form-label">Total Seats</label><input type="number" id="editSeats" class="form-control" min="0" placeholder="e.g., 50"></div>
-            <div class="col-md-6"><label class="form-label">Slot Duration (minutes)</label><input type="number" id="editSlotDuration" class="form-control" min="15" step="15" value="60"></div>
-            <div class="col-12">
-              <label class="form-label">Restaurant Image</label>
-              <input type="file" id="editImageFile" class="form-control" accept="image/*">
-              <div id="editImagePreview" class="mt-2"></div>
-            </div>
-            <div class="col-12">
-              <label class="form-label">Payment QR Code Image</label>
-              <input type="file" id="editQrImage" class="form-control" accept="image/*">
-              <small class="text-muted">Upload new QR code to replace existing</small>
-              <div id="editQrPreview" class="mt-2"></div>
-            </div>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-etg" id="saveRestaurantChanges">Save Changes</button>
-      </div>
-    </div>
-  </div>
+  <div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Edit Restaurant Details</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="editRestaurantForm"><input type="hidden" id="editRestaurantId"><div class="row g-3"><div class="col-md-6"><label>Restaurant Name</label><input id="editName" class="form-control" required></div><div class="col-md-6"><label>Cuisine</label><input id="editCuisine" class="form-control" required></div><div class="col-md-6"><label>Location</label><input id="editLocation" class="form-control" required></div><div class="col-md-6"><label>Price Range</label><input id="editPriceRange" class="form-control" placeholder="RM10-30"></div><div class="col-12"><label>Description</label><textarea id="editDescription" class="form-control" rows="2"></textarea></div><div class="col-md-6"><label>Operating Hours</label><input id="editHours" class="form-control" placeholder="10:00 AM - 10:00 PM" required pattern="\d{1,2}:\d{2}\s?(?:AM|PM)\s*-\s*\d{1,2}:\d{2}\s?(?:AM|PM)" title="Format: 10:00 AM - 10:00 PM"></div><div class="col-md-6"><label>Promotion / Deal</label><input id="editDeal" class="form-control" placeholder="Special offer"></div><div class="col-md-6"><label>Total Seats</label><input type="number" id="editSeats" class="form-control" min="0"></div><div class="col-md-6"><label>Slot Duration (minutes)</label><input type="number" id="editSlotDuration" class="form-control" min="15" step="15" value="60"></div><div class="col-12"><label>Restaurant Image</label><input type="file" id="editImageFile" class="form-control" accept="image/*"><div id="editImagePreview" class="mt-2"></div></div><div class="col-12"><label>Payment QR Code Image</label><input type="file" id="editQrImage" class="form-control" accept="image/*"><small class="text-muted">Upload new QR code to replace existing</small><div id="editQrPreview" class="mt-2"></div></div></div></form></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-etg" id="saveRestaurantChanges">Save Changes</button></div></div></div>
+</div>
+
+<!-- Rejection Modal for Owner Applications -->
+<div class="modal fade" id="rejectModal" tabindex="-1">
+  <div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Reject Owner Application</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><label class="form-label">Reason for rejection:</label><textarea id="rejectReason" class="form-control" rows="3"></textarea><input type="hidden" id="rejectAppId"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-danger" id="confirmRejectBtn">Reject Application</button></div></div></div>
 </div>
 
 <footer class="minimal-footer">
@@ -340,42 +461,110 @@
 <script src="assets/js/api.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-  // Sidebar toggle – hidden by default
-  const sidebar = document.getElementById('sidebar');
-  const adminMain = document.getElementById('adminMain');
-  const toggleBtn = document.getElementById('toggleSidebarBtn');
-  let sidebarOpen = false;
-  function toggleSidebar() {
-    if (sidebarOpen) {
-      sidebar.classList.remove('open');
-      adminMain.classList.remove('shifted');
-    } else {
-      sidebar.classList.add('open');
-      adminMain.classList.add('shifted');
+  // ==================== SIDEBAR TOGGLE ====================
+  const hamburger = document.getElementById('hamburgerBtn');
+  const sidebar = document.getElementById('mobileSidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  const closeBtn = document.getElementById('closeSidebarBtn');
+
+  function openSidebar() {
+    sidebar.classList.add('open');
+    overlay.classList.add('active');
+    document.body.classList.add('sidebar-open');
+  }
+  function closeSidebar() {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('active');
+    document.body.classList.remove('sidebar-open');
+  }
+  if (hamburger) hamburger.addEventListener('click', openSidebar);
+  if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+  if (overlay) overlay.addEventListener('click', closeSidebar);
+
+  document.addEventListener('click', (e) => {
+    if (sidebar && sidebar.classList.contains('open')) {
+      if (e.target.closest('#mobileNavLinks a')) {
+        setTimeout(() => closeSidebar(), 80);
+      }
     }
-    sidebarOpen = !sidebarOpen;
-  }
-  if (toggleBtn) toggleBtn.addEventListener('click', toggleSidebar);
+  });
 
-  // ----- Helper: upload image (generic) -----
-  async function uploadImage(file) {
-    const formData = new FormData();
-    formData.append('image', file);
-    const res = await fetch(`${API_BASE}/admin-upload-image.php`, {
-      method: 'POST',
-      body: formData,
-      credentials: 'same-origin'
+  // ==================== AUTH & SIDEBAR UI ====================
+  function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m=>m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
+
+  async function updateAuthAreaOldStyle() {
+    const authDiv = document.getElementById('authArea');
+    if (!authDiv) return;
+    const sessionData = await checkSession();
+    const user = sessionData.loggedIn ? sessionData.user : null;
+    if (!user) {
+      authDiv.innerHTML = `<a href="login.html" class="btn btn-outline-etg">Sign in</a><a href="signup.html" class="btn btn-etg">Register</a>`;
+    } else {
+      const displayName = user.name || user.email.split('@')[0];
+      authDiv.innerHTML = `<div class="user-greeting"><span>👋 ${escapeHtml(displayName)}</span><a class="logout-link" id="topLogoutBtn">Logout</a></div>`;
+      const logoutBtn = document.getElementById('topLogoutBtn');
+      if (logoutBtn) logoutBtn.addEventListener('click', async (e) => { e.preventDefault(); await apiCall('/logout.php',{method:'POST'}); window.location.href='login.html'; });
+    }
+  }
+
+  async function updateMobileSidebarUI() {
+    const sessionData = await checkSession();
+    const user = sessionData.loggedIn ? sessionData.user : null;
+    const avatarDiv = document.getElementById('mobileUserAvatar');
+    const userInfoDiv = document.getElementById('mobileUserInfo');
+    if (user) {
+      const firstLetter = (user.name && user.name.charAt(0)) || (user.email && user.email.charAt(0).toUpperCase()) || 'U';
+      avatarDiv.innerHTML = `<span style="font-size:28px;">${escapeHtml(firstLetter)}</span>`;
+      avatarDiv.style.background = "#ff6b3522";
+      userInfoDiv.innerHTML = `<div class="user-display-name">${escapeHtml(user.name || user.email.split('@')[0])}</div><div class="user-display-email">${escapeHtml(user.email)}</div>`;
+    } else {
+      avatarDiv.innerHTML = `👤`;
+      avatarDiv.style.background = "rgba(255,107,53,0.2)";
+      userInfoDiv.innerHTML = `<div class="user-display-name">Guest User</div><div class="guest-label">Not signed in</div>`;
+    }
+  }
+
+  async function setupEnhancedNav() {
+    const sessionData = await checkSession();
+    const user = sessionData.loggedIn ? sessionData.user : null;
+    const mobileNavContainer = document.getElementById('mobileNavLinks');
+    if (!mobileNavContainer) return;
+    
+    let navItems = [];
+    if (!user || user.role === 'customer') {
+      navItems = [
+        { href: "index.html", icon: "bi bi-shop", label: "Restaurants" },
+        { href: "booking-history.html", icon: "bi bi-calendar-check", label: "My Bookings" },
+        { href: "order-status.html", icon: "bi bi-clock-history", label: "Order Status" }
+      ];
+    } else if (user.role === 'admin') {
+      navItems = [
+        { href: "admin.html", icon: "bi bi-grid-1x2", label: "Dashboard" },
+        { href: "#restaurants", icon: "bi bi-building", label: "Restaurants" },
+        { href: "#accounts", icon: "bi bi-people", label: "Accounts" },
+        { href: "#requests", icon: "bi bi-file-text", label: "Restaurant Requests" },
+        { href: "#ownerApps", icon: "bi bi-person-badge", label: "Owner Applications" }
+      ];
+    } else if (user.role === 'staff') {
+      navItems = [{ href: "staff-dashboard.html", icon: "bi bi-person-badge", label: "Staff Dashboard" }];
+    } else if (user.role === 'owner') {
+      navItems = [{ href: "owner-dashboard.html", icon: "bi bi-building", label: "Owner Dashboard" }];
+    }
+    
+    mobileNavContainer.innerHTML = navItems.map(item => `<a href="${item.href}"><i class="${item.icon}"></i> ${item.label}</a>`).join('');
+    const currentPath = window.location.pathname.split('/').pop() || 'admin.html';
+    mobileNavContainer.querySelectorAll('a').forEach(link => {
+      if (link.getAttribute('href') === currentPath || (link.getAttribute('href').startsWith('#') && currentPath === 'admin.html')) {
+        link.classList.add('active');
+      }
     });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.error || 'Upload failed');
-    return data.imagePath;
   }
 
-  // ----- Load admin data -----
+  // ==================== ADMIN DASHBOARD LOGIC ====================
   async function loadAdminData() {
     const session = await checkSession();
-    if (!session.loggedIn || session.user.role !== 'admin') { alert('Unauthorized'); window.location.href='login.html'; return; }
-    await renderStats(); await renderRestaurantTable(); await renderAccounts(); await renderRequests();
+    if (!session.loggedIn || session.user.role !== 'admin') { alert('Unauthorized'); window.location.href = 'login.html'; return; }
+    await renderStats(); await renderRestaurantTable(); await renderAccounts(); await renderRequests(); await loadOwnerApplications();
   }
 
   async function renderStats() {
@@ -390,78 +579,18 @@
 
   async function renderRestaurantTable() {
     let r = await apiCall('/admin-restaurants.php');
-    document.getElementById('restaurantRows').innerHTML = r.map(r=>`
-      <tr>
-        <td>${escapeHtml(r.name)}</td>
-        <td>${escapeHtml(r.category)}</td>
-        <td>${escapeHtml(r.location)}</td>
-        <td>${escapeHtml(r.price_range)}</td>
-        <td>${escapeHtml(r.owner_name || 'N/A')}</td>
-        <td><button class="btn btn-sm btn-warning" onclick="openEditRestaurantModal(${r.id})">Edit</button> <button class="btn btn-sm btn-danger" onclick="deleteRestaurant(${r.id})">Delete</button></td>
-      </tr>`).join('');
+    document.getElementById('restaurantRows').innerHTML = r.map(r=>`<tr>
+      <td>${escapeHtml(r.name)}</div>
+      <td>${escapeHtml(r.category)}</div>
+      <td>${escapeHtml(r.location)}</div>
+      <td>${escapeHtml(r.price_range)}</div>
+      <td>${escapeHtml(r.owner_name || 'N/A')}</div>
+      <td><button class="btn btn-sm btn-warning" onclick="openEditRestaurantModal(${r.id})">Edit</button> <button class="btn btn-sm btn-danger" onclick="deleteRestaurant(${r.id})">Delete</button></div>
+    </tr>`).join('');
   }
 
-  // Add Restaurant Modal
-  function openAddRestaurantModal() {
-    document.getElementById('addName').value = '';
-    document.getElementById('addCuisine').value = '';
-    document.getElementById('addLocation').value = '';
-    document.getElementById('addPriceRange').value = '';
-    document.getElementById('addDescription').value = '';
-    document.getElementById('addHours').value = '';
-    document.getElementById('addDeal').value = '';
-    document.getElementById('addSeats').value = '';
-    document.getElementById('addSlotDuration').value = '60';
-    document.getElementById('addImage').value = '';
-    document.getElementById('addImagePreview').innerHTML = '';
-    document.getElementById('addQrImage').value = '';
-    document.getElementById('addQrPreview').innerHTML = '';
-    const modal = new bootstrap.Modal(document.getElementById('addRestaurantModal'));
-    modal.show();
-  }
-
-  document.getElementById('saveAddRestaurant').addEventListener('click', async () => {
-    const name = document.getElementById('addName').value.trim();
-    const category = document.getElementById('addCuisine').value.trim();
-    const location = document.getElementById('addLocation').value.trim();
-    const price_range = document.getElementById('addPriceRange').value.trim();
-    const description = document.getElementById('addDescription').value.trim();
-    const hours = document.getElementById('addHours').value.trim();
-    const deal = document.getElementById('addDeal').value.trim();
-    const total_seats = parseInt(document.getElementById('addSeats').value) || 0;
-    const slot_duration = parseInt(document.getElementById('addSlotDuration').value) || 60;
-    const imageFile = document.getElementById('addImage').files[0];
-    const qrFile = document.getElementById('addQrImage').files[0];
-    if (!name || !category || !location) { alert('Name, cuisine and location are required'); return; }
-    const hoursPattern = /^\d{1,2}:\d{2}\s?(?:AM|PM)\s*-\s*\d{1,2}:\d{2}\s?(?:AM|PM)$/i;
-    if (hours && !hoursPattern.test(hours)) { alert('Operating hours format invalid. Use "10:00 AM - 10:00 PM".'); return; }
-    let imagePath = null, qrPath = null;
-    if (imageFile) {
-      try { imagePath = await uploadImage(imageFile); }
-      catch(e) { alert('Image upload failed: ' + e.message); return; }
-    }
-    if (qrFile) {
-      try { qrPath = await uploadImage(qrFile); }
-      catch(e) { alert('QR code upload failed: ' + e.message); return; }
-    }
-    try {
-      await apiCall('/admin-restaurants.php', {
-        method: 'POST',
-        body: JSON.stringify({ name, category, description, image: imagePath, location, price_range, hours, deal, total_seats, slot_duration, qr_code: qrPath })
-      });
-      alert('Restaurant added');
-      bootstrap.Modal.getInstance(document.getElementById('addRestaurantModal')).hide();
-      renderRestaurantTable(); renderStats();
-    } catch(e) { alert('Error: ' + e.message); }
-  });
-
-  // Edit Restaurant Modal
-  function openEditRestaurantModal(id) {
-    fetchRestaurantData(id);
-    const modal = new bootstrap.Modal(document.getElementById('editRestaurantModal'));
-    modal.show();
-  }
-
+  // "Add Restaurant" function and modal have been removed.
+  function openEditRestaurantModal(id) { fetchRestaurantData(id); new bootstrap.Modal(document.getElementById('editRestaurantModal')).show(); }
   async function fetchRestaurantData(id) {
     const restaurants = await apiCall('/admin-restaurants.php');
     const r = restaurants.find(rest => rest.id == id);
@@ -476,18 +605,15 @@
     document.getElementById('editDeal').value = r.deal || '';
     document.getElementById('editSeats').value = r.total_seats || 0;
     document.getElementById('editSlotDuration').value = r.slot_duration || 60;
-    // Show current restaurant image preview
     const imagePreview = document.getElementById('editImagePreview');
     if (r.image) imagePreview.innerHTML = `<img src="${r.image}" class="image-preview">`;
     else imagePreview.innerHTML = '';
-    // Show current QR code preview
     const qrPreview = document.getElementById('editQrPreview');
     if (r.qr_code) qrPreview.innerHTML = `<img src="${r.qr_code}" class="image-preview">`;
     else qrPreview.innerHTML = '';
     document.getElementById('editImageFile').value = '';
     document.getElementById('editQrImage').value = '';
   }
-
   document.getElementById('saveRestaurantChanges').addEventListener('click', async () => {
     const id = document.getElementById('editRestaurantId').value;
     const name = document.getElementById('editName').value.trim();
@@ -505,14 +631,8 @@
     const hoursPattern = /^\d{1,2}:\d{2}\s?(?:AM|PM)\s*-\s*\d{1,2}:\d{2}\s?(?:AM|PM)$/i;
     if (hours && !hoursPattern.test(hours)) { alert('Operating hours format invalid. Use "10:00 AM - 10:00 PM".'); return; }
     let imagePath = null, qrPath = null;
-    if (imageFile) {
-      try { imagePath = await uploadImage(imageFile); }
-      catch(e) { alert('Image upload failed: ' + e.message); return; }
-    }
-    if (qrFile) {
-      try { qrPath = await uploadImage(qrFile); }
-      catch(e) { alert('QR code upload failed: ' + e.message); return; }
-    }
+    if (imageFile) { try { imagePath = await uploadImage(imageFile); } catch(e) { alert('Image upload failed: ' + e.message); return; } }
+    if (qrFile) { try { qrPath = await uploadImage(qrFile); } catch(e) { alert('QR code upload failed: ' + e.message); return; } }
     const updateData = { id, name, category, location, price_range, description, hours, deal, total_seats, slot_duration };
     if (imagePath) updateData.image = imagePath;
     if (qrPath) updateData.qr_code = qrPath;
@@ -523,57 +643,104 @@
       renderRestaurantTable(); renderStats();
     } catch(e) { alert('Error: ' + e.message); }
   });
+  async function deleteRestaurant(id) { if(confirm('Delete?')) { await apiCall(`/admin-restaurants.php?id=${id}`,{method:'DELETE'}); renderRestaurantTable(); renderStats(); } }
 
-  async function deleteRestaurant(id) {
-    if(confirm('Delete this restaurant? All associated data will be removed.')) {
-      await apiCall(`/admin-restaurants.php?id=${id}`, { method:'DELETE' });
-      renderRestaurantTable(); renderStats();
+  async function renderAccounts() { let u = await apiCall('/admin-users.php'); document.getElementById('accountRows').innerHTML = u.map(u=>`<tr>
+      <td>${escapeHtml(u.name)}</div>
+      <td>${escapeHtml(u.email)}</div>
+      <td>${u.role}</div>
+      <td><button class="btn btn-sm btn-danger" onclick="deleteUser(${u.id})">Delete</button></div>
+    </tr>`).join(''); }
+  async function deleteUser(id) { if(confirm('Delete user?')) { await apiCall(`/admin-users.php?id=${id}`,{method:'DELETE'}); renderAccounts(); } }
+
+  async function renderRequests() { let req = await apiCall('/admin-requests.php'); document.getElementById('requestRows').innerHTML = req.map(r => `<tr>
+      <td>${r.id}</div>
+      <td>${escapeHtml(r.owner_name)}</div>
+      <td>${escapeHtml(r.name)}</div>
+      <td><span class="status pending">${r.status}</span></div>
+      <td><button class="btn btn-sm btn-success" onclick="approveRequest(${r.id})">Approve</button><button class="btn btn-sm btn-danger" onclick="rejectRequest(${r.id})">Reject</button></div>
+    </tr>`).join(''); }
+  async function approveRequest(id) { await apiCall('/admin-requests.php', { method:'PUT', body: JSON.stringify({ id, action:'approve' }) }); alert('Approved'); renderRequests(); renderRestaurantTable(); }
+  async function rejectRequest(id) { await apiCall('/admin-requests.php', { method:'PUT', body: JSON.stringify({ id, action:'reject' }) }); alert('Rejected'); renderRequests(); }
+
+  async function loadOwnerApplications() {
+    try {
+      const apps = await apiCall('/admin-owner-applications.php');
+      const tbody = document.getElementById('ownerAppRows');
+      if (!apps.length) { tbody.innerHTML = '<tr><td colspan="7">No pending applications.</div>'; return; }
+      tbody.innerHTML = apps.map(app => `
+        <tr>
+          <td>${app.id}</div>
+          <td>${escapeHtml(app.name)}</div>
+          <td>${escapeHtml(app.email)}</div>
+          <td>${escapeHtml(app.phone)}</div>
+          <td><button class="btn btn-sm btn-outline-secondary" onclick="showCertificatePreview('${app.certificate_path}')">View Certificate</button></div>
+          <td>${new Date(app.created_at).toLocaleString()}</div>
+          <td>
+            <button class="btn btn-sm btn-success" onclick="approveOwnerApp(${app.id})">Approve</button>
+            <button class="btn btn-sm btn-danger" onclick="openRejectModal(${app.id})">Reject</button>
+           </div>
+        </tr>
+      `).join('');
+    } catch(e) { console.error(e); document.getElementById('ownerAppRows').innerHTML = '<tr><td colspan="7">Error loading applications.</div>'; }
+  }
+
+  async function approveOwnerApp(id) {
+    if (!confirm('Approve this owner application? The user will be able to log in.')) return;
+    try {
+      await apiCall('/admin-approve-owner.php', { method: 'POST', body: JSON.stringify({ id }) });
+      alert('Application approved. User account created.');
+      loadOwnerApplications();
+    } catch(e) { alert('Error: ' + e.message); }
+  }
+
+  const DEFAULT_REJECTION_REASON = "The submitted business certificate is invalid, unclear, or does not meet our requirements. Please upload a clear, valid certificate and reapply.";
+
+  function openRejectModal(id) {
+    document.getElementById('rejectAppId').value = id;
+    document.getElementById('rejectReason').value = DEFAULT_REJECTION_REASON;
+    new bootstrap.Modal(document.getElementById('rejectModal')).show();
+  }
+  document.getElementById('confirmRejectBtn').addEventListener('click', async () => {
+    const id = document.getElementById('rejectAppId').value;
+    const reason = document.getElementById('rejectReason').value.trim();
+    if (!reason) { alert('Please provide a reason for rejection.'); return; }
+    try {
+      await apiCall('/admin-reject-owner.php', { method: 'POST', body: JSON.stringify({ id, reason }) });
+      alert('Application rejected.');
+      bootstrap.Modal.getInstance(document.getElementById('rejectModal')).hide();
+      loadOwnerApplications();
+    } catch(e) { alert('Error: ' + e.message); }
+  });
+
+  async function uploadImage(file) {
+    const formData = new FormData();
+    formData.append('image', file);
+    const res = await fetch(`${API_BASE}/admin-upload-image.php`, { method: 'POST', body: formData, credentials: 'same-origin' });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'Upload failed');
+    return data.imagePath;
+  }
+
+  function showCertificatePreview(fileUrl) {
+    const modalBody = document.getElementById('certificateModalBody');
+    const ext = fileUrl.split('.').pop().toLowerCase();
+    if (ext === 'pdf') {
+      modalBody.innerHTML = `<iframe src="${fileUrl}" class="certificate-preview-iframe"></iframe>`;
+    } else {
+      modalBody.innerHTML = `<img src="${fileUrl}" class="certificate-preview-img" alt="Certificate">`;
     }
+    new bootstrap.Modal(document.getElementById('certificateModal')).show();
   }
 
-  async function renderAccounts() {
-    let u = await apiCall('/admin-users.php');
-    document.getElementById('accountRows').innerHTML = u.map(u=>`<tr>
-        <td>${escapeHtml(u.name)}</td>
-        <td>${escapeHtml(u.email)}</td>
-        <td>${u.role}</td>
-        <td><button class="btn btn-sm btn-danger" onclick="deleteUser(${u.id})">Delete</button></td>
-      </tr>`).join('');
-  }
-
-  async function deleteUser(id) {
-    if(confirm('Delete user?')) { await apiCall(`/admin-users.php?id=${id}`, { method:'DELETE' }); renderAccounts(); }
-  }
-
-  async function renderRequests() {
-    let req = await apiCall('/admin-requests.php');
-    document.getElementById('requestRows').innerHTML = req.map(r => `
-      <tr>
-        <td>${r.id}</td>
-        <td>${escapeHtml(r.owner_name)}</td>
-        <td>${escapeHtml(r.name)}</td>
-        <td><span class="status pending">${r.status}</span></td>
-        <td>
-          <button class="btn btn-sm btn-success" onclick="approveRequest(${r.id})">Approve</button>
-          <button class="btn btn-sm btn-danger" onclick="rejectRequest(${r.id})">Reject</button>
-        </td>
-      </tr>
-    `).join('');
-  }
-
-  async function approveRequest(id) {
-    await apiCall('/admin-requests.php', { method:'PUT', body: JSON.stringify({ id, action:'approve' }) });
-    alert('Approved'); renderRequests(); renderRestaurantTable();
-  }
-
-  async function rejectRequest(id) {
-    await apiCall('/admin-requests.php', { method:'PUT', body: JSON.stringify({ id, action:'reject' }) });
-    alert('Rejected'); renderRequests();
-  }
-
-  function escapeHtml(s) { if(!s) return ''; return s.replace(/[&<>]/g, m=>m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
-
-  window.addEventListener('DOMContentLoaded', async () => { await nav(); await loadAdminData(); });
+  window.addEventListener('DOMContentLoaded', async () => {
+    await nav();
+    await updateAuthAreaOldStyle();
+    await setupEnhancedNav();
+    await updateMobileSidebarUI();
+    await loadAdminData();
+  });
+  window.addEventListener('pageshow', () => { updateMobileSidebarUI(); setupEnhancedNav(); updateAuthAreaOldStyle(); });
 </script>
 </body>
 </html>
