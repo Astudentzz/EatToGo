@@ -177,6 +177,17 @@ h1, h2, h3, .logo {
     font-weight: 800;
 }
 
+.btn-outline-etg:hover,
+.btn-outline-etg:focus,
+.btn-outline-etg:focus-visible,
+.auth-buttons .btn-outline-etg:hover,
+.auth-buttons .btn-outline-etg:focus,
+.auth-buttons .btn-outline-etg:focus-visible {
+    background: var(--orange) !important;
+    border-color: var(--orange) !important;
+    color: white !important;
+}
+
 .hero {
     padding: 60px 0;
     background: radial-gradient(circle at 85% 10%, rgba(255,107,53,.18), transparent 30%),
@@ -364,13 +375,34 @@ h1, h2, h3, .logo {
     background: radial-gradient(circle, rgba(255,107,53,.18), transparent 70%);
 }
 
+.minimal-footer .container {
+    display: flex !important;
+    align-items: start;
+    justify-content: space-between !important;
+    gap: 48px !important;
+    max-width: none;
+    width: 100%;
+    padding-left: clamp(48px, 4vw, 96px);
+    padding-right: clamp(48px, 4vw, 96px);
+    flex-wrap: nowrap !important;
+}
+.footer-brand { order: 1; }
+.footer-contact { order: 2; }
+.footer-members { order: 3; }
+.footer-brand { max-width: 540px; }
+.footer-contact,
+.footer-members { flex: 0 0 auto; }
+
 .footer-brand h2 {
     font-size: 30px;
     color: var(--orange);
 }
 .footer-brand h2 span { color: var(--green); }
-.footer-members h4 { color: var(--orange); font-size: 14px; letter-spacing: 1px; }
-.footer-members li { margin-bottom: 8px; color: rgba(255,255,255,.8); }
+.footer-members h4,
+.footer-contact h4 { color: var(--orange); font-size: 14px; letter-spacing: 1px; }
+.footer-members li,
+.footer-contact li { margin-bottom: 8px; color: rgba(255,255,255,.8); }
+.footer-contact p { margin-bottom: 8px; color: rgba(255,255,255,.72); }
 .footer-bottom {
     border-top: 1px solid rgba(255,255,255,.08);
     margin-top: 35px;
@@ -492,8 +524,10 @@ h1, h2, h3, .logo {
     }
     .minimal-footer .container {
         flex-direction: column;
+        align-items: center;
+        flex-wrap: wrap !important;
         text-align: center;
-        gap: 20px;
+        gap: 18px !important;
     }
     .timeline span {
         font-size: 10px;
