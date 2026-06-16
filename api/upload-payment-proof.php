@@ -33,7 +33,8 @@ try {
         ['jpg', 'jpeg', 'png', 'pdf'],
         ['image/jpeg', 'image/png', 'application/pdf']
     );
-    $stmt = $pdo->prepare("UPDATE reservations SET payment_proof = ?, payment_submitted_at = NOW(), payment_verified = 0 WHERE id = ?");
+    // Update payment_proof and change status from 'pending_payment' to 'pending'
+    $stmt = $pdo->prepare("UPDATE reservations SET payment_proof = ?, payment_submitted_at = NOW(), payment_verified = 0, status = 'pending' WHERE id = ?");
     $stmt->execute([$filePath, $reservation_id]);
     echo json_encode(['success' => true]);
 } catch (RuntimeException $e) {

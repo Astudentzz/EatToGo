@@ -33,6 +33,7 @@ if ($guests < 1 || $guests > 50) {
     echo json_encode(['error' => 'Invalid guest count']);
     exit;
 }
+
 $reservationDate = DateTime::createFromFormat('Y-m-d', $date);
 if (!$reservationDate || $reservationDate->format('Y-m-d') !== $date || $date < date('Y-m-d')) {
     http_response_code(400);
@@ -40,7 +41,7 @@ if (!$reservationDate || $reservationDate->format('Y-m-d') !== $date || $date < 
     exit;
 }
 
-// --- Convert time from 12‑hour (e.g., "8:00 AM") to 24‑hour (e.g., "08:00:00") ---
+// Convert time from 12‑hour to 24‑hour
 if (preg_match('/^\d{1,2}:\d{2}\s?(?:AM|PM)$/i', $time)) {
     $dt = DateTime::createFromFormat('g:i A', $time);
     if ($dt) {
@@ -51,29 +52,37 @@ if (preg_match('/^\d{1,2}:\d{2}\s?(?:AM|PM)$/i', $time)) {
         exit;
     }
 }
-// Now validate the 24‑hour format
 if (!preg_match('/^\d{2}:\d{2}(:\d{2})?$/', $time)) {
     http_response_code(400);
     echo json_encode(['error' => 'Invalid reservation time']);
     exit;
 }
 
-// 1. Check for duplicate reservation
+// Auto‑delete abandoned pending_payment reservations older than 30 minutes
+$stmt = $pdo->prepare("DELETE FROM reservations WHERE status = 'pending_payment' AND created_at < DATE_SUB(NOW(), INTERVAL 30 MINUTE)");
+$stmt->execute();
+
+// Check for duplicate reservation (same user, restaurant, date, time)
 $stmt = $pdo->prepare("
-    SELECT id FROM reservations 
+    SELECT id, status FROM reservations 
     WHERE user_id = ? 
       AND restaurant_id = ? 
       AND reservation_date = ? 
       AND reservation_time = ?
 ");
 $stmt->execute([$_SESSION['user']['id'], $restaurant_id, $date, $time]);
-if ($stmt->fetch()) {
+$existing = $stmt->fetch(PDO::FETCH_ASSOC);
+if ($existing) {
     http_response_code(409);
-    echo json_encode(['error' => 'You already have a reservation at this restaurant for the same date and time. Please choose a different time or date.']);
+    echo json_encode([
+        'error' => 'You already have a reservation for this time slot.',
+        'existing_reservation_id' => $existing['id'],
+        'existing_status' => $existing['status']
+    ]);
     exit;
 }
 
-// 2. Get total seats
+// Get total seats of the restaurant
 $stmt = $pdo->prepare("SELECT total_seats FROM restaurants WHERE id = ? AND status = 'approved'");
 $stmt->execute([$restaurant_id]);
 $totalSeats = $stmt->fetchColumn();
@@ -83,14 +92,14 @@ if ($totalSeats === false) {
     exit;
 }
 
-// 3. Sum already confirmed guests for the same slot
+// Check availability for the chosen slot (only confirmed reservations block seats)
 $stmt = $pdo->prepare("
     SELECT COALESCE(SUM(num_people), 0) as booked 
     FROM reservations 
     WHERE restaurant_id = ? 
       AND reservation_date = ? 
       AND reservation_time = ? 
-      AND status = 'confirmed'
+      AND status IN ('confirmed', 'pending')
 ");
 $stmt->execute([$restaurant_id, $date, $time]);
 $booked = $stmt->fetchColumn();
@@ -102,8 +111,11 @@ if ($guests > $remaining) {
     exit;
 }
 
-// 4. Insert new reservation
-$stmt = $pdo->prepare("INSERT INTO reservations (user_id, restaurant_id, reservation_date, reservation_time, num_people, status) VALUES (?, ?, ?, ?, ?, 'pending')");
+// Insert new reservation with status 'pending_payment'
+$stmt = $pdo->prepare("
+    INSERT INTO reservations (user_id, restaurant_id, reservation_date, reservation_time, num_people, status)
+    VALUES (?, ?, ?, ?, ?, 'pending_payment')
+");
 $stmt->execute([$_SESSION['user']['id'], $restaurant_id, $date, $time, $guests]);
 $reservation_id = $pdo->lastInsertId();
 

@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="assets/css/style.css">
     <style>
+        /* all existing styles unchanged – kept from your original */
         :root {
             --orange: #ff6b35;
             --dark-wood: #1C1208;
@@ -120,7 +121,7 @@
 
         <section id="reservations" class="card-etg">
             <h3>📅 Reservations</h3>
-            <div class="table-responsive"><table class="table"><thead><tr><th>ID</th><th>Customer</th><th>Date & Time</th><th>Guests</th><th>Status</th><th>Arrival</th><th>Action</th></tr></thead><tbody id="bookingRows"></tbody></table></div>
+            <div class="table-responsive"><table class="table"><thead><tr><th>ID</th><th>Customer</th><th>Date & Time</th><th>Guests</th><th>Status</th><th>Arrival</th><th>Actions</th></tr></thead><tbody id="bookingRows"></tbody></table></div>
         </section>
 
         <section id="orders" class="card-etg">
@@ -186,10 +187,41 @@
     </div>
 </div>
 
+<!-- Receipt Modal -->
+<div class="modal fade" id="receiptModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Booking Receipt</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="receiptModalBody">
+                <div class="text-center py-4">Loading...</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-outline-etg" onclick="printReceipt()">🖨️ Print</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FIXED FOOTER – matches index.html -->
 <footer class="minimal-footer">
     <div class="container d-flex justify-content-between flex-wrap gap-5">
-        <div class="footer-brand"><h2>Eat<span>To</span>Go</h2><p>Final Year Project – Restaurant and Food Reservation System.</p></div>
-        <div class="footer-members"><h4>Project Team</h4><ul class="list-unstyled"><li>Navin Ramu</li><li>Muhamamd Nazim</li><li>Hadif</li><li>Ng Yue Yang</li></ul></div><div class="footer-contact"><h4>Contact Us</h4><p>Need help or found an issue?</p><ul class="list-unstyled"><li>Email: support@eattogo.local</li><li>Phone: +60 12-345 6789</li></ul></div>
+        <div class="footer-brand">
+            <h2>Eat<span>To</span>Go</h2>
+            <p>Final Year Project – Restaurant and Food Reservation System.</p>
+        </div>
+        <div class="footer-members">
+            <h4>Project Team</h4>
+            <ul class="list-unstyled">
+                <li>Navin Ramu</li>
+                <li>Muhamamd Nazim</li>
+                <li>Hadif</li>
+                <li>Ng Yue Yang</li>
+            </ul>
+        </div>
     </div>
     <div class="footer-bottom">© 2026 EatToGo • Universiti Teknologi Malaysia (UTM)</div>
 </footer>
@@ -341,6 +373,70 @@
         } catch(e) { console.error(e); }
     }
 
+    // View receipt function
+    async function viewReceipt(reservationId) {
+        const modalBody = document.getElementById('receiptModalBody');
+        modalBody.innerHTML = '<div class="text-center py-4">Loading receipt...</div>';
+        const modal = new bootstrap.Modal(document.getElementById('receiptModal'));
+        modal.show();
+        try {
+            const data = await apiCall(`/staff-reservation-details.php?id=${reservationId}`);
+            const r = data.reservation;
+            const order = data.order;
+            let itemsHtml = '';
+            let total = 0;
+            if (order && order.items && order.items.length) {
+                itemsHtml = '<h6>Pre‑ordered items:</h6><ul>';
+                for (const item of order.items) {
+                    const subtotal = item.quantity * item.price;
+                    total += subtotal;
+                    itemsHtml += `<li>${item.emoji || '🍽️'} ${escapeHtml(item.name)} × ${item.quantity} = RM ${subtotal.toFixed(2)}</li>`;
+                }
+                itemsHtml += '</ul>';
+            } else {
+                itemsHtml = '<p class="text-muted">No pre‑order items.</p>';
+            }
+            modalBody.innerHTML = `
+                <div style="text-align: center; margin-bottom: 16px;">
+                    <h3>EatToGo</h3>
+                    <p>Booking Receipt #${r.id}</p>
+                </div>
+                <hr>
+                <p><strong>Restaurant:</strong> ${escapeHtml(r.restaurant_name)}</p>
+                <p><strong>Date & Time:</strong> ${r.reservation_date} ${r.reservation_time}</p>
+                <p><strong>Guests:</strong> ${r.num_people}</p>
+                <hr>
+                <h6>Customer Details</h6>
+                <p><strong>Name:</strong> ${escapeHtml(r.customer_name || r.customer_name_from_users || '-')}<br>
+                <strong>Phone:</strong> ${escapeHtml(r.customer_phone || '-')}<br>
+                <strong>Email:</strong> ${escapeHtml(r.customer_email || '-')}<br>
+                <strong>Special requests:</strong> ${escapeHtml(r.special_requests || '-')}</p>
+                <hr>
+                ${itemsHtml}
+                <h5 class="text-end">Total: RM ${total.toFixed(2)}</h5>
+            `;
+        } catch (err) {
+            modalBody.innerHTML = `<div class="alert alert-danger">Error loading receipt: ${err.message}</div>`;
+        }
+    }
+
+    window.printReceipt = function() {
+        const printContents = document.getElementById('receiptModalBody').innerHTML;
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <html>
+            <head><title>Booking Receipt</title>
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+            <style>body { padding: 20px; } .btn { display: none; }</style>
+            </head>
+            <body>${printContents}</body>
+            </html>
+        `);
+        printWindow.document.close();
+        printWindow.print();
+        printWindow.close();
+    };
+
     async function renderBookings() {
         try {
             let bookings = await apiCall('/staff-reservations.php');
@@ -355,7 +451,20 @@
                 } else if (b.status === 'confirmed') {
                     action = !b.arrival_confirmed ? `<button class="btn btn-sm btn-primary" onclick="confirmMarkArrived(${b.id})">🚶 Mark Arrived</button>` : `<span class="badge bg-success">✓ Arrived</span>`;
                 } else { action = `<button class="btn btn-sm btn-secondary" disabled>${b.status}</button>`; }
-                return `<tr><td>${b.id}</td><td>${escapeHtml(b.customer_name)}</div><td>${b.reservation_date} ${b.reservation_time}</div><td>${b.num_people}</div><td><span class="status ${b.status}">${b.status}</span></div><td>${b.arrival_confirmed ? 'Arrived' : 'Not arrived'}</div><td>${action}</div></tr>`;
+                return `
+                    <tr>
+                        <td>${b.id}</td>
+                        <td>${escapeHtml(b.customer_name)}</div>
+                        <td>${b.reservation_date} ${b.reservation_time}</div>
+                        <td>${b.num_people}</div>
+                        <td><span class="status ${b.status}">${b.status}</span></div>
+                        <td>${b.arrival_confirmed ? 'Arrived' : 'Not arrived'}</div>
+                        <td class="d-flex gap-1 flex-wrap">
+                            <button class="btn btn-sm btn-outline-info" onclick="viewReceipt(${b.id})">📄 Receipt</button>
+                            ${action}
+                         </div>
+                    </tr>
+                `;
             }).join('');
         } catch(e) { console.error(e); }
     }
@@ -393,7 +502,13 @@
             if (!active.length) { tbody.innerHTML = '<tr><td colspan="5">No pre-orders for confirmed reservations.</div>'; return; }
             tbody.innerHTML = active.map(o => {
                 let btn = o.status !== 'ready' ? `<button class="btn btn-sm btn-success" onclick="confirmUpdateOrder(${o.id}, 'ready')">Mark Ready</button>` : `<button class="btn btn-sm btn-secondary" disabled>Ready</button>`;
-                return `<tr><td>${o.id}</div><td>${o.reservation_id}</div><td>${escapeHtml(o.items_summary || '-')}</div><td><span class="status ${o.status}">${o.status}</span></div><td>${btn}</div></tr>`;
+                return `</tr>
+                        <td>${o.id}</td>
+                        <td>${o.reservation_id}</td>
+                        <td>${escapeHtml(o.items_summary || '-')}</td>
+                        <td><span class="status ${o.status}">${o.status}</span></td>
+                        <td>${btn}</td>
+                    </tr>`;
             }).join('');
         } catch(e) { console.error(e); }
     }
@@ -408,7 +523,7 @@
         showConfirm(`Mark order #${orderId} as ready?`, async () => await updateOrder(orderId, status));
     }
 
-    // --- Payment verification with fixed reject modal ---
+    // --- Payment verification ---
     let pendingRejectReservationId = null;
 
     async function renderPaymentVerifications() {
@@ -418,7 +533,10 @@
             if (!v.length) { tbody.innerHTML = '<tr><td colspan="7">No pending verifications.</div>'; return; }
             v.sort((a,b) => new Date(b.payment_submitted_at) - new Date(a.payment_submitted_at));
             tbody.innerHTML = v.map(v => `<tr>
-                <td>${v.reservation_id}</div><td>${escapeHtml(v.customer_name)}</div><td>${escapeHtml(v.restaurant_name)}</div><td>RM ${parseFloat(v.total_amount).toFixed(2)}</div>
+                <td>${v.reservation_id}</td>
+                <td>${escapeHtml(v.customer_name)}</div>
+                <td>${escapeHtml(v.restaurant_name)}</div>
+                <td>RM ${parseFloat(v.total_amount).toFixed(2)}</div>
                 <td><button class="btn btn-sm btn-primary" onclick="viewProof('${v.payment_proof}', ${v.reservation_id})">View Proof</button></div>
                 <td>${new Date(v.payment_submitted_at).toLocaleString()}</div>
                 <td><button class="btn btn-sm btn-success me-1" onclick="confirmVerifyPayment(${v.reservation_id})">Approve</button>
@@ -447,7 +565,6 @@
         showConfirm('Mark this payment as verified? The reservation will be confirmed.', async () => await verifyPayment(reservationId));
     }
 
-    // Fix: no extra confirm after reason – just reject directly
     function confirmRejectPayment(reservationId) {
         pendingRejectReservationId = reservationId;
         document.getElementById('rejectReason').value = 'Payment proof unclear';
@@ -455,15 +572,11 @@
         rejectModal.show();
     }
 
-    // Handle reject button inside modal – close modal first, then call API and show alert
     document.getElementById('confirmRejectBtn').addEventListener('click', async () => {
         const reason = document.getElementById('rejectReason').value.trim();
         const rejectModalEl = document.getElementById('rejectReasonModal');
         const rejectModal = bootstrap.Modal.getInstance(rejectModalEl);
-        // Close the reject modal immediately
         rejectModal.hide();
-        
-        // Wait for modal to fully close before performing the API call
         rejectModalEl.addEventListener('hidden.bs.modal', async function onHidden() {
             rejectModalEl.removeEventListener('hidden.bs.modal', onHidden);
             try {
