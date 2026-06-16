@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <base href="/EatToGo/">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Admin Dashboard – EatToGo</title>
@@ -561,6 +562,9 @@
   }
 
   // ==================== ADMIN DASHBOARD LOGIC ====================
+  // defaultSvg for fallback
+  const defaultSvg = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23ddd'/%3E%3Ctext x='50' y='55' font-size='12' text-anchor='middle' fill='%23666'%3ENo Img%3C/text%3E%3C/svg%3E";
+
   async function loadAdminData() {
     const session = await checkSession();
     if (!session.loggedIn || session.user.role !== 'admin') { alert('Unauthorized'); window.location.href = 'login.html'; return; }
@@ -580,17 +584,19 @@
   async function renderRestaurantTable() {
     let r = await apiCall('/admin-restaurants.php');
     document.getElementById('restaurantRows').innerHTML = r.map(r=>`<tr>
-      <td>${escapeHtml(r.name)}</div>
-      <td>${escapeHtml(r.category)}</div>
-      <td>${escapeHtml(r.location)}</div>
-      <td>${escapeHtml(r.price_range)}</div>
-      <td>${escapeHtml(r.owner_name || 'N/A')}</div>
-      <td><button class="btn btn-sm btn-warning" onclick="openEditRestaurantModal(${r.id})">Edit</button> <button class="btn btn-sm btn-danger" onclick="deleteRestaurant(${r.id})">Delete</button></div>
+      <td>${escapeHtml(r.name)}</td>
+      <td>${escapeHtml(r.category)}</td>
+      <td>${escapeHtml(r.location)}</td>
+      <td>${escapeHtml(r.price_range)}</td>
+      <td>${escapeHtml(r.owner_name || 'N/A')}</td>
+      <td><button class="btn btn-sm btn-warning" onclick="openEditRestaurantModal(${r.id})">Edit</button> <button class="btn btn-sm btn-danger" onclick="deleteRestaurant(${r.id})">Delete</button></td>
     </tr>`).join('');
   }
 
   // "Add Restaurant" function and modal have been removed.
   function openEditRestaurantModal(id) { fetchRestaurantData(id); new bootstrap.Modal(document.getElementById('editRestaurantModal')).show(); }
+
+  // ==================== FIXED: fetchRestaurantData with resolveImagePath ====================
   async function fetchRestaurantData(id) {
     const restaurants = await apiCall('/admin-restaurants.php');
     const r = restaurants.find(rest => rest.id == id);
@@ -605,15 +611,27 @@
     document.getElementById('editDeal').value = r.deal || '';
     document.getElementById('editSeats').value = r.total_seats || 0;
     document.getElementById('editSlotDuration').value = r.slot_duration || 60;
+
     const imagePreview = document.getElementById('editImagePreview');
-    if (r.image) imagePreview.innerHTML = `<img src="${r.image}" class="image-preview">`;
-    else imagePreview.innerHTML = '';
+    if (r.image) {
+      const imgSrc = resolveImagePath(r.image);
+      imagePreview.innerHTML = `<img src="${imgSrc}" class="image-preview" onerror="this.src='${defaultSvg}'">`;
+    } else {
+      imagePreview.innerHTML = '';
+    }
+
     const qrPreview = document.getElementById('editQrPreview');
-    if (r.qr_code) qrPreview.innerHTML = `<img src="${r.qr_code}" class="image-preview">`;
-    else qrPreview.innerHTML = '';
+    if (r.qr_code) {
+      const qrSrc = resolveImagePath(r.qr_code);
+      qrPreview.innerHTML = `<img src="${qrSrc}" class="image-preview" onerror="this.src='${defaultSvg}'">`;
+    } else {
+      qrPreview.innerHTML = '';
+    }
+
     document.getElementById('editImageFile').value = '';
     document.getElementById('editQrImage').value = '';
   }
+
   document.getElementById('saveRestaurantChanges').addEventListener('click', async () => {
     const id = document.getElementById('editRestaurantId').value;
     const name = document.getElementById('editName').value.trim();
@@ -646,19 +664,19 @@
   async function deleteRestaurant(id) { if(confirm('Delete?')) { await apiCall(`/admin-restaurants.php?id=${id}`,{method:'DELETE'}); renderRestaurantTable(); renderStats(); } }
 
   async function renderAccounts() { let u = await apiCall('/admin-users.php'); document.getElementById('accountRows').innerHTML = u.map(u=>`<tr>
-      <td>${escapeHtml(u.name)}</div>
-      <td>${escapeHtml(u.email)}</div>
-      <td>${u.role}</div>
-      <td><button class="btn btn-sm btn-danger" onclick="deleteUser(${u.id})">Delete</button></div>
+      <td>${escapeHtml(u.name)}</td>
+      <td>${escapeHtml(u.email)}</td>
+      <td>${u.role}</td>
+      <td><button class="btn btn-sm btn-danger" onclick="deleteUser(${u.id})">Delete</button></td>
     </tr>`).join(''); }
   async function deleteUser(id) { if(confirm('Delete user?')) { await apiCall(`/admin-users.php?id=${id}`,{method:'DELETE'}); renderAccounts(); } }
 
   async function renderRequests() { let req = await apiCall('/admin-requests.php'); document.getElementById('requestRows').innerHTML = req.map(r => `<tr>
-      <td>${r.id}</div>
-      <td>${escapeHtml(r.owner_name)}</div>
-      <td>${escapeHtml(r.name)}</div>
-      <td><span class="status pending">${r.status}</span></div>
-      <td><button class="btn btn-sm btn-success" onclick="approveRequest(${r.id})">Approve</button><button class="btn btn-sm btn-danger" onclick="rejectRequest(${r.id})">Reject</button></div>
+      <td>${r.id}</td>
+      <td>${escapeHtml(r.owner_name)}</td>
+      <td>${escapeHtml(r.name)}</td>
+      <td><span class="status pending">${r.status}</span></td>
+      <td><button class="btn btn-sm btn-success" onclick="approveRequest(${r.id})">Approve</button><button class="btn btn-sm btn-danger" onclick="rejectRequest(${r.id})">Reject</button></td>
     </tr>`).join(''); }
   async function approveRequest(id) { await apiCall('/admin-requests.php', { method:'PUT', body: JSON.stringify({ id, action:'approve' }) }); alert('Approved'); renderRequests(); renderRestaurantTable(); }
   async function rejectRequest(id) { await apiCall('/admin-requests.php', { method:'PUT', body: JSON.stringify({ id, action:'reject' }) }); alert('Rejected'); renderRequests(); }
@@ -667,22 +685,22 @@
     try {
       const apps = await apiCall('/admin-owner-applications.php');
       const tbody = document.getElementById('ownerAppRows');
-      if (!apps.length) { tbody.innerHTML = '<tr><td colspan="7">No pending applications.</div>'; return; }
+      if (!apps.length) { tbody.innerHTML = '<tr><td colspan="7">No pending applications.</td></tr>'; return; }
       tbody.innerHTML = apps.map(app => `
         <tr>
-          <td>${app.id}</div>
-          <td>${escapeHtml(app.name)}</div>
-          <td>${escapeHtml(app.email)}</div>
-          <td>${escapeHtml(app.phone)}</div>
-          <td><button class="btn btn-sm btn-outline-secondary" onclick="showCertificatePreview('${app.certificate_path}')">View Certificate</button></div>
-          <td>${new Date(app.created_at).toLocaleString()}</div>
+          <td>${app.id}</td>
+          <td>${escapeHtml(app.name)}</td>
+          <td>${escapeHtml(app.email)}</td>
+          <td>${escapeHtml(app.phone)}</td>
+          <td><button class="btn btn-sm btn-outline-secondary" onclick="showCertificatePreview('${app.certificate_path}')">View Certificate</button></td>
+          <td>${new Date(app.created_at).toLocaleString()}</td>
           <td>
             <button class="btn btn-sm btn-success" onclick="approveOwnerApp(${app.id})">Approve</button>
             <button class="btn btn-sm btn-danger" onclick="openRejectModal(${app.id})">Reject</button>
-           </div>
+           </td>
         </tr>
       `).join('');
-    } catch(e) { console.error(e); document.getElementById('ownerAppRows').innerHTML = '<tr><td colspan="7">Error loading applications.</div>'; }
+    } catch(e) { console.error(e); document.getElementById('ownerAppRows').innerHTML = '<tr><td colspan="7">Error loading applications.</td></tr>'; }
   }
 
   async function approveOwnerApp(id) {

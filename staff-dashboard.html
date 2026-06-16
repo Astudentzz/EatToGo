@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <base href="/EatToGo/">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Staff Dashboard – EatToGo</title>
@@ -548,11 +549,19 @@
     let currentReservationForProof = null;
     function viewProof(proofUrl, reservationId) {
         currentReservationForProof = reservationId;
-        const ext = proofUrl.split('.').pop().toLowerCase();
-        let content = ext === 'pdf' ? `<iframe src="${proofUrl}" width="100%" height="400px"></iframe>` : `<img src="${proofUrl}" class="proof-img">`;
+        // --- FIX: Resolve proof URL using resolveImagePath ---
+        const resolvedUrl = resolveImagePath(proofUrl);
+        const ext = resolvedUrl ? resolvedUrl.split('.').pop().toLowerCase() : '';
+        let content = '';
+        if (ext === 'pdf') {
+            content = `<iframe src="${resolvedUrl}" width="100%" height="400px"></iframe>`;
+        } else {
+            content = `<img src="${resolvedUrl}" class="proof-img" onerror="this.src='${defaultSvg}'">`;
+        }
         document.getElementById('proofContent').innerHTML = content;
         new bootstrap.Modal(document.getElementById('viewProofModal')).show();
     }
+
     document.getElementById('verifyAndCloseBtn').addEventListener('click', async () => { if (currentReservationForProof) { await verifyPayment(currentReservationForProof); bootstrap.Modal.getInstance(document.getElementById('viewProofModal')).hide(); } });
     async function verifyPayment(reservationId) {
         try {
@@ -601,14 +610,19 @@
         try {
             const menu = await apiCall('/menu-items.php');
             const tbody = document.getElementById('menuRows');
-            if (!menu.length) { tbody.innerHTML = '<tr><td colspan="6">No menu items. Click "Add Menu Item".</div>'; return; }
-            tbody.innerHTML = menu.map(m => `<tr>
-                <td><img src="${m.image || defaultSvg}" class="menu-thumb" onerror="this.src='${defaultSvg}'"> </div>
-                <td>${m.emoji || '🍽️'} ${escapeHtml(m.name)}</div><td>${escapeHtml(m.category)}</div><td>RM ${parseFloat(m.price).toFixed(2)}</div>
-                <td>${escapeHtml(m.description || '-')}</div>
-                <td><button class="btn btn-sm btn-warning me-1" onclick="openEditMenuModal(${m.id})">✏️ Edit</button>
-                       <button class="btn btn-sm btn-danger" onclick="confirmRemoveMenuItem(${m.id})">🗑️ Remove</button></div>
-            </tr>`).join('');
+            if (!menu.length) { tbody.innerHTML = '<tr><td colspan="6">No menu items. Click "Add Menu Item".</td></tr>'; return; }
+            tbody.innerHTML = menu.map(m => {
+                const img = resolveImagePath(m.image) || defaultSvg;
+                return `<tr>
+                    <td><img src="${img}" class="menu-thumb" onerror="this.src='${defaultSvg}'"></td>
+                    <td>${m.emoji || '🍽️'} ${escapeHtml(m.name)}</td>
+                    <td>${escapeHtml(m.category)}</td>
+                    <td>RM ${parseFloat(m.price).toFixed(2)}</td>
+                    <td>${escapeHtml(m.description || '-')}</td>
+                    <td><button class="btn btn-sm btn-warning me-1" onclick="openEditMenuModal(${m.id})">✏️ Edit</button>
+                           <button class="btn btn-sm btn-danger" onclick="confirmRemoveMenuItem(${m.id})">🗑️ Remove</button></td>
+                </tr>`;
+            }).join('');
         } catch(e) { console.error(e); }
     }
 
@@ -641,7 +655,13 @@
             document.getElementById('editMenuName').value = item.name; document.getElementById('editMenuPrice').value = item.price;
             document.getElementById('editMenuCat').value = item.category; document.getElementById('editMenuEmoji').value = item.emoji || '🍽️';
             document.getElementById('editMenuDesc').value = item.description || '';
-            document.getElementById('editMenuImagePreview').innerHTML = item.image ? `<img src="${item.image}" class="image-preview">` : '';
+            const preview = document.getElementById('editMenuImagePreview');
+            if (item.image) {
+                const imgSrc = resolveImagePath(item.image);
+                preview.innerHTML = `<img src="${imgSrc}" class="image-preview" onerror="this.src='${defaultSvg}'">`;
+            } else {
+                preview.innerHTML = '';
+            }
             document.getElementById('editMenuImage').value = '';
             new bootstrap.Modal(document.getElementById('editMenuModal')).show();
         } catch(e) { showAlert('Failed to load item'); }

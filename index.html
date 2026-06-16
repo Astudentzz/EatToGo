@@ -1,24 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <base href="/EatToGo/">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>EatToGo – Reserve & Pre-Order</title>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Bootstrap Icons for modern sidebar & UI -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="assets/css/style.css">
   <style>
-    /* ----- GLOBAL & ENHANCED SIDEBAR UI (from advanced design) ----- */
     :root {
       --orange: #ff6b35;
       --dark-wood: #1C1208;
       --sidebar-bg: #0f0b06;
       --sidebar-width: 280px;
     }
-
-    /* Enhanced mobile sidebar styles (avatar, user info, footer actions) */
     .mobile-sidebar {
       position: fixed;
       top: 0;
@@ -35,11 +32,7 @@
       flex-direction: column;
       border-right: 1px solid rgba(255, 107, 53, 0.2);
     }
-
-    .mobile-sidebar.open {
-      transform: translateX(0);
-    }
-
+    .mobile-sidebar.open { transform: translateX(0); }
     .sidebar-header {
       padding: 28px 20px 20px 20px;
       display: flex;
@@ -48,7 +41,6 @@
       border-bottom: 1px solid rgba(255,255,255,0.08);
       position: relative;
     }
-
     .sidebar-avatar {
       width: 52px;
       height: 52px;
@@ -63,11 +55,7 @@
       border: 1.5px solid rgba(255,107,53,0.4);
       box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     }
-
-    .sidebar-userinfo {
-      flex: 1;
-    }
-
+    .sidebar-userinfo { flex: 1; }
     .sidebar-userinfo .user-display-name {
       font-weight: 800;
       font-size: 1.1rem;
@@ -75,7 +63,6 @@
       letter-spacing: -0.2px;
       margin-bottom: 4px;
     }
-
     .sidebar-userinfo .user-display-email {
       font-size: 0.7rem;
       color: rgba(255,255,255,0.6);
@@ -84,7 +71,6 @@
       text-overflow: ellipsis;
       max-width: 140px;
     }
-
     .sidebar-userinfo .guest-label {
       font-size: 0.75rem;
       color: rgba(255,255,255,0.7);
@@ -94,7 +80,6 @@
       padding: 2px 10px;
       border-radius: 20px;
     }
-
     .close-sidebar {
       background: rgba(255,255,255,0.1);
       border: none;
@@ -110,13 +95,11 @@
       transition: 0.2s;
       cursor: pointer;
     }
-
     .close-sidebar:hover {
       background: var(--orange);
       color: #1C1208;
       transform: rotate(90deg);
     }
-
     .sidebar-nav-links {
       flex: 1;
       padding: 24px 16px;
@@ -124,7 +107,6 @@
       flex-direction: column;
       gap: 8px;
     }
-
     .sidebar-nav-links a {
       display: flex;
       align-items: center;
@@ -138,25 +120,17 @@
       transition: all 0.2s ease;
       background: transparent;
     }
-
-    .sidebar-nav-links a i {
-      font-size: 1.3rem;
-      width: 28px;
-      color: var(--orange);
-    }
-
+    .sidebar-nav-links a i { font-size: 1.3rem; width: 28px; color: var(--orange); }
     .sidebar-nav-links a:hover {
       background: rgba(255,107,53,0.18);
       color: white;
       transform: translateX(4px);
     }
-
     .sidebar-nav-links a.active {
       background: rgba(255,107,53,0.25);
       color: var(--orange);
       border-left: 3px solid var(--orange);
     }
-
     .sidebar-footer {
       padding: 20px 16px 30px;
       border-top: 1px solid rgba(255,255,255,0.08);
@@ -164,7 +138,6 @@
       flex-direction: column;
       gap: 10px;
     }
-
     .sidebar-action-btn {
       background: rgba(255,255,255,0.05);
       border: 1px solid rgba(255,255,255,0.12);
@@ -181,34 +154,26 @@
       gap: 8px;
       font-size: 0.9rem;
     }
-
-    .sidebar-action-btn i {
-      font-size: 1.1rem;
-    }
-
+    .sidebar-action-btn i { font-size: 1.1rem; }
     .sidebar-action-btn.logout-btn {
       background: rgba(255,70,70,0.15);
       border-color: rgba(255,100,100,0.3);
       color: #ffb4a2;
     }
-
     .sidebar-action-btn.logout-btn:hover {
       background: rgba(255,70,70,0.4);
       color: white;
     }
-
     .sidebar-action-btn.primary-action {
       background: var(--orange);
       border: none;
       color: #1C1208;
       font-weight: 800;
     }
-
     .sidebar-action-btn.primary-action:hover {
       background: #ff8555;
       transform: scale(0.98);
     }
-
     .sidebar-overlay {
       position: fixed;
       top: 0;
@@ -221,22 +186,13 @@
       display: none;
       transition: all 0.25s;
     }
-
-    .sidebar-overlay.active {
-      display: block;
-    }
-
-    body.sidebar-open {
-      overflow: hidden;
-    }
-
+    .sidebar-overlay.active { display: block; }
+    body.sidebar-open { overflow: hidden; }
     .sidebar-divider {
       height: 1px;
       background: linear-gradient(90deg, transparent, rgba(255,107,53,0.3), transparent);
       margin: 6px 16px;
     }
-
-    /* top bar & auth buttons (old style but modern) */
     .hamburger {
       background: rgba(0,0,0,0.05);
       border-radius: 50px;
@@ -286,9 +242,7 @@
       border-radius: 50px;
       font-weight: 600;
     }
-    .user-greeting span {
-      color: #1C1208;
-    }
+    .user-greeting span { color: #1C1208; }
     .user-greeting .logout-link {
       color: var(--orange);
       cursor: pointer;
@@ -301,8 +255,6 @@
     .user-greeting .logout-link:hover {
       background: rgba(255,107,53,0.1);
     }
-
-    /* Navbar & desktop / mobile layout */
     .navbar-etg .container {
       display: flex;
       flex-wrap: wrap;
@@ -349,8 +301,6 @@
         display: none;
       }
     }
-
-    /* Restaurant cards & cuisine filter (new version's robust styles) */
     .owner-cta { background: linear-gradient(135deg, #1C1208, #2f1a08); border-radius: 18px; padding: 18px 26px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap:12px; margin-bottom: 28px; }
     .owner-cta p { margin:0; color:rgba(255,255,255,.8); font-size:15px; }
     .owner-cta strong { color:white; }
@@ -364,8 +314,6 @@
     .hero { background: #fef5ed; }
     .badge-etg { background: #ffefe7; padding: 8px 18px; border-radius: 40px; font-weight: 700; font-size: 0.85rem; color: var(--orange); display: inline-block; }
     .highlight { color: var(--orange); }
-
-    /* cuisine filter bar */
     .mood-filter-bar { background: rgba(255,255,255,0.9); border-radius: 48px; padding: 8px 18px; display: inline-flex; align-items: center; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); backdrop-filter: blur(4px); }
     .mood-label { font-weight: 700; font-size: 15px; color: #1C1208; margin-right: 6px; white-space: nowrap; }
     .mood-btn { background: none; border: 2px solid transparent; border-radius: 999px; padding: 6px 18px; font-size: 14px; font-weight: 600; color: #6c5a48; cursor: pointer; transition: all 0.2s ease; }
@@ -391,7 +339,6 @@
   </div>
 </nav>
 
-<!-- ENHANCED MOBILE SIDEBAR (Advanced UI: avatar, user info, role-based buttons) -->
 <div class="mobile-sidebar" id="mobileSidebar">
   <div class="sidebar-header">
     <div class="sidebar-avatar" id="mobileUserAvatar">🍽️</div>
@@ -407,13 +354,11 @@
 </div>
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-<!-- Hero + Search + Cuisine Filters (Same modern layout) -->
 <section class="hero">
   <div class="container text-center">
     <span class="badge-etg">Reserve + Pre-Order • EatToGo</span>
     <h1 class="mt-4">Dine smarter,<br><span class="highlight">order faster</span></h1>
     <p class="lead text-muted mt-3">Reserve a table, pre-order your meal, and skip the wait.</p>
-    
     <div class="search-card glass-card p-4">
       <div class="row g-3 justify-content-center">
         <div class="col-md-8 col-lg-9">
@@ -424,7 +369,6 @@
         </div>
       </div>
     </div>
-
     <div style="text-align:center; margin-top: 20px;">
       <div class="mood-filter-bar" id="cuisineFilterBar">
         <span class="mood-label">Cuisine:</span>
@@ -451,19 +395,20 @@
 <footer class="minimal-footer">
   <div class="container d-flex justify-content-between flex-wrap gap-5">
     <div class="footer-brand"><h2>Eat<span>To</span>Go</h2><p>Final Year Project – Restaurant and Food Reservation System.</p></div>
-    <div class="footer-members"><h4>Project Team</h4><ul class="list-unstyled"><li>Navin Ramu</li><li>Muhamamd Nazim</li><li>Hadif</li><li>Ng Yue Yang</li></ul></div><div class="footer-contact"><h4>Contact Us</h4><p>Need help or found an issue?</p><ul class="list-unstyled"><li>Email: eattogo.test@gmail.com</li><li>Phone: +60 16-933 0771</li></ul></div>
+    <div class="footer-members"><h4>Project Team</h4><ul class="list-unstyled"><li>Navin Ramu</li><li>Muhamamd Nazim</li><li>Hadif</li><li>Ng Yue Yang</li></ul></div>
+    <div class="footer-contact"><h4>Contact Us</h4><p>Need help or found an issue?</p><ul class="list-unstyled"><li>Email: eattogo.test@gmail.com</li><li>Phone: +60 16-933 0771</li></ul></div>
   </div>
   <div class="footer-bottom">© 2026 EatToGo • Universiti Teknologi Malaysia (UTM)</div>
 </footer>
 
 <script src="assets/js/api.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
   // ========== SIDEBAR TOGGLE & OVERLAY ==========
   const hamburger = document.getElementById('hamburgerBtn');
   const sidebar = document.getElementById('mobileSidebar');
   const overlay = document.getElementById('sidebarOverlay');
   const closeBtn = document.getElementById('closeSidebarBtn');
-
   function openSidebar() {
     sidebar.classList.add('open');
     overlay.classList.add('active');
@@ -490,35 +435,19 @@
   let currentSearchTerm = '';
   let currentCuisine = '';
 
-  function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
-
-  // ---------- AUTH & ADVANCED SIDEBAR FUNCTIONS (identical to old index) ----------
+  // ---------- AUTH & ADVANCED SIDEBAR FUNCTIONS ----------
   async function updateAuthAreaOldStyle() {
     const authDiv = document.getElementById('authArea');
     if (!authDiv) return;
     const sessionData = await checkSession();
     const user = sessionData.loggedIn ? sessionData.user : null;
     if (!user) {
-      authDiv.innerHTML = `
-        <a href="login.html" class="btn btn-outline-etg">Sign in</a>
-        <a href="signup.html" class="btn btn-etg">Register</a>
-      `;
+      authDiv.innerHTML = `<a href="login.html" class="btn btn-outline-etg">Sign in</a><a href="signup.html" class="btn btn-etg">Register</a>`;
     } else {
       const displayName = user.name || user.email.split('@')[0];
-      authDiv.innerHTML = `
-        <div class="user-greeting">
-          <span>👋 ${escapeHtml(displayName)}</span>
-          <a class="logout-link" id="topLogoutBtn">Logout</a>
-        </div>
-      `;
+      authDiv.innerHTML = `<div class="user-greeting"><span>👋 ${escapeHtml(displayName)}</span><a class="logout-link" id="topLogoutBtn">Logout</a></div>`;
       const logoutBtn = document.getElementById('topLogoutBtn');
-      if (logoutBtn) {
-        logoutBtn.addEventListener('click', async (e) => {
-          e.preventDefault();
-          await apiCall('/logout.php', { method: 'POST' });
-          window.location.href = 'index.html';
-        });
-      }
+      if (logoutBtn) logoutBtn.addEventListener('click', async (e) => { e.preventDefault(); await apiCall('/logout.php',{method:'POST'}); window.location.href='index.html'; });
     }
   }
 
@@ -528,15 +457,11 @@
     const avatarDiv = document.getElementById('mobileUserAvatar');
     const userInfoDiv = document.getElementById('mobileUserInfo');
     const footerContainer = document.getElementById('mobileSidebarFooter');
-    
     if (user) {
       const firstLetter = (user.name && user.name.charAt(0)) || (user.email && user.email.charAt(0).toUpperCase()) || 'U';
       avatarDiv.innerHTML = `<span style="font-size:28px;">${escapeHtml(firstLetter)}</span>`;
       avatarDiv.style.background = "#ff6b3522";
-      userInfoDiv.innerHTML = `
-        <div class="user-display-name">${escapeHtml(user.name || user.email.split('@')[0])}</div>
-        <div class="user-display-email">${escapeHtml(user.email)}</div>
-      `;
+      userInfoDiv.innerHTML = `<div class="user-display-name">${escapeHtml(user.name || user.email.split('@')[0])}</div><div class="user-display-email">${escapeHtml(user.email)}</div>`;
       let footerHtml = '';
       if (user.role === 'customer') {
         footerHtml = `<a href="booking-history.html" class="sidebar-action-btn"><i class="bi bi-journal-bookmark-fill"></i> My Bookings</a>
@@ -556,22 +481,14 @@
       }
       footerContainer.innerHTML = footerHtml;
       const logoutBtn = document.getElementById('mobileLogoutBtn');
-      if (logoutBtn) logoutBtn.addEventListener('click', async () => {
-        await apiCall('/logout.php', { method: 'POST' });
-        window.location.href = 'index.html';
-      });
+      if (logoutBtn) logoutBtn.addEventListener('click', async () => { await apiCall('/logout.php',{method:'POST'}); window.location.href='index.html'; });
     } else {
       avatarDiv.innerHTML = `👤`;
       avatarDiv.style.background = "rgba(255,107,53,0.2)";
-      userInfoDiv.innerHTML = `
-        <div class="user-display-name">Guest User</div>
-        <div class="guest-label">Not signed in</div>
-      `;
-      footerContainer.innerHTML = `
-        <a href="login.html" class="sidebar-action-btn primary-action"><i class="bi bi-box-arrow-in-right"></i> Log In</a>
-        <a href="signup.html" class="sidebar-action-btn"><i class="bi bi-person-plus"></i> Create Account</a>
-        <a href="signup.html?role=owner" class="sidebar-action-btn"><i class="bi bi-shop"></i> Partner with Us</a>
-      `;
+      userInfoDiv.innerHTML = `<div class="user-display-name">Guest User</div><div class="guest-label">Not signed in</div>`;
+      footerContainer.innerHTML = `<a href="login.html" class="sidebar-action-btn primary-action"><i class="bi bi-box-arrow-in-right"></i> Log In</a>
+                                   <a href="signup.html" class="sidebar-action-btn"><i class="bi bi-person-plus"></i> Create Account</a>
+                                   <a href="signup.html?role=owner" class="sidebar-action-btn"><i class="bi bi-shop"></i> Partner with Us</a>`;
     }
   }
 
@@ -581,7 +498,6 @@
     const desktopNav = document.getElementById('mainNav');
     const mobileNavContainer = document.getElementById('mobileNavLinks');
     if (!desktopNav) return;
-    
     let navItems = [];
     if (!user || user.role === 'customer') {
       navItems = [
@@ -596,19 +512,16 @@
     } else if (user.role === 'admin') {
       navItems = [{ href: "admin.html", icon: "bi bi-shield-lock", label: "Admin Dashboard" }];
     }
-    
     const buildLinks = (items) => items.map(item => `<a class="nav-link" href="${item.href}"><i class="${item.icon}"></i> ${item.label}</a>`).join('');
     desktopNav.innerHTML = buildLinks(navItems);
     if (mobileNavContainer) {
       mobileNavContainer.innerHTML = navItems.map(item => `<a href="${item.href}"><i class="${item.icon}"></i> ${item.label}</a>`).join('');
       const currentPath = window.location.pathname.split('/').pop() || 'index.html';
-      mobileNavContainer.querySelectorAll('a').forEach(link => {
-        if (link.getAttribute('href') === currentPath) link.classList.add('active');
-      });
+      mobileNavContainer.querySelectorAll('a').forEach(link => { if (link.getAttribute('href') === currentPath) link.classList.add('active'); });
     }
   }
 
-  // ---------- RESTAURANT & CUISINE LOGIC (dynamic, modern) ----------
+  // ---------- RESTAURANT & CUISINE LOGIC ----------
   async function populateCuisineButtons(cuisines) {
     const container = document.getElementById('cuisineFilterBar');
     if (!container) return;
@@ -663,10 +576,12 @@
       return;
     }
     noResults.style.display = 'none';
-    container.innerHTML = filtered.map(r => `
+    container.innerHTML = filtered.map(r => {
+      const img = resolveImagePath(r.image) || 'assets/img/default-restaurant.jpg';
+      return `
       <div class="col-md-4">
         <div class="rest-card">
-          <img src="${r.image || 'assets/img/default-restaurant.jpg'}" onerror="this.src='assets/img/default-restaurant.jpg'">
+          <img src="${img}" onerror="this.src='assets/img/default-restaurant.jpg'">
           <div class="card-body">
             <h3>${escapeHtml(r.name)}</h3>
             <p>${escapeHtml(r.category || 'Restaurant')} • ${escapeHtml(r.location || 'Malaysia')}</p>
@@ -674,7 +589,7 @@
           </div>
         </div>
       </div>
-    `).join('');
+    `}).join('');
   }
 
   function updateFilters() {
@@ -682,47 +597,18 @@
     applyFilter();
   }
 
-  // Redirect for admin/staff/owner to their dashboards if they land on homepage (same as old logic)
-  async function checkAutoRedirect() {
-    const session = (await checkSession()).loggedIn ? (await checkSession()).user : null;
-    if (session && (session.role === 'admin' || session.role === 'staff' || session.role === 'owner')) {
-      if (session.role === 'admin') location.href = 'admin.html';
-      else if (session.role === 'staff') location.href = 'staff-dashboard.html';
-      else if (session.role === 'owner') location.href = 'owner-dashboard.html';
-      return true;
-    }
-    return false;
-  }
-
-  // ========== INITIALIZE PAGE ==========
+  // ========== INITIALIZE ==========
   window.addEventListener('DOMContentLoaded', async () => {
-    // Refresh UI on all parts: top auth, enhanced nav (desktop & mobile), sidebar user profile
     await updateAuthAreaOldStyle();
     await setupEnhancedNav();
     await updateMobileSidebarUI();
     await renderRestaurants();
-    
     const searchInput = document.getElementById('searchInput');
     const searchButton = document.getElementById('searchButton');
     if (searchInput) searchInput.addEventListener('input', updateFilters);
     if (searchButton) searchButton.addEventListener('click', updateFilters);
-    
-    const willRedirect = await checkAutoRedirect();
-    if (!willRedirect) {
-      // re-sync again in case session changes
-      await updateMobileSidebarUI();
-      await setupEnhancedNav();
-      await updateAuthAreaOldStyle();
-    }
   });
-
-  window.addEventListener('pageshow', () => { 
-    updateMobileSidebarUI(); 
-    setupEnhancedNav(); 
-    updateAuthAreaOldStyle();
-    // Re-fetch restaurants in case data updated
-    if(allRestaurants.length === 0) renderRestaurants(); else applyFilter();
-  });
+  window.addEventListener('pageshow', () => { updateMobileSidebarUI(); setupEnhancedNav(); updateAuthAreaOldStyle(); });
 </script>
 </body>
 </html>

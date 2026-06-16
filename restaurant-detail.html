@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <base href="/EatToGo/">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Restaurant Details – EatToGo</title>
@@ -9,14 +10,12 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="assets/css/style.css">
   <style>
-    /* ----- EXACT SAME SIDEBAR & NAVBAR STYLES AS INDEX ----- */
     :root {
       --orange: #ff6b35;
       --dark-wood: #1C1208;
       --sidebar-bg: #0f0b06;
       --sidebar-width: 280px;
     }
-
     .mobile-sidebar {
       position: fixed;
       top: 0;
@@ -189,7 +188,6 @@
       background: linear-gradient(90deg, transparent, rgba(255,107,53,0.3), transparent);
       margin: 6px 16px;
     }
-
     .hamburger {
       background: rgba(0,0,0,0.05);
       border-radius: 50px;
@@ -252,7 +250,6 @@
     .user-greeting .logout-link:hover {
       background: rgba(255,107,53,0.1);
     }
-
     .navbar-etg .container {
       display: flex;
       flex-wrap: wrap;
@@ -299,8 +296,6 @@
         display: none;
       }
     }
-
-    /* Restaurant detail specific styles (unchanged) */
     .restaurant-hero {
       position: relative;
       background-size: cover;
@@ -382,7 +377,6 @@
   </div>
 </nav>
 
-<!-- ENHANCED MOBILE SIDEBAR (same as index) -->
 <div class="mobile-sidebar" id="mobileSidebar">
   <div class="sidebar-header">
     <div class="sidebar-avatar" id="mobileUserAvatar">🍽️</div>
@@ -403,7 +397,8 @@
 <footer class="minimal-footer">
   <div class="container d-flex justify-content-between flex-wrap gap-5">
     <div class="footer-brand"><h2>Eat<span>To</span>Go</h2><p>Final Year Project – Restaurant and Food Reservation System.</p></div>
-    <div class="footer-members"><h4>Project Team</h4><ul class="list-unstyled"><li>Navin Ramu</li><li>Muhamamd Nazim</li><li>Hadif</li><li>Ng Yue Yang</li></ul></div><div class="footer-contact"><h4>Contact Us</h4><p>Need help or found an issue?</p><ul class="list-unstyled"><li>Email: eattogo.test@gmail.com</li><li>Phone: +60 16-933 0771</li></ul></div>
+    <div class="footer-members"><h4>Project Team</h4><ul class="list-unstyled"><li>Navin Ramu</li><li>Muhamamd Nazim</li><li>Hadif</li><li>Ng Yue Yang</li></ul></div>
+    <div class="footer-contact"><h4>Contact Us</h4><p>Need help or found an issue?</p><ul class="list-unstyled"><li>Email: eattogo.test@gmail.com</li><li>Phone: +60 16-933 0771</li></ul></div>
   </div>
   <div class="footer-bottom">© 2026 EatToGo • Universiti Teknologi Malaysia (UTM)</div>
 </footer>
@@ -411,12 +406,11 @@
 <script src="assets/js/api.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-  // ==================== SIDEBAR TOGGLE (identical to index) ====================
+  // ========== SIDEBAR TOGGLE ==========
   const hamburger = document.getElementById('hamburgerBtn');
   const sidebar = document.getElementById('mobileSidebar');
   const overlay = document.getElementById('sidebarOverlay');
   const closeBtn = document.getElementById('closeSidebarBtn');
-
   function openSidebar() {
     sidebar.classList.add('open');
     overlay.classList.add('active');
@@ -438,7 +432,7 @@
     }
   });
 
-  // ==================== AUTH & SIDEBAR UI (exact copy from index) ====================
+  // ========== AUTH & SIDEBAR UI ==========
   function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
   const defaultMenuSvg = "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23ddd%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2255%22%20font-size%3D%2212%22%20text-anchor%3D%22middle%22%20fill%3D%22%23666%22%3ENo%20Img%3C%2Ftext%3E%3C%2Fsvg%3E";
 
@@ -527,7 +521,7 @@
     }
   }
 
-  // ==================== RESTAURANT DETAIL LOGIC ====================
+  // ========== RESTAURANT DETAIL LOGIC ==========
   function getAverageRating(feedbacks) {
     if (!feedbacks || feedbacks.length === 0) return null;
     const sum = feedbacks.reduce((acc, f) => acc + f.rating, 0);
@@ -549,7 +543,7 @@
       const reviewCount = feedbacks.length;
       let ratingDisplay = avgRating === null ? '⭐ No reviews yet' : `⭐ ${avgRating} (${reviewCount} review${reviewCount !== 1 ? 's' : ''})`;
       const reviewsHtml = feedbacks.length ? feedbacks.map(f => `<div class="review-card"><b>⭐ ${f.rating} — ${escapeHtml(f.customer_name)}</b><p>${escapeHtml(f.comment)}</p><small>${new Date(f.created_at).toLocaleDateString()}</small></div>`).join('') : '<p class="text-muted">No reviews yet.</p>';
-      const bgImage = restaurant.image || 'assets/img/default-restaurant.jpg';
+      const bgImage = resolveImagePath(restaurant.image) || 'assets/img/default-restaurant.jpg';
 
       const html = `
         <div class="restaurant-hero" style="background-image: url('${bgImage}');">
@@ -575,14 +569,16 @@
             <div class="card-etg p-4 mb-4">
               <h2>Menu Highlights</h2>
               <div class="row g-3">
-                ${menu.slice(0,4).map(item => `
+                ${menu.slice(0,4).map(item => {
+                  const img = resolveImagePath(item.image) || defaultMenuSvg;
+                  return `
                   <div class="col-md-6">
                     <div class="d-flex align-items-center gap-3 p-2 border rounded-3">
-                      <img src="${item.image || defaultMenuSvg}" class="menu-thumb" onerror="this.src='${defaultMenuSvg}'">
+                      <img src="${img}" class="menu-thumb" onerror="this.src='${defaultMenuSvg}'">
                       <div><b>${escapeHtml(item.name)}</b><br><small class="text-muted">RM ${parseFloat(item.price).toFixed(2)} • ${escapeHtml(item.category)}</small></div>
                     </div>
                   </div>
-                `).join('')}
+                `}).join('')}
               </div>
             </div>
             <div class="card-etg p-4">
@@ -613,7 +609,7 @@
     }
   }
 
-  // ==================== INIT ====================
+  // ========== INIT ==========
   window.addEventListener('DOMContentLoaded', async () => {
     await updateAuthAreaOldStyle();
     await setupEnhancedNav();

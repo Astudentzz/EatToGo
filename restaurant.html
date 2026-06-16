@@ -739,7 +739,8 @@
     const reviewCount = feedbacks.length;
     let ratingDisplay = avgRating === null ? '⭐ No reviews yet' : `⭐ ${avgRating} (${reviewCount} review${reviewCount !== 1 ? 's' : ''})`;
     const reviewsHtml = feedbacks.length ? feedbacks.map(f => `<div class="review-card"><b>⭐ ${f.rating} — ${escapeHtml(f.customer_name)}</b><p>${escapeHtml(f.comment)}</p><small>${new Date(f.created_at).toLocaleDateString()}</small></div>`).join('') : '<p class="text-muted">No reviews yet.</p>';
-    const bgImage = restaurant.image || 'assets/img/default-restaurant.jpg';
+    // --- FIX: Use resolveImagePath for restaurant image ---
+    const bgImage = resolveImagePath(restaurant.image) || 'assets/img/default-restaurant.jpg';
     const html = `
       <div class="restaurant-hero" style="background-image: url('${bgImage}');">
         <div class="hero-content">
@@ -768,14 +769,17 @@
           <div class="card-etg p-4 mb-4">
             <h2>Menu Preview</h2>
             <div class="row g-3">
-              ${menu.map(item => `
+              ${menu.map(item => {
+                // --- FIX: Use resolveImagePath for menu item image ---
+                const imgSrc = resolveImagePath(item.image);
+                return `
                 <div class="col-md-6">
                   <div class="d-flex align-items-center gap-3 p-2 border rounded-3">
-                    ${item.image ? `<img src="${item.image}" class="menu-img" onerror="this.src='${defaultMenuSvg}'">` : `<span style="font-size:32px">${item.emoji || '🍽️'}</span>`}
+                    ${imgSrc ? `<img src="${imgSrc}" class="menu-img" onerror="this.src='${defaultMenuSvg}'">` : `<span style="font-size:32px">${item.emoji || '🍽️'}</span>`}
                     <div><b>${escapeHtml(item.name)}</b><br><small class="text-muted">RM ${formatPrice(item.price)} • ${escapeHtml(item.category)}</small></div>
                   </div>
                 </div>
-              `).join('')}
+              `}).join('')}
             </div>
           </div>
           <div class="card-etg p-4"><h2>Customer Reviews</h2>${reviewsHtml}</div>

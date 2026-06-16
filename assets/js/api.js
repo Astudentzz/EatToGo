@@ -88,3 +88,14 @@ function escapeHtml(str) {
     if (!str) return '';
     return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
 }
+
+// ========== ADD THIS HELPER FUNCTION ==========
+function resolveImagePath(path) {
+    if (!path) return null;
+    // Already absolute URL
+    if (path.startsWith('http://') || path.startsWith('https://')) return path;
+    // Absolute path starting with / – prepend APP_ROOT
+    if (path.startsWith('/')) return APP_ROOT + path;
+    // Relative path – let base tag handle it or return as is
+    return path;
+}
