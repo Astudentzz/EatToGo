@@ -1,58 +1,164 @@
-EatToGo – Frontend Prototype v9 (Proposal Gap Fix – Complete)
-=============================================================
+=========================================
+         EATTOGO – README
+         Restaurant & Food Reservation System
+         Final Year Project – UTM
+=========================================
 
-Open in VS Code with Live Server extension. Run index.html.
+PROJECT DESCRIPTION
+-------------------
+EatToGo is a web-based restaurant reservation and food pre-ordering system.
+It allows customers to search for restaurants, book tables, pre-order food,
+and make online payments. Restaurant owners and staff have dedicated
+dashboards to manage bookings, menu items, and verify payments.
 
-DEMO LOGIN ACCOUNTS (any password works):
-  customer@eattogo.test  → Customer
-  staff@eattogo.test     → Restaurant Staff
-  owner@eattogo.test     → Restaurant Owner
-  admin@eattogo.test     → Admin
+The system supports multiple user roles:
+  • Customer – browse restaurants, book tables, pre-order food, leave feedback
+  • Staff – manage reservations, orders, menu items, verify payments
+  • Owner – manage restaurants, staff, view reservations, handle listings
+  • Admin – full system oversight (users, restaurants, applications)
 
-DATA: Stored in browser localStorage. Backend teammate connects PHP/Laravel/MySQL.
+TECHNOLOGY STACK
+----------------
+  • PHP (backend API)
+  • MySQL / MariaDB (database)
+  • HTML, CSS, Bootstrap 5 (frontend)
+  • JavaScript (AJAX, dynamic UI)
+  • PHPMailer (email notifications)
+  • XAMPP (local development environment)
 
-PAGES (18 total – all proposal use cases covered):
-  index.html              → Home / Browse Restaurants (View Details + Reserve buttons)
-  login.html              → Sign In (toast notifications, role validation)
-  signup.html             → Sign Up (role pre-select for owner CTA)
-  forgot-password.html    → Forgot Password
-  search-results.html     → Search & Filter (dynamic cuisine filter from restaurant data)
-  restaurant-detail.html  → View Restaurant Details (PROPOSAL: "View restaurant details")
-  restaurant.html         → Reserve Table (dynamic per restaurant ID)
-  preorder.html           → Pre-Order Food (visual cart, qty controls)
-  checkout.html           → Customer Details form
-  receipt.html            → Booking Receipt (itemized order)
-  pay-counter.html        → Pay at Counter instruction + cash-only alert
-  booking-success.html    → Booking Confirmation
-  booking-history.html    → My Bookings (confirm arrival, track, feedback)
-  order-status.html       → Order Status Tracker
-  feedback.html           → Dining Feedback (shows admin request notice)
-  staff-dashboard.html    → Staff: Reservations, Orders, Menu Availability
-  owner-dashboard.html    → Owner: Reservations, Menu CRUD, Request Restaurant Info
-  admin.html              → Admin: Full CRUD – Restaurants, Menu, Accounts, Requests, Feedback
+FOLDER STRUCTURE
+----------------
+  /EatToGo/
+  ├── api/              – PHP backend endpoints
+  │   ├── login.php
+  │   ├── register.php
+  │   ├── reservations.php
+  │   ├── menu-items.php
+  |   |──config/           – configuration files
+  │   |  ├── database.php
+  │   |  └── security.php
+  │   └── ... (all API files)
+  ├── assets/
+  │   ├── css/          – stylesheets
+  │   └── js/           – JavaScript files (api.js, app.js, mobile-nav.js)
+  |
+  ├── contact/          – SMTP configuration
+  │   └── config.php
+  ├── lib/              – external libraries
+  │   └── PHPMailer/    – email library
+  ├── uploads/          – uploaded files
+  │   ├── certificates/
+  │   ├── menu_items/
+  │   ├── payment_proofs/
+  │   ├── qrcodes/
+  │   └── restaurants/
+  └── *.html            – all frontend pages
 
-PROPOSAL COMPLIANCE SUMMARY:
-  ✅ Customer: Sign in/up/out, forgot password, browse restaurants, view restaurant details,
-     view menu, cash payment alert, book reservation, confirm reservation, receive confirmation,
-     place orders, view total, pay at counter, view order status, confirm arrival, receive feedback request, upload feedback
-  ✅ Staff: Sign in/up/out, forgot password, view restaurant info, view/add/remove menu item,
-     receive reservation & order details, view details, send confirmation, confirm reservations,
-     reject reservations (owner-only enforced), update order status, receive arrival confirmation
-  ✅ Admin: Sign in/up/out, forgot password, view customer/staff/owner lists, view restaurant info requests,
-     approve/reject requests, add/update/delete restaurant info, add/update/remove menu items,
-     send feedback request, delete accounts
-  ✅ Owner: Sign in/up/out, forgot password, request to add restaurant information, receive request result
+INSTALLATION GUIDE (XAMPP)
+--------------------------
 
-FIXES IN v9:
-  - app.js fully rewritten: clean, consistent, all functions connected
-  - restaurant.html: fully dynamic per ?id= URL param (no more hardcoded "Sakura Omakase")
-  - restaurant-detail.html: proper dedicated "View Details" page (separate from reservation)
-  - index.html: duplicate team member name removed
-  - receipt.html: proper navbar and footer added
-  - renderRestaurants(): now renders "View Details" + "Reserve Table" as separate buttons
-  - sendFeedbackRequest(): wired to feedback.html notice + booking table badge
-  - renderOrders(): shows emoji + customer name for each order row
-  - renderBookings(): staff-specific actions (can't reject), owner/admin can send feedback request
-  - renderAccounts(): role colour badges
-  - requestStatus(): updates owner-facing result text after admin action
-  - All seed data corrected (no duplicate entries)
+1. Install XAMPP (Apache + MySQL + PHP)
+   – Download from: https://www.apachefriends.org/
+   – Install and start Apache & MySQL services.
+
+2. Copy project files
+   – Place the entire "EatToGo" folder into:
+     C:\xampp\htdocs\EatToGo\
+
+3. Create the database
+   – Open phpMyAdmin (http://localhost/phpmyadmin)
+   – Create a new database named: eattogo
+   – Import the SQL file: if0_42158944_eattogo(4).sql
+
+4. Configure database connection
+   – Open: config/database.php
+   – Change these lines:
+       $host = 'localhost';
+       $dbname = 'eattogo';
+       $user = 'root';
+       $pass = '';
+   – Save the file.
+
+5. Start the application
+   – Open your browser and go to:
+     http://localhost/EatToGo/index.html
+   – You should see the homepage with restaurant listings.
+
+DEFAULT TEST ACCOUNTS
+---------------------
+ ADMIN
+eattogo.test@gmail.com
+Admin123
+
+Owners
+groupokhciproject@gmail.com
+Owner123
+
+Owner
+nazim06@graduate.utm.my
+Eattogo
+
+TianManStaff1
+ngyueyang@graduate.utm.my
+TianManStaff
+
+MoonsCafeStaff1
+chinming0210@gmail.com
+MoonsCafeStaff1
+
+GrumpyBear Staff
+nazimaaabbb@gmail.com
+John123
+
+Gagahoho box Staff
+theamazingemailz256@gmail.com
+Staff12345
+
+Customer
+ngyueyang.316@gmail.com
+customer123
+
+Customer
+tis.some.nonesense@gmail.com
+Eatz123
+
+Owner
+hadifhazuan06@gmail.com
+hadif123
+
+Staff (Happy Dessert Cafe)
+buddieshh@gmail.com
+James123
+
+Staff(Coffee House)
+difqie06@gmail.com
+Abu123
+
+
+
+DEVELOPMENT NOTES
+-----------------
+  • All API endpoints are located in the /api/ folder.
+  • The frontend uses fetch() with API_BASE from api.js.
+  • Session and CSRF protection are handled by config/security.php.
+  • File uploads are saved to the /uploads/ folder with unique filenames.
+  • Email notifications use PHPMailer with Brevo SMTP.
+
+
+SUPPORT & CONTACT
+-----------------
+  Project Team:
+    • Navin Ramu
+    • Muhammad Nazim
+    • Hadif
+    • Ng Yue Yang
+
+  Email: eattogo.test@gmail.com
+  Phone: +60 16-933 0771
+
+  Universiti Teknologi Malaysia (UTM)
+  Final Year Project – 2026
+
+=========================================
+              END OF README
+=========================================
